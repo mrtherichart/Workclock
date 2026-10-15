@@ -387,7 +387,37 @@ function validateState(s){const n=newState();if(!s||typeof s!=="object")return n
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)return validateState(JSON.parse(raw));for(const key of PREVIOUS_KEYS){const legacy=localStorage.getItem(key);if(legacy){const migrated=migrateOld(JSON.parse(legacy));localStorage.setItem(STORAGE_KEY,JSON.stringify(migrated));return migrated}}}catch(e){console.error("State load failed",e)}return newState()}
 function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));syncAndroidPlaces()}catch(e){console.error("Persist failed",e);setNotice("mainMessage","Could not save data in this browser.","bad")}}
 function syncAndroidPlaces(){if(!window.WorkClockAndroid)return;try{WorkClockAndroid.syncPlaces(JSON.stringify(state.locations.map(({id,name,type,lat,lon,radius})=>({id,name,type,lat,lon,radius}))))}catch(e){console.warn("Android place sync failed",e)}}
-function refreshAndroidStatus(){if(!window.WorkClockAndroid)return;try{const p=JSON.parse(WorkClockAndroid.permissionStatus());$("#nativeTrackingBox").classList.remove("hidden");setNotice("nativeTrackingHelp",p.background&&p.location?"Background detection enabled. Android checks saved places with low-power geofences.":p.location?"Location enabled. Tap above and choose Always allow in Android location settings.":"Enable location first, then allow background location so reminders work while WorkClock is closed.",p.background&&p.location?"good":"");}catch(e){console.warn(e)}}
+function refreshAndroidStatus(){
+  if(!window.WorkClockAndroid)return;
+  try{
+    const p=JSON.parse(WorkClockAndroid.permissionStatus());
+    $("#nativeTrackingBox").classList.remove("hidden");
+    const summary=!p.location?"Android location permission not granted. Tap Enable location above.":
+      !p.services?"Phone location services are OFF. Turn on Location in Android quick settings.":
+      !p.precise?"Approximate location only. Precise location is required for background place detection.":
+      !p.background?"Foreground location enabled. For background detection, tap above and allow location all the time.":
+      p.geofences==="active"?"Background place detection active.":
+      p.geofences==="no-saved-places"?"Location enabled. Save home and work locations to enable background reminders.":
+      p.geofences?.startsWith("error:")?`Background detection failed: ${p.geofences.slice(6)}`:
+      `Background setup: ${p.geofences||"checking"}`;
+    setNotice("nativeTrackingHelp",summary+(p.location?` · Precise: ${p.precise?"yes":"no"} · Background: ${p.background?"yes":"no"}`:""),
+      p.services&&p.geofences==="active"?"good":p.services?"":"bad");
+  }catch(e){console.warn("Android status failed",e)}
+}
+window.__WorkClockNativeLocation=function(position){
+  if(!position||!Number.isFinite(Number(position.lat))||!Number.isFinite(Number(position.lon)))return;
+  const fix={lat:Number(position.lat),lon:Number(position.lon),accuracy:Number(position.accuracy)||0};
+  currentPosition=fix;
+  $("#locationHelp").textContent=`Android location active · accuracy about ${Math.round(fix.accuracy)} m.`;
+  processPosition(fix,{source:"gps"});
+  refreshAndroidStatus();
+};
+window.__WorkClockNativeLocationError=function(error){
+  $("#locationHelp").textContent=error?.message||"Android could not obtain your location.";
+  $("#gpsStatus").textContent="Location unavailable";
+  $("#gpsStatus").className="pill bad";
+  refreshAndroidStatus();
+};
 async function syncAndroidEvents(){if(!window.WorkClockAndroid)return;syncAndroidPlaces();refreshAndroidStatus();let events=[];try{events=JSON.parse(WorkClockAndroid.getEvents()||"[]")}catch(e){console.warn("Cannot read Android events",e);return}for(const event of events){const loc=locationById(event.placeId);try{if(loc){if(event.transition==="ENTER"){await processPosition({lat:loc.lat,lon:loc.lon,accuracy:Math.max(100,loc.radius||150)},{source:"android"})}else if(event.transition==="EXIT"&&loc.type==="work"){state.presence.currentId=null;state.presence.currentType=null;state.presence.currentName=null;state.presence.changedAt=new Date(event.at).toISOString();state.presence.source="android";state.presence.lastWorkId=loc.id;persist();renderStatus(null,"android");const d=getToday();if(d.start&&!d.stop&&isAutomationDay(new Date(event.at)))showTimeChoice("stop",`Android detected leaving ${loc.name} at ${fmtTime(event.at)}. When did you finish?`)}}WorkClockAndroid.acknowledgeEvent(event.id)}catch(e){console.error("Failed to process Android location event",e);break}}}
 window.__WorkClockNativeSync=syncAndroidEvents;
 window.__WorkClockBackupResult=message=>setNotice("backupMessage",message);
@@ -616,9 +646,16 @@ async function testNotification(){
   if(ok)setNotice("notificationHelp","Test notification sent to Android.","good");
 }
 function geoErrorMessage(e){if(e?.code===1)return "Location permission denied. Allow Location in this page's site permissions, then try again.";if(e?.code===2)return "The phone could not determine a location.";if(e?.code===3)return "Location request timed out.";return e?.message||"Unknown location error."}
-function beginGeoWatch(){if(geoWatchId!==null||!navigator.geolocation)return;geoWatchId=navigator.geolocation.watchPosition(p=>{processPosition({lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy},{source:"gps"});$("#locationHelp").textContent=`Location active. Browser accuracy: about ${Math.round(p.coords.accuracy||0)} m.`},e=>{$("#locationHelp").textContent=geoErrorMessage(e);$("#gpsStatus").textContent="Location unavailable";$("#gpsStatus").className="pill bad"},{enableHighAccuracy:false,maximumAge:30000,timeout:20000})}
-function requestLocation(){if(!navigator.geolocation){$("#locationHelp").textContent="This browser does not expose geolocation.";return}$("#locationHelp").textContent="Requesting location permission…";navigator.geolocation.getCurrentPosition(p=>{currentPosition={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy};$("#locationHelp").textContent=`Location enabled. Browser accuracy: about ${Math.round(p.coords.accuracy||0)} m.`;processPosition(currentPosition,{source:"gps"});beginGeoWatch()},e=>{$("#locationHelp").textContent=geoErrorMessage(e)},{enableHighAccuracy:false,maximumAge:0,timeout:20000})}
-async function refreshPermissionUI(){if(!navigator.geolocation){$("#enableLocation").disabled=true;$("#locationHelp").textContent="Geolocation is unavailable in this browser.";return}if(!window.isSecureContext)$("#locationHelp").textContent=`This page is running as ${location.protocol}. Mobile browsers may block real geolocation outside HTTPS or localhost.`;try{if(navigator.permissions?.query){const p=await navigator.permissions.query({name:"geolocation"});if(p.state==="granted")beginGeoWatch();p.onchange=refreshPermissionUI}}catch{}}
+function beginGeoWatch(){if(window.WorkClockAndroid)return;if(geoWatchId!==null||!navigator.geolocation)return;geoWatchId=navigator.geolocation.watchPosition(p=>{processPosition({lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy},{source:"gps"});$("#locationHelp").textContent=`Location active. Browser accuracy: about ${Math.round(p.coords.accuracy||0)} m.`},e=>{$("#locationHelp").textContent=geoErrorMessage(e);$("#gpsStatus").textContent="Location unavailable";$("#gpsStatus").className="pill bad"},{enableHighAccuracy:false,maximumAge:30000,timeout:20000})}
+function requestLocation(){if(window.WorkClockAndroid){
+  $("#locationHelp").textContent="Requesting Android location…";
+  WorkClockAndroid.requestForegroundTracking();
+  refreshAndroidStatus();
+  return;
+}if(!navigator.geolocation){$("#locationHelp").textContent="This browser does not expose geolocation.";return}$("#locationHelp").textContent="Requesting location permission…";navigator.geolocation.getCurrentPosition(p=>{currentPosition={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy};$("#locationHelp").textContent=`Location enabled. Browser accuracy: about ${Math.round(p.coords.accuracy||0)} m.`;processPosition(currentPosition,{source:"gps"});beginGeoWatch()},e=>{$("#locationHelp").textContent=geoErrorMessage(e)},{enableHighAccuracy:false,maximumAge:0,timeout:20000})}
+async function refreshPermissionUI(){
+  if(window.WorkClockAndroid){refreshAndroidStatus();return;}
+  if(!navigator.geolocation){$("#enableLocation").disabled=true;$("#locationHelp").textContent="Geolocation is unavailable in this browser.";return}if(!window.isSecureContext)$("#locationHelp").textContent=`This page is running as ${location.protocol}. Mobile browsers may block real geolocation outside HTTPS or localhost.`;try{if(navigator.permissions?.query){const p=await navigator.permissions.query({name:"geolocation"});if(p.state==="granted")beginGeoWatch();p.onchange=refreshPermissionUI}}catch{}}
 
 function addLocation(type,name,lat,lon,radius){const loc={id:uid("loc"),type,name:name.trim()||`${type==="home"?"Home":"Workplace"} ${locationsOf(type).length+1}`,lat:Number(lat),lon:Number(lon),radius:Number(radius)||state.settings.defaultRadius,createdAt:nowISO(),lastVisitedAt:null};if(!validLocation(loc)||loc.lat<-90||loc.lat>90||loc.lon<-180||loc.lon>180)throw new Error("Invalid coordinates");state.locations.push(loc);state.routeCache={};persist();return loc}
 function resetLocationEditor(){editingLocationId=null;$("#locationEditorTitle").textContent="Add location manually";$("#saveLocation").textContent="Add location";$("#locType").value="home";$("#locName").value="";$("#locLat").value="";$("#locLon").value="";$("#locRadius").value=state.settings.defaultRadius;setNotice("locationEditorMessage","You can add any number of homes and workplaces.")}

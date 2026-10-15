@@ -24,6 +24,9 @@ class MainActivity : Activity() {
     private var permissionCallback: GeolocationPermissions.Callback? = null
     private var permissionOrigin: String? = null
     private var pendingBackup: String? = null
+    private var pageReady = false
+    private var lastNativeFix: JSONObject? = null
+    private lateinit var foregroundLocator: ForegroundLocator
 
     companion object {
         private const val LOCAL_ORIGIN = "https://appassets.androidplatform.net"
@@ -38,10 +41,18 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         window.statusBarColor = android.graphics.Color.rgb(5, 7, 6)
         window.navigationBarColor = android.graphics.Color.rgb(5, 7, 6)
+        foregroundLocator = ForegroundLocator(this,
+            { fix ->
+                lastNativeFix = fix
+                sendToPage("__WorkClockNativeLocation", fix)
+            },
+            { error -> sendToPage("__WorkClockNativeLocationError", error) }
+        )
         webView = WebView(this)
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
+            setGeolocationEnabled(true)
             allowFileAccess = false
             allowContentAccess = false
             setSupportMultipleWindows(false)
@@ -64,14 +75,18 @@ class MainActivity : Activity() {
             }
 
             override fun onPageFinished(view: WebView, url: String) {
+                pageReady = url.startsWith("$LOCAL_ORIGIN/assets/")
                 deliverEvents()
+                lastNativeFix?.let { sendToPage("__WorkClockNativeLocation", it) }
             }
         }
         webView.webChromeClient = object : WebChromeClient() {
             override fun onGeolocationPermissionsShowPrompt(
                 origin: String, callback: GeolocationPermissions.Callback
             ) {
-                if (origin != LOCAL_ORIGIN) {
+                val requested = Uri.parse(origin)
+                if (requested.scheme != "https" || requested.host != "appassets.androidplatform.net" ||
+                    requested.port !in listOf(-1, 443)) {
                     callback.invoke(origin, false, false)
                     return
                 }
@@ -91,7 +106,16 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         if (::webView.isInitialized) deliverEvents()
-        GeoManager.registerSaved(this)
+        GeoManager.registerSaved(this) { runOnUiThread { deliverEvents() } }
+        if (::foregroundLocator.isInitialized && GeoManager.hasForegroundPermission(this)) {
+            foregroundLocator.start()
+        }
+    }
+
+    private fun sendToPage(function: String, payload: JSONObject) {
+        if (pageReady && ::webView.isInitialized) {
+            webView.evaluateJavascript("window.$function?.(${payload});", null)
+        }
     }
 
     private fun deliverEvents() {
@@ -107,6 +131,7 @@ class MainActivity : Activity() {
                 FOREGROUND_PERMISSION
             )
         } else {
+            foregroundLocator.start()
             GeoManager.registerSaved(this)
         }
     }
@@ -146,7 +171,13 @@ class MainActivity : Activity() {
             permissionCallback?.invoke(permissionOrigin ?: LOCAL_ORIGIN, granted, false)
             permissionCallback = null
             permissionOrigin = null
-            if (granted) GeoManager.registerSaved(this)
+            if (granted) {
+                foregroundLocator.start()
+                GeoManager.registerSaved(this)
+            } else {
+                sendToPage("__WorkClockNativeLocationError", JSONObject().put("code", "permission")
+                    .put("message", "Location permission denied in Android settings."))
+            }
         } else if (requestCode == BACKGROUND_PERMISSION) {
             GeoManager.registerSaved(this)
         } else if (requestCode == NOTIFICATION_PERMISSION) {
@@ -217,9 +248,16 @@ class MainActivity : Activity() {
             runOnUiThread { GeoReceiver.show(this@MainActivity, title, body, tag) }
         }
 
+        @JavascriptInterface fun refreshLocation() {
+            runOnUiThread { foregroundLocator.start() }
+        }
+
         @JavascriptInterface fun permissionStatus(): String = JSONObject()
             .put("location", GeoManager.hasForegroundPermission(applicationContext))
+            .put("precise", GeoManager.hasPrecisePermission(applicationContext))
             .put("background", GeoManager.hasBackgroundPermission(applicationContext))
+            .put("services", ForegroundLocator.servicesEnabled(applicationContext))
+            .put("geofences", GeoManager.registrationStatus(applicationContext))
             .put("notification", Build.VERSION.SDK_INT < 33 ||
                 checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
             .toString()
@@ -248,6 +286,11 @@ class MainActivity : Activity() {
     override fun onBackPressed() {
         if (::webView.isInitialized && webView.canGoBack()) webView.goBack()
         else super.onBackPressed()
+    }
+
+    override fun onPause() {
+        if (::foregroundLocator.isInitialized) foregroundLocator.stop()
+        super.onPause()
     }
 
     override fun onDestroy() {

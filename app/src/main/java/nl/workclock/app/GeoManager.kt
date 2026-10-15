@@ -18,14 +18,28 @@ object GeoManager {
     private const val PREF = "workclock_native"
     private const val KEY = "places"
 
-    fun hasForegroundPermission(context: Context): Boolean =
+    fun hasPrecisePermission(context: Context): Boolean =
         context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+    fun hasForegroundPermission(context: Context): Boolean =
+        hasPrecisePermission(context) ||
+        context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
     fun hasBackgroundPermission(context: Context): Boolean =
         Build.VERSION.SDK_INT < 29 ||
             context.checkSelfPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
 
-    fun canRegister(context: Context) = hasForegroundPermission(context) && hasBackgroundPermission(context)
+    fun canRegister(context: Context) = hasPrecisePermission(context) && hasBackgroundPermission(context)
+
+    private const val STATUS = "geofence_status"
+    fun registrationStatus(context: Context): String = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        .getString(STATUS, "not-configured") ?: "not-configured"
+    private fun status(context: Context, value: String) = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        .edit().putString(STATUS, value).apply()
+
+    private var registering = false
+    private var registerAgain = false
+    private val completionCallbacks = mutableListOf<() -> Unit>()
 
     private fun pendingIntent(context: Context): PendingIntent {
         val flags = PendingIntent.FLAG_UPDATE_CURRENT or
@@ -67,51 +81,88 @@ object GeoManager {
         return null
     }
 
-    @SuppressLint("MissingPermission")
+    @Synchronized
     fun registerSaved(context: Context, onComplete: () -> Unit = {}) {
-        if (!canRegister(context)) { onComplete(); return }
+        completionCallbacks.add(onComplete)
+        if (registering) {
+            registerAgain = true
+            return
+        }
+        registering = true
+        performRegistration(context.applicationContext)
+    }
+
+    private fun finishRegistration(context: Context) {
+        val rerun: Boolean
+        val callbacks: List<() -> Unit>
+        synchronized(this) {
+            rerun = registerAgain
+            registerAgain = false
+            if (rerun) callbacks = emptyList()
+            else {
+                registering = false
+                callbacks = completionCallbacks.toList()
+                completionCallbacks.clear()
+            }
+        }
+        if (rerun) performRegistration(context)
+        else callbacks.forEach { try { it() } catch (_: Exception) {} }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun performRegistration(context: Context) {
+        if (!canRegister(context)) {
+            status(context, if (hasPrecisePermission(context)) "background-permission-needed"
+                else "precise-permission-needed")
+            finishRegistration(context)
+            return
+        }
         val client = LocationServices.getGeofencingClient(context)
-        // Removing by the same PendingIntent clears fences for places deleted
-        // in WorkClock. Recreate afterwards with the new list.
         val intent = pendingIntent(context)
-        client.removeGeofences(intent).addOnCompleteListener {
-            try {
-                val raw = context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getString(KEY, "[]")
-                val arr = JSONArray(raw)
-                val geofences = mutableListOf<Geofence>()
-                for (i in 0 until arr.length()) {
-                    val place = arr.getJSONObject(i)
-                    geofences.add(
-                        Geofence.Builder()
+        try {
+            client.removeGeofences(intent).addOnCompleteListener {
+                try {
+                    val raw = context.getSharedPreferences(PREF, Context.MODE_PRIVATE).getString(KEY, "[]")
+                    val arr = JSONArray(raw)
+                    val geofences = mutableListOf<Geofence>()
+                    for (i in 0 until arr.length()) {
+                        val place = arr.getJSONObject(i)
+                        geofences.add(Geofence.Builder()
                             .setRequestId(place.getString("id"))
-                            .setCircularRegion(
-                                place.getDouble("lat"), place.getDouble("lon"),
-                                maxOf(100f, place.optDouble("radius", 150.0).toFloat())
-                            )
-                            .setTransitionTypes(
-                                Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT
-                            )
+                            .setCircularRegion(place.getDouble("lat"), place.getDouble("lon"),
+                                maxOf(100f, place.optDouble("radius", 150.0).toFloat()))
+                            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER or Geofence.GEOFENCE_TRANSITION_EXIT)
                             .setExpirationDuration(Geofence.NEVER_EXPIRE)
                             .setNotificationResponsiveness(5 * 60 * 1000)
-                            .build()
-                    )
-                }
-                if (geofences.isNotEmpty()) {
-                    val request = GeofencingRequest.Builder()
-                        .setInitialTrigger(0)
-                        .addGeofences(geofences)
-                        .build()
-                    client.addGeofences(request, intent).addOnCompleteListener { task ->
-                        if (!task.isSuccessful) Log.e("WorkClock", "Geofences not registered", task.exception)
-                        onComplete()
+                            .build())
                     }
-                } else {
-                    onComplete()
+                    if (geofences.isEmpty()) {
+                        status(context, "no-saved-places")
+                        finishRegistration(context)
+                    } else {
+                        client.addGeofences(GeofencingRequest.Builder()
+                            .setInitialTrigger(0)
+                            .addGeofences(geofences)
+                            .build(), intent).addOnCompleteListener { task ->
+                            if (task.isSuccessful) status(context, "active")
+                            else {
+                                val reason = task.exception?.message ?: "unknown Android location error"
+                                Log.e("WorkClock", "Geofences not registered", task.exception)
+                                status(context, "error: $reason")
+                            }
+                            finishRegistration(context)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("WorkClock", "Failed to restore geofences", e)
+                    status(context, "error: ${e.message ?: e.javaClass.simpleName}")
+                    finishRegistration(context)
                 }
-            } catch (e: Exception) {
-                Log.e("WorkClock", "Failed to restore geofences", e)
-                onComplete()
             }
+        } catch (e: Exception) {
+            Log.e("WorkClock", "Failed to register geofences", e)
+            status(context, "error: ${e.message ?: e.javaClass.simpleName}")
+            finishRegistration(context)
         }
     }
 }
