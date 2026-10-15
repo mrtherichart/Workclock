@@ -10,13 +10,24 @@ android {
         applicationId = "nl.workclock.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "0.1.2"
+        versionCode = 4
+        versionName = "0.2.0"
     }
 
     signingConfigs {
         getByName("debug") {
-            // Keep the newer v2 signature and include v1 for older installers.
+            enableV1Signing = true
+            enableV2Signing = true
+        }
+        create("stable") {
+            val signingPath = System.getenv("WORKCLOCK_SIGNING_FILE")
+            val signingPassword = System.getenv("WORKCLOCK_SIGNING_PASSWORD")
+            if (!signingPath.isNullOrBlank() && !signingPassword.isNullOrBlank()) {
+                storeFile = file(signingPath)
+                storePassword = signingPassword
+                keyAlias = "workclock"
+                keyPassword = signingPassword
+            }
             enableV1Signing = true
             enableV2Signing = true
         }
@@ -30,6 +41,7 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("stable")
         }
         getByName("debug") {
             isMinifyEnabled = false

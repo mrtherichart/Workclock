@@ -1,4 +1,4 @@
-name: Android APK
+name: Android APK (test build)
 on:
   push:
     branches: [main]
@@ -23,21 +23,20 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '9.1.0'
-      - name: Build Android debug APK
+      - name: "Build debug APK (temporary signature: do not use as daily driver)"
         run: gradle --no-daemon :app:assembleDebug
-      - name: Verify Android 10 APK compatibility
+      - name: Verify APK is installable on Android 10
         shell: bash
         run: |
           set -euo pipefail
           APK=app/build/outputs/apk/debug/app-debug.apk
-          SDK_TOOLS="${ANDROID_HOME}/build-tools/36.0.0"
-          "${SDK_TOOLS}/zipalign" -c -v 4 "$APK"
-          "${SDK_TOOLS}/apksigner" verify --verbose --print-certs --min-sdk-version 29 --max-sdk-version 29 "$APK"
-          "${SDK_TOOLS}/aapt" dump badging "$APK" | grep -E '^(package:|sdkVersion:|targetSdkVersion:|launchable-activity:|application-label:)'
+          TOOLS="$ANDROID_HOME/build-tools/36.0.0"
+          "$TOOLS/zipalign" -c -v 4 "$APK"
+          "$TOOLS/apksigner" verify --verbose --print-certs --min-sdk-version 29 --max-sdk-version 29 "$APK"
+          "$TOOLS/aapt" dump badging "$APK" | grep -E '^(package:|sdkVersion:|targetSdkVersion:|launchable-activity:)'
           unzip -t "$APK" | tail -1
-      - name: Publish installable APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: workclock-android-debug
+          name: workclock-debug-not-for-updates
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14

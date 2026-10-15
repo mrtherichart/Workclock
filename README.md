@@ -31,17 +31,6 @@ De **uren worden niet zonder bevestiging automatisch op basis van GPS ingevuld**
 
 Een nieuwe app heeft een ander opslaggebied dan de oude mobiele browser. In de nieuwe app is daarom import/export toegevoegd. Als je al gegevens in de oude webversie hebt, moet je **eerst vanuit diezelfde web-origin een JSON-back-up exporteren**; upload/publiceer dus zo nodig eerst de vernieuwde HTML op de bestaande origin en gebruik daar Export backup. De nieuwe app kan browser-localStorage niet zelf uitlezen. Verwijder de oude webapp niet voordat een proefimport van de back-up is geslaagd.
 
-## Als de Android-pakketinstallatie niets doet
-
-Deze controle vindt **voor de installatie** plaats; WorkClock kan hier zelf geen foutmelding tonen omdat Android de app nog niet heeft gestart.
-
-1. Open je **Bestanden/Bestandsbeheer**-app en tik daar op `Downloads/app-debug.apk`; niet op het voorbeeld in ChatGPT.
-2. Op Android 10/OxygenOS: **Instellingen → Apps en meldingen → Speciale app-toegang → Onbekende apps installeren**. Geef toestemming aan de app die je gebruikt om de APK te openen (bijvoorbeeld Bestandsbeheer).
-3. Als het installatiescherm niet verschijnt: **Instellingen → Apps en meldingen → Alle apps → ⋮ → Systeem weergeven → Pakketinstallatie (Package Installer) → Opslag → Cache wissen**. Start de telefoon opnieuw en probeer nogmaals via Bestandsbeheer.
-4. Als het dan nog niet lukt, meld of *alle APK-bestanden* falen of alleen WorkClock. Bij echte installatiefouten kan `adb install -r app-debug.apk` op een aangesloten computer een exacte `INSTALL_FAILED_...`-melding tonen.
-
-De APK wordt in GitHub Actions vanaf versie 0.1.1 expliciet getest op ZIP-integriteit, zip-uitlijning, v1/v2-ondertekening en Android 10-handtekeningcompatibiliteit. Een succesvolle controle sluit een probleem in de pakketinstallatie van de telefoon niet uit.
-
 ## Invoeren van een afwijkend tijdstip
 
 Bij een vergeten start- of eindtijd blijven de bestaande keuzes (nu, 15/30/45/60 minuten geleden) intact. De extra knop **Custom · enter exact time** opent een datum- en tijdveld voor een precieze invoer. Een toekomstig tijdstip en een eindtijd vóór de start worden afgewezen.
@@ -52,6 +41,7 @@ Geen React Native, Flutter, Cordova, losse backend, account of tracker die elke 
 
 Bronnen: Android Developers `WebViewAssetLoader`, geofencing/background location documentation; Gradle setup actions.
 
+
 ## Android location fix (0.1.2)
 
 - **Foreground positioning is native** through Android's fused location API, not the WebView geolocation permission layer. `Places → Enable location` requests Android permission and acquires a fix. While visible, updates use a 60-second balanced-power request. Closing the activity stops updates; background uses geofences only.
@@ -61,3 +51,22 @@ Bronnen: Android Developers `WebViewAssetLoader`, geofencing/background location
 - On Android 10 and newer, permissions must be configured in Android's own app settings; the app's Settings panel shows current permission levels separately.
 
 **Upgrade note:** GitHub runner debug APK signing keys are not stable across builds. Before uninstalling the previous test APK, use WorkClock → Settings → Export backup (JSON). If Android rejects the updated APK with a signature mismatch, uninstall the old test APK, install the new one, then import the JSON backup. Do not uninstall until export is confirmed. We should set up a securely stored persistent release keystore before daily use.
+
+## One-time permanent signing activation — WorkClock 0.2.0
+
+WorkClock now has an in-app updater in **Settings → App updates**. It checks the **latest published GitHub Release**, downloads `WorkClock.apk` securely, verifies its SHA-256 digest and Android package ID, then launches Android's Package Installer. The user still needs to approve installation, and may need to allow installs from WorkClock once.
+
+The APK signing key is **fixed across future releases**, provided the following one-time setup is completed. The public repository holds only an **AES-256 encrypted** copy of the key (`signing/workclock-signing.p12.enc`) using PBKDF2 with 250,000 iterations. The password is not in GitHub and is not printed in workflow logs. Keep a separate, private copy of the signing key and password. Losing both means Android updates with this app ID cannot continue.
+
+1. Obtain the privately generated `WorkClock-signing-password.txt` and `WorkClock-signing-keystore.p12` files from the ChatGPT conversation. **Do not upload the raw keystore or password to the public repository.** Save the keystore and password safely outside GitHub.
+2. Open [GitHub Actions secrets for this repository](https://github.com/mrtherichart/Workclock/settings/secrets/actions) → **New repository secret**; set **name** `WORKCLOCK_SIGNING_PASSWORD` and **value** to the single line in the password file. One secret only.
+3. Open [GitHub Actions settings](https://github.com/mrtherichart/Workclock/settings/actions) → General → **Workflow permissions** → grant **Read and write permissions** to the `GITHUB_TOKEN` if the workflow reports a publish permission error.
+4. Open [Signed Android release workflow](https://github.com/mrtherichart/Workclock/actions/workflows/stable-release.yml) → **Run workflow** (main). After success, the signed update will appear under [GitHub Releases](https://github.com/mrtherichart/Workclock/releases/latest) as `WorkClock.apk`. Future new version pushes publish automatically once the version is incremented.
+5. **One-time migration from earlier test APK (0.1.x):** In the installed app choose **Settings → Export backup**. Verify the JSON is stored somewhere safe. **Uninstall the test APK** and install the new stable `WorkClock.apk` downloaded from Releases via Android Downloads. Open app → **Import backup** and verify history/places. Old debug signing keys cannot be upgraded in place. This step must not be skipped.
+6. Thereafter, use **Settings → App updates → Check for updates → Download & install**. Android may ask once to allow WorkClock to install APKs; the update retains its existing data because package ID and signing certificate stay the same. Only signed **Releases** are offered; downloadable GitHub Actions debug artifacts are **not** suitable for updates.
+
+Current stable signing certificate SHA-256: `d321aebe6255506998d22009a6d46deb98a41c34717839ea4ec0a5e77faa3209`.
+
+### Publishing later versions
+
+Increment **both** `versionName` and `versionCode` in `app/build.gradle.kts` on each published change. The Release workflow only publishes a new version tag once. There is no continuous location tracking or network access added by the updater: it checks on app launch and on demand, and only downloads when the user taps the install button.

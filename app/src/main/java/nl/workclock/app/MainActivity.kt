@@ -27,6 +27,7 @@ class MainActivity : Activity() {
     private var pageReady = false
     private var lastNativeFix: JSONObject? = null
     private lateinit var foregroundLocator: ForegroundLocator
+    private lateinit var updater: WorkClockUpdater
 
     companion object {
         private const val LOCAL_ORIGIN = "https://appassets.androidplatform.net"
@@ -41,6 +42,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         window.statusBarColor = android.graphics.Color.rgb(5, 7, 6)
         window.navigationBarColor = android.graphics.Color.rgb(5, 7, 6)
+        updater = WorkClockUpdater(this) { info -> sendToPage("__WorkClockUpdateStatus", info) }
         foregroundLocator = ForegroundLocator(this,
             { fix ->
                 lastNativeFix = fix
@@ -107,6 +109,7 @@ class MainActivity : Activity() {
         super.onResume()
         if (::webView.isInitialized) deliverEvents()
         GeoManager.registerSaved(this) { runOnUiThread { deliverEvents() } }
+        if (::updater.isInitialized) updater.onResume()
         if (::foregroundLocator.isInitialized && GeoManager.hasForegroundPermission(this)) {
             foregroundLocator.start()
         }
@@ -220,6 +223,13 @@ class MainActivity : Activity() {
     }
 
     private inner class Bridge {
+        @JavascriptInterface fun appVersion(): String = updater.appVersion()
+        @JavascriptInterface fun checkForUpdates() {
+            runOnUiThread { updater.beginCheck() }
+        }
+        @JavascriptInterface fun installUpdate() {
+            runOnUiThread { updater.beginInstall() }
+        }
         @JavascriptInterface fun syncPlaces(json: String) =
             GeoManager.syncPlaces(applicationContext, json)
 

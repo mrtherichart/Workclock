@@ -1,0 +1,102 @@
+name: Signed Android release
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      WORKCLOCK_SIGNING_PASSWORD: ${{ secrets.WORKCLOCK_SIGNING_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check whether permanent signing is ready
+        id: signing
+        shell: bash
+        run: |
+          if [[ -n "$WORKCLOCK_SIGNING_PASSWORD" ]]; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::To publish stable updates, set the WORKCLOCK_SIGNING_PASSWORD repository Actions secret, then run this workflow again.'
+          fi
+      - name: Find version and existing release
+        if: steps.signing.outputs.ready == 'true'
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VER=$(sed -n 's/^[[:space:]]*versionName = "\([^"]*\)"/\1/p' app/build.gradle.kts | head -1)
+          [[ "$VER" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Invalid version'; exit 1; }
+          echo "tag=v$VER" >> "$GITHUB_OUTPUT"
+          if gh release view "v$VER" >/dev/null 2>&1; then
+            echo 'new=false' >> "$GITHUB_OUTPUT"
+            echo "::notice::Release v$VER already exists. Bump versionCode and versionName to publish another update."
+          else
+            echo 'new=true' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-java@v4
+        if: steps.signing.outputs.ready == 'true' && steps.version.outputs.new == 'true'
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v4
+        if: steps.signing.outputs.ready == 'true' && steps.version.outputs.new == 'true'
+        with:
+          packages: 'platform-tools'
+      - name: Install Android SDK
+        if: steps.signing.outputs.ready == 'true' && steps.version.outputs.new == 'true'
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - uses: gradle/actions/setup-gradle@v6
+        if: steps.signing.outputs.ready == 'true' && steps.version.outputs.new == 'true'
+        with:
+          gradle-version: '9.1.0'
+      - name: Decrypt signing key only on runner
+        if: steps.signing.outputs.ready == 'true' && steps.version.outputs.new == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 250000 \
+            -in signing/workclock-signing.p12.enc \
+            -out "$RUNNER_TEMP/workclock.p12" \
+            -pass env:WORKCLOCK_SIGNING_PASSWORD
+      - name: Build signed release APK
+        if: steps.signing.outputs.ready == 'true' && steps.version.outputs.new == 'true'
+        env:
+          WORKCLOCK_SIGNING_FILE: ${{ runner.temp }}/workclock.p12
+        run: gradle --no-daemon :app:assembleRelease
+      - name: Verify release identity and signed package
+        if: steps.signing.outputs.ready == 'true' && steps.version.outputs.new == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=app/build/outputs/apk/release/app-release.apk
+          TOOLS="$ANDROID_HOME/build-tools/36.0.0"
+          "$TOOLS/zipalign" -c -v 4 "$APK"
+          "$TOOLS/apksigner" verify --verbose --print-certs --min-sdk-version 26 "$APK" | tee "$RUNNER_TEMP/signature.txt"
+          grep -iq 'Signer #1 certificate SHA-256 digest: d321aebe6255506998d22009a6d46deb98a41c34717839ea4ec0a5e77faa3209' "$RUNNER_TEMP/signature.txt"
+          "$TOOLS/aapt" dump badging "$APK" | grep -F "package: name='nl.workclock.app'"
+          unzip -t "$APK" | tail -1
+          cp "$APK" "$RUNNER_TEMP/WorkClock.apk"
+          sha256sum "$RUNNER_TEMP/WorkClock.apk"
+      - name: Publish new signed GitHub release
+        if: steps.signing.outputs.ready == 'true' && steps.version.outputs.new == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          gh release create "$TAG" "$RUNNER_TEMP/WorkClock.apk" \
+            --target "$GITHUB_SHA" --title "WorkClock $TAG" \
+            --notes 'Signed WorkClock Android APK. Open Settings > App updates in installed versions for subsequent updates.' \
+            --latest
+      - name: Remove temporary private key
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/workclock.p12"

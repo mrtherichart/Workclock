@@ -303,6 +303,15 @@ input:focus,select:focus{border-color:rgba(115,215,188,.46);box-shadow:0 0 0 3px
           <input type="file" id="backupFile" accept=".json,application/json" class="hidden">
           <div class="notice" id="backupMessage">Backups contain your saved locations, projects, hours and settings.</div>
         </div>
+        <div class="settingGroup" id="updatesSetting">
+          <h3>App updates</h3>
+          <p id="updateVersion">Browser version</p>
+          <div class="buttonRow">
+            <button class="btn" id="checkUpdates" type="button">Check for updates</button>
+            <button class="btn primary hidden" id="installUpdate" type="button">Download &amp; install</button>
+          </div>
+          <div class="notice" id="updateMessage" role="status" aria-live="polite">Updates are available for the Android app.</div>
+        </div>
         <div class="settingGroup">
           <h3>Automatic work detection</h3><p>Weekdays only. Time windows are confidence signals, not your recorded hours.</p>
           <div class="grid2"><div><label>Start from</label><input type="time" id="startFrom"></div><div><label>Start until</label><input type="time" id="startUntil"></div></div>
@@ -700,6 +709,26 @@ $("#endProject").addEventListener("click",endProjectNow);$("#saveProjectModal").
 $("#editStart").addEventListener("click",()=>showTimeChoice("start","Change today's start time."));$("#editStop").addEventListener("click",()=>showTimeChoice("stop","Change today's finish time."));$("#clearDraft").addEventListener("click",clearToday);$("#enableLocation").addEventListener("click",requestLocation);$("#enableNotifications").addEventListener("click",enableNotifications);$("#testNotification").addEventListener("click",testNotification);$("#closeTimeModal").addEventListener("click",hideTimeChoice);$("#confirmCustomTime").addEventListener("click",confirmCustomTime);$("#timeModal").addEventListener("click",e=>{if(e.target===$("#timeModal"))hideTimeChoice()});
 $("#fillCurrentLocation").addEventListener("click",()=>{if(!currentPosition)return setNotice("locationEditorMessage","No current GPS position available.","bad");$("#locLat").value=currentPosition.lat;$("#locLon").value=currentPosition.lon;setNotice("locationEditorMessage","Filled current GPS coordinates.","good")});$("#saveLocation").addEventListener("click",saveLocationEditor);$("#cancelLocationEdit").addEventListener("click",resetLocationEditor);$("#saveSettings").addEventListener("click",saveSettings);$("#clearRouteCache").addEventListener("click",()=>{state.routeCache={};persist();setNotice("settingsMessage","Route cache cleared.","good")});
 $("#enableNativeBackground").addEventListener("click",()=>{WorkClockAndroid.requestBackgroundTracking();setNotice("nativeTrackingHelp","Follow the Android permission screens, then reopen WorkClock. Choose Allow all the time where available.");});
+// Native-only updater; leaves the existing web UI and saved data untouched.
+const updateBox=$("#updatesSetting"),updateButton=$("#checkUpdates"),installButton=$("#installUpdate");
+window.__WorkClockUpdateStatus=function(info){
+  if(!window.WorkClockAndroid||!info)return;
+  const message=String(info.message||"");
+  const stateName=String(info.state||"");
+  setNotice("updateMessage",message,stateName==="error"||stateName==="migration"?"bad":stateName==="current"?"good":undefined);
+  updateButton.disabled=stateName==="checking"||stateName==="downloading"||stateName==="installing";
+  installButton.classList.toggle("hidden",stateName!=="available");
+  installButton.disabled=stateName!=="available";
+};
+if(window.WorkClockAndroid){
+  $("#updateVersion").textContent=`Installed: WorkClock ${WorkClockAndroid.appVersion()}`;
+  updateButton.addEventListener("click",()=>WorkClockAndroid.checkForUpdates());
+  installButton.addEventListener("click",()=>WorkClockAndroid.installUpdate());
+  // One low-frequency check on launch, with visible results in Settings.
+  setTimeout(()=>WorkClockAndroid.checkForUpdates(),1500);
+}else{
+  updateBox.classList.add("hidden");
+}
 $("#exportBackup").addEventListener("click",exportWorkClockBackup);
 $("#importBackup").addEventListener("click",importWorkClockBackup);
 $("#backupFile").addEventListener("change",async e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>10*1024*1024){setNotice("backupMessage","Backup file is too large.","bad");return}window.__WorkClockReceiveImport(await f.text());e.target.value=""});
