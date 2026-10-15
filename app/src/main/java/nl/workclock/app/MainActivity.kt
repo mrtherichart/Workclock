@@ -26,6 +26,7 @@ class MainActivity : Activity() {
     private var permissionOrigin: String? = null
     private var pendingBackup: String? = null
     private var pageReady = false
+    private var screenVisible = false
     private var lastNativeFix: JSONObject? = null
     private lateinit var foregroundLocator: ForegroundLocator
     private lateinit var updater: WorkClockUpdater
@@ -108,6 +109,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        screenVisible = true
         // Clear notifications when the user opens WorkClock.
         getSystemService(NotificationManager::class.java)?.cancelAll()
         if (::webView.isInitialized && pageReady) {
@@ -191,7 +193,7 @@ class MainActivity : Activity() {
         } else if (requestCode == NOTIFICATION_PERMISSION) {
             if (Build.VERSION.SDK_INT < 33 ||
                 checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-            ) GeoReceiver.test(this)
+            ) deliverEvents()
         }
         deliverEvents()
     }
@@ -260,7 +262,7 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface fun showNotification(title: String, body: String, tag: String) {
-            runOnUiThread { GeoReceiver.show(this@MainActivity, title, body, tag) }
+            runOnUiThread { if (!screenVisible) GeoReceiver.show(this@MainActivity, title, body, tag) }
         }
 
         @JavascriptInterface fun refreshLocation() {
@@ -310,6 +312,7 @@ class MainActivity : Activity() {
     }
 
     override fun onPause() {
+        screenVisible = false
         if (::foregroundLocator.isInitialized) foregroundLocator.stop()
         super.onPause()
     }
