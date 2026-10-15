@@ -1,6 +1,7 @@
 package nl.workclock.app
 
 import android.Manifest
+import android.app.NotificationManager
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -25,6 +26,7 @@ class MainActivity : Activity() {
     private var permissionOrigin: String? = null
     private var pendingBackup: String? = null
     private var pageReady = false
+    private var screenVisible = false
     private var lastNativeFix: JSONObject? = null
     private lateinit var foregroundLocator: ForegroundLocator
     private lateinit var updater: WorkClockUpdater
@@ -78,7 +80,7 @@ class MainActivity : Activity() {
 
             override fun onPageFinished(view: WebView, url: String) {
                 pageReady = url.startsWith("$LOCAL_ORIGIN/assets/")
-                deliverEvents()
+                webView.evaluateJavascript("window.__WorkClockAppResume?.();", null)
                 lastNativeFix?.let { sendToPage("__WorkClockNativeLocation", it) }
             }
         }
@@ -107,7 +109,12 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        if (::webView.isInitialized) deliverEvents()
+        screenVisible = true
+        // Clear notifications when the user opens WorkClock.
+        getSystemService(NotificationManager::class.java)?.cancelAll()
+        if (::webView.isInitialized && pageReady) {
+            webView.evaluateJavascript("window.__WorkClockAppResume?.();", null)
+        }
         GeoManager.registerSaved(this) { runOnUiThread { deliverEvents() } }
         if (::updater.isInitialized) updater.onResume()
         if (::foregroundLocator.isInitialized && GeoManager.hasForegroundPermission(this)) {
@@ -162,7 +169,7 @@ class MainActivity : Activity() {
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
         ) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_PERMISSION)
-        else GeoReceiver.test(this)
+        else deliverEvents()
     }
 
     override fun onRequestPermissionsResult(
@@ -186,7 +193,7 @@ class MainActivity : Activity() {
         } else if (requestCode == NOTIFICATION_PERMISSION) {
             if (Build.VERSION.SDK_INT < 33 ||
                 checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-            ) GeoReceiver.test(this)
+            ) deliverEvents()
         }
         deliverEvents()
     }
@@ -203,7 +210,7 @@ class MainActivity : Activity() {
                         it.write(pendingBackup ?: "")
                     }
                     pendingBackup = null
-                    webView.evaluateJavascript("window.__WorkClockBackupResult?.('Export opgeslagen');", null)
+                    webView.evaluateJavascript("window.__WorkClockBackupResult?.('Backup saved');", null)
                 }
                 IMPORT_BACKUP -> {
                     val contents = contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use {
@@ -217,7 +224,7 @@ class MainActivity : Activity() {
             }
         } catch (ex: Exception) {
             webView.evaluateJavascript(
-                "window.__WorkClockBackupResult?.(${JSONObject.quote("Bestand openen of opslaan mislukt: ${ex.message}")});", null
+                "window.__WorkClockBackupResult?.(${JSONObject.quote("Could not open or save the file: ${ex.message}")});", null
             )
         }
     }
@@ -255,7 +262,7 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface fun showNotification(title: String, body: String, tag: String) {
-            runOnUiThread { GeoReceiver.show(this@MainActivity, title, body, tag) }
+            runOnUiThread { if (!screenVisible) GeoReceiver.show(this@MainActivity, title, body, tag) }
         }
 
         @JavascriptInterface fun refreshLocation() {
@@ -294,11 +301,18 @@ class MainActivity : Activity() {
     }
 
     override fun onBackPressed() {
-        if (::webView.isInitialized && webView.canGoBack()) webView.goBack()
-        else super.onBackPressed()
+        // WebView tabs are not browser history: close sheets, then return Today.
+        if (::webView.isInitialized && pageReady) {
+            webView.evaluateJavascript("window.__WorkClockHandleBack?.() === true") { handled ->
+                if (handled != "true") {
+                    if (webView.canGoBack()) webView.goBack() else super.onBackPressed()
+                }
+            }
+        } else super.onBackPressed()
     }
 
     override fun onPause() {
+        screenVisible = false
         if (::foregroundLocator.isInitialized) foregroundLocator.stop()
         super.onPause()
     }
