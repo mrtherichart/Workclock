@@ -27,16 +27,16 @@ class GeoReceiver : BroadcastReceiver() {
             val placeId = geofence.requestId
             val place = GeoManager.place(context, placeId) ?: return@forEach
             EventStore.append(context, placeId, transition)
-            val label = place.optString("name", "de locatie")
+            val label = place.optString("name", "this place")
             val type = place.optString("type")
             if (type == "work" && transition == "ENTER") {
                 prefs.edit().putString("pending_work", placeId).apply()
-                show(context, "Aangekomen bij $label", "Controleer of je werktijd gestart is.", "arrive-$placeId")
+                show(context, "Arrived at $label", "Check whether you started work.", "arrive-$placeId")
             } else if (type == "work" && transition == "EXIT") {
-                show(context, "Vertrokken van $label", "Controleer of je werktijd gestopt is.", "leave-$placeId")
+                show(context, "Left $label", "Check whether you finished work.", "leave-$placeId")
             } else if (type == "home" && transition == "ENTER" && prefs.contains("pending_work")) {
                 prefs.edit().remove("pending_work").apply()
-                show(context, "Thuis aangekomen", "Je terugreis staat klaar om in WorkClock te verwerken.", "home-$placeId")
+                show(context, "Arrived home", "Open WorkClock to complete your return trip.", "home-$placeId")
             }
         }
     }
@@ -48,7 +48,7 @@ class GeoReceiver : BroadcastReceiver() {
         ) return
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(
-            NotificationChannel("workclock", "Werk en reizen", NotificationManager.IMPORTANCE_DEFAULT)
+            NotificationChannel("workclock", "Work and travel", NotificationManager.IMPORTANCE_DEFAULT)
         )
         val open = PendingIntent.getActivity(
             context, 0, Intent(context, MainActivity::class.java).addFlags(
@@ -61,6 +61,7 @@ class GeoReceiver : BroadcastReceiver() {
             .setContentText(body)
             .setContentIntent(open)
             .setAutoCancel(true)
+            .setTimeoutAfter(2 * 60 * 60 * 1000L)
             .build()
         manager.notify(tag, 1, notification)
     }
@@ -71,7 +72,7 @@ class GeoReceiver : BroadcastReceiver() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val manager = context.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(
-                NotificationChannel("workclock", "Werk en reizen", NotificationManager.IMPORTANCE_DEFAULT)
+                NotificationChannel("workclock", "Work and travel", NotificationManager.IMPORTANCE_DEFAULT)
             )
             if (Build.VERSION.SDK_INT >= 33 &&
                 context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -79,8 +80,8 @@ class GeoReceiver : BroadcastReceiver() {
             manager.notify("test", 1, NotificationCompat.Builder(context, "workclock")
                 .setSmallIcon(android.R.drawable.ic_menu_mylocation)
                 .setContentTitle("WorkClock")
-                .setContentText("Android-meldingen werken op dit toestel.")
-                .setContentIntent(pending).setAutoCancel(true).build())
+                .setContentText("Notifications are working on this device.")
+                .setContentIntent(pending).setAutoCancel(true).setTimeoutAfter(30_000L).build())
         }
     }
 }
