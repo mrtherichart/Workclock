@@ -10,8 +10,16 @@ android {
         applicationId = "nl.workclock.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            // Keep the newer v2 signature and include v1 for older installers.
+            enableV1Signing = true
+            enableV2Signing = true
+        }
     }
 
     compileOptions {
