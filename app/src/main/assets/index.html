@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080a0c">
+<title>WorkClock</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#050706;
+  --bg-lift:#080b0a;
+  --surface:#0d1210;
+  --surface2:#111815;
+  --surface3:#17201c;
+  --surface-glass:rgba(15,22,19,.78);
+  --line:rgba(194,219,208,.10);
+  --line-strong:rgba(194,219,208,.17);
+  --text:#f1f4ef;
+  --text-soft:#d6ddd8;
+  --muted:#8e9a93;
+  --muted2:#65716b;
+  --accent:#73d7bc;
+  --accent-strong:#a4ead7;
+  --accent-deep:#15362f;
+  --accent-glow:rgba(92,213,181,.18);
+  --brass:#d7ad67;
+  --brass-soft:#f0ca88;
+  --brass-deep:#352816;
+  --bad:#e18282;
+  --bad-soft:#f2aaaa;
+  --bad-deep:#35191d;
+  --good:#8bd2a0;
+  --radius-xl:28px;
+  --radius:19px;
+  --radius-sm:13px;
+  --nav-h:74px;
+  --shadow:0 18px 54px rgba(0,0,0,.34);
+}
+*{box-sizing:border-box}
+html{background:var(--bg);color-scheme:dark;scrollbar-color:#2c3933 #070907}
+body{
+  margin:0;min-height:100vh;color:var(--text);
+  font-family:Inter,"Segoe UI Variable",ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(900px 520px at 50% -180px,rgba(70,135,116,.15),transparent 68%),
+    radial-gradient(640px 480px at 105% 76%,rgba(132,93,41,.055),transparent 72%),
+    linear-gradient(180deg,#060806 0%,#050706 48%,#040605 100%);
+  transition:background .8s ease;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.24;
+  background-image:
+    linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.009) 1px,transparent 1px);
+  background-size:34px 34px;
+  mask-image:linear-gradient(to bottom,black,transparent 72%);
+}
+body.work-running{
+  background:
+    radial-gradient(880px 520px at 50% -160px,rgba(69,171,144,.20),transparent 68%),
+    radial-gradient(600px 460px at 105% 76%,rgba(96,150,126,.045),transparent 72%),
+    linear-gradient(180deg,#060906 0%,#050706 48%,#040605 100%);
+}
+body.work-review{
+  background:
+    radial-gradient(880px 520px at 50% -160px,rgba(153,111,54,.15),transparent 68%),
+    radial-gradient(600px 460px at 105% 76%,rgba(202,155,78,.04),transparent 72%),
+    linear-gradient(180deg,#080806 0%,#050706 48%,#040605 100%);
+}
+button,input,select{font:inherit}button{color:inherit}button,input,select{-webkit-tap-highlight-color:transparent}
+button{cursor:pointer}
+.app{max-width:760px;margin:0 auto;min-height:100vh;padding:0 14px calc(var(--nav-h) + 48px + env(safe-area-inset-bottom))}
+.appHeader{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding:24px 5px 17px}
+.brand{display:flex;align-items:center;gap:10px;font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:22px;font-weight:650;letter-spacing:-.035em;color:#f2f2eb}
+.brand::before{content:"";width:18px;height:18px;display:inline-block;border:1px solid rgba(164,234,215,.54);border-radius:5px;transform:rotate(45deg);background:linear-gradient(135deg,rgba(115,215,188,.24),rgba(115,215,188,.02));box-shadow:inset 0 0 0 4px rgba(0,0,0,.26),0 0 18px rgba(115,215,188,.08)}
+.dateLine{font-size:11px;color:var(--muted2);margin:4px 0 0 29px;text-transform:uppercase;letter-spacing:.09em;font-weight:620}
+.headerSignal{display:flex;align-items:center;gap:8px;color:var(--muted2);font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:680;padding-bottom:2px}
+.signalDot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(115,215,188,.07),0 0 18px rgba(115,215,188,.22)}
+.view{display:none}.view.active{display:block;animation:viewIn .16s cubic-bezier(.2,.8,.2,1) both}
+@keyframes viewIn{from{opacity:.88;transform:translateY(3px)}to{opacity:1;transform:none}}
+.viewTitle{margin:5px 4px 18px}
+.viewTitle h1{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:31px;font-weight:560;letter-spacing:-.04em;margin:0;color:#f1f2eb}
+.viewTitle p{font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.5;max-width:570px}
+
+/* Instrument hero */
+.hero{
+  position:relative;isolation:isolate;overflow:hidden;
+  background:
+    radial-gradient(330px 190px at 50% 31%,rgba(96,180,155,.09),transparent 70%),
+    linear-gradient(155deg,rgba(255,255,255,.028),transparent 30%),
+    linear-gradient(180deg,#0e1412 0%,#0a0f0d 100%);
+  border:1px solid rgba(171,210,195,.13);border-radius:var(--radius-xl);padding:18px 17px 17px;
+  box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.035),inset 0 -1px 0 rgba(0,0,0,.6);
+}
+.hero::before{
+  content:"";position:absolute;inset:0;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 0%,rgba(115,215,188,.06),transparent 27%),
+    repeating-linear-gradient(90deg,transparent 0 35px,rgba(191,222,209,.016) 36px,transparent 37px);
+}
+.hero::after{
+  content:"";position:absolute;z-index:-1;left:50%;top:60px;width:min(72vw,330px);height:134px;transform:translateX(-50%);border-radius:999px;
+  border:1px solid rgba(172,212,197,.055);
+  box-shadow:0 0 0 12px rgba(255,255,255,.006),0 24px 70px rgba(0,0,0,.26),inset 0 0 55px rgba(0,0,0,.5);
+  opacity:.82;pointer-events:none;transition:border-color .5s ease,box-shadow .5s ease;
+}
+.work-running .hero{border-color:rgba(115,215,188,.22);box-shadow:0 22px 66px rgba(0,0,0,.40),0 0 54px rgba(66,155,132,.06),inset 0 1px 0 rgba(255,255,255,.04)}
+.work-running .hero::after{border-color:rgba(115,215,188,.12);box-shadow:0 0 0 12px rgba(115,215,188,.008),0 0 72px rgba(83,192,163,.07),inset 0 0 55px rgba(0,0,0,.44)}
+.work-review .hero{border-color:rgba(215,173,103,.19)}
+.work-review #confirmDayHold{background:linear-gradient(180deg,#3b2d19,#2c2114);border-color:rgba(215,173,103,.35);color:#f0d49e;box-shadow:0 14px 32px rgba(0,0,0,.28),0 0 32px rgba(215,173,103,.035),inset 0 1px 0 rgba(255,255,255,.05)}
+.work-review #confirmDayHold .fill{background:linear-gradient(90deg,#57401e,#7a5b2a);box-shadow:18px 0 38px rgba(215,173,103,.10)}
+.work-review .summaryGrid{border-color:rgba(215,173,103,.12)}
+.heroTop{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.workState{font-size:9.5px;font-weight:800;letter-spacing:.15em;color:var(--muted);padding:7px 10px;border-radius:999px;background:rgba(4,7,6,.72);border:1px solid var(--line);box-shadow:inset 0 1px 0 rgba(255,255,255,.02)}
+.workState.active{color:var(--accent-strong);background:rgba(19,51,43,.72);border-color:rgba(115,215,188,.27);box-shadow:0 0 24px rgba(115,215,188,.06)}
+.workState.review{color:var(--brass-soft);background:rgba(51,39,21,.74);border-color:rgba(215,173,103,.25)}
+.statusMini{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pill{font-size:10px;color:var(--muted2);padding:6px 8px;border-radius:999px;background:rgba(4,7,6,.55);border:1px solid rgba(194,219,208,.08);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill.good{color:var(--good)}.pill.warn{color:var(--brass)}.pill.bad{color:var(--bad)}
+.timer{position:relative;z-index:1;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1,"ss01" 1;font-size:62px;font-weight:610;letter-spacing:-.064em;line-height:1;text-align:center;margin:34px 0 6px;text-shadow:0 2px 24px rgba(0,0,0,.62),0 0 28px rgba(115,215,188,.045)}
+.timer::before{content:"ELAPSED";position:absolute;left:50%;top:-17px;transform:translateX(-50%);font-family:Inter,"Segoe UI",sans-serif;font-size:8px;letter-spacing:.23em;font-weight:760;color:rgba(142,154,147,.48);text-shadow:none}
+.timerLabel{text-align:center;font-size:11px;letter-spacing:.035em;color:var(--muted);min-height:16px}
+.currentSection{position:relative;margin:29px 0 12px;display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px 13px 12px 33px;background:linear-gradient(180deg,rgba(5,9,7,.78),rgba(8,12,10,.86));border:1px solid rgba(188,218,206,.10);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.018)}
+.currentSection::before{content:"";position:absolute;left:13px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:#46534d;box-shadow:0 0 0 5px rgba(255,255,255,.015)}
+.work-running .currentSection::before{background:var(--accent);box-shadow:0 0 0 5px rgba(115,215,188,.07),0 0 16px rgba(115,215,188,.30);animation:softPulse 2.6s ease-in-out infinite}
+@keyframes softPulse{0%,100%{transform:scale(.88);opacity:.72}50%{transform:scale(1.08);opacity:1}}
+.currentSection span{color:var(--muted2);font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}.currentSection strong{font-size:12px;font-weight:680;text-align:right;color:var(--text-soft)}
+.hold{position:relative;overflow:hidden;width:100%;min-height:68px;border:1px solid rgba(115,215,188,.30);border-radius:16px;background:linear-gradient(180deg,#173a31 0%,#112a24 100%);font-weight:800;font-size:13px;letter-spacing:.09em;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;box-shadow:0 14px 32px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.055),inset 0 -10px 24px rgba(0,0,0,.12);transition:transform .14s ease,border-color .2s ease,box-shadow .2s ease}
+.hold:active{transform:translateY(1px)}
+.hold .fill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#24584b,#317664);pointer-events:none;box-shadow:18px 0 38px rgba(90,207,176,.12)}
+.hold span{position:relative;z-index:1;text-shadow:0 1px 10px rgba(0,0,0,.3)}
+.hold.finish{background:linear-gradient(180deg,#3b2d19,#2c2114);border-color:rgba(215,173,103,.35);color:#f0d49e}.hold.finish .fill{background:linear-gradient(90deg,#57401e,#7a5b2a);box-shadow:18px 0 38px rgba(215,173,103,.10)}
+.hold.danger{background:linear-gradient(180deg,#351b1f,#281417);border-color:rgba(225,130,130,.28)}.hold.danger .fill{background:#5a2b31}
+.hold:disabled{opacity:.35;filter:saturate(.55);box-shadow:none;cursor:default}
+.projectAction{width:100%;margin-top:9px;min-height:48px;border-radius:14px;border:1px solid rgba(115,215,188,.14);background:rgba(16,28,24,.70);color:var(--accent-strong);font-weight:760;font-size:11px;letter-spacing:.08em;box-shadow:inset 0 1px 0 rgba(255,255,255,.02);transition:background .16s ease,border-color .16s ease,transform .12s ease}.projectAction:active{transform:translateY(1px)}.projectAction:disabled{color:var(--muted2);background:#0b0f0d;border-color:var(--line);opacity:.55}
+.toast{position:fixed;z-index:75;left:50%;bottom:calc(var(--nav-h) + 30px + env(safe-area-inset-bottom));transform:translate(-50%,12px);width:min(500px,calc(100% - 34px));padding:12px 14px;border-radius:14px;background:rgba(18,24,21,.92);backdrop-filter:blur(18px);border:1px solid rgba(194,219,208,.13);color:var(--text);font-size:12px;line-height:1.4;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;box-shadow:0 16px 45px rgba(0,0,0,.55)}.toast.show{opacity:1;transform:translate(-50%,0)}.toast.good{color:var(--good);border-color:rgba(139,210,160,.25);background:rgba(13,28,18,.94)}.toast.bad{color:var(--bad-soft);border-color:rgba(225,130,130,.28);background:rgba(37,16,19,.95)}
+
+/* Sections and crafted surfaces */
+.section{margin-top:22px}.sectionHead{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:0 3px 10px}.sectionHead h2{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:18px;font-weight:560;margin:0;letter-spacing:-.02em;color:#e8ebe5}.sectionHead .hint{font-size:9.5px;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.card{position:relative;background:linear-gradient(180deg,rgba(15,21,18,.97),rgba(11,16,14,.97));border:1px solid var(--line);border-radius:var(--radius);padding:15px;margin:0 0 12px;box-shadow:0 10px 32px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.018)}
+.card.subtle{background:#0a0e0c}.card.flush{padding:0;overflow:hidden}
+.summaryGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid rgba(194,219,208,.08);border-radius:15px;overflow:hidden;margin-bottom:12px;background:rgba(5,8,7,.46)}
+.summaryStat{position:relative;padding:12px 10px 11px;background:linear-gradient(180deg,rgba(255,255,255,.012),transparent)}.summaryStat+.summaryStat{border-left:1px solid rgba(194,219,208,.065)}
+.summaryStat span{display:block;color:var(--muted2);font-size:8.5px;text-transform:uppercase;letter-spacing:.12em;font-weight:780}.summaryStat strong{display:block;margin-top:5px;font-size:14px;font-weight:690;font-variant-numeric:tabular-nums;color:#e8ece7}
+.reviewLine{display:flex;justify-content:space-between;gap:14px;padding:9px 1px;border-bottom:1px solid rgba(194,219,208,.07)}.reviewLine:last-child{border-bottom:0}.reviewLine span{color:var(--muted);font-size:12px}.reviewLine strong{text-align:right;font-size:12px;font-weight:680}.meta,.help,.sub{color:var(--muted);font-size:11.5px;line-height:1.5}.notice{font-size:11.5px;color:var(--muted);line-height:1.45;padding:11px 12px;background:rgba(5,8,7,.48);border:1px solid rgba(194,219,208,.08);border-radius:12px;margin-top:10px}.notice.good{color:var(--good);border-color:rgba(139,210,160,.20);background:rgba(16,31,20,.6)}.notice.bad{color:var(--bad-soft);border-color:rgba(225,130,130,.22);background:rgba(40,17,20,.62)}
+.projectList{position:relative;display:grid;gap:0;margin-top:13px;padding-left:20px}.projectList::before{content:"";position:absolute;left:6px;top:7px;bottom:8px;width:1px;background:linear-gradient(180deg,rgba(115,215,188,.60),rgba(115,215,188,.10))}
+.projectLine{position:relative;display:flex;justify-content:space-between;gap:12px;padding:8px 9px 9px 4px;border-radius:0;background:transparent;border:0;border-bottom:1px solid rgba(194,219,208,.055)}.projectLine:last-child{border-bottom:0}.projectLine::before{content:"";position:absolute;left:-18px;top:13px;width:7px;height:7px;border-radius:50%;background:#53756a;border:2px solid #101714;box-shadow:0 0 0 1px rgba(115,215,188,.18)}.projectLine .name{font-size:12.5px;font-weight:680;color:#dfe6e1}.projectLine .time{font-size:10.5px;color:var(--muted2);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* Controls */
+label{display:block;color:var(--muted);font-size:9.5px;font-weight:760;text-transform:uppercase;letter-spacing:.075em;margin:12px 0 6px}
+input,select{width:100%;min-height:44px;background:rgba(5,8,7,.72);color:var(--text);border:1px solid rgba(194,219,208,.11);border-radius:11px;padding:10px 11px;outline:none;box-shadow:inset 0 1px 7px rgba(0,0,0,.22);transition:border-color .16s ease,box-shadow .16s ease,background .16s ease}
+input:focus,select:focus{border-color:rgba(115,215,188,.46);box-shadow:0 0 0 3px rgba(115,215,188,.06),inset 0 1px 7px rgba(0,0,0,.2);background:#080d0b}
+.buttonRow,.chips,.statusRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid rgba(194,219,208,.11);background:linear-gradient(180deg,#141b18,#0f1512);border-radius:12px;padding:10px 12px;min-height:41px;font-size:11.5px;box-shadow:inset 0 1px 0 rgba(255,255,255,.018);transition:transform .12s ease,border-color .16s ease,background .16s ease}.btn:hover{border-color:rgba(194,219,208,.18);background:#151d19}.btn:active{transform:translateY(1px)}.btn.primary{background:linear-gradient(180deg,#193b32,#123027);border-color:rgba(115,215,188,.28);color:var(--accent-strong);font-weight:730}.btn.small{font-size:10.5px;padding:7px 9px;min-height:34px}.btn.project{display:none}.btn:disabled,input:disabled,select:disabled{opacity:.4}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.chips{margin-top:7px}.chip{border:1px solid rgba(194,219,208,.09);background:rgba(7,11,9,.70);border-radius:999px;padding:8px 11px;font-size:10.5px;color:var(--muted)}.chip.selected{background:rgba(23,54,47,.78);border-color:rgba(115,215,188,.30);color:var(--accent-strong);box-shadow:0 0 20px rgba(115,215,188,.035)}
+.hold.mini{min-height:41px;width:auto;padding:0 12px;font-size:10px;border-radius:11px;flex:1;background:linear-gradient(180deg,#171f1b,#101613);border-color:rgba(194,219,208,.13);box-shadow:none;letter-spacing:.055em}.hold.mini .fill{background:#35423d}.hold.mini.danger{background:linear-gradient(180deg,#2c181b,#211215);border-color:rgba(225,130,130,.24);color:#efb0b0}.hold.mini.danger .fill{background:#572a31}
+
+/* History */
+.historyToolbar{display:flex;gap:8px;margin-bottom:13px}.historyToolbar .btn{flex:1;min-height:46px}.historyItem{position:relative;border:1px solid var(--line);background:linear-gradient(180deg,rgba(14,20,17,.96),rgba(10,15,13,.96));border-radius:18px;padding:15px;margin:0 0 10px;box-shadow:0 10px 26px rgba(0,0,0,.16)}
+.historyItem::before{content:"";position:absolute;left:0;top:18px;bottom:18px;width:2px;border-radius:4px;background:linear-gradient(180deg,rgba(115,215,188,.54),rgba(115,215,188,.06))}.historyTop{display:flex;justify-content:space-between;gap:12px;align-items:baseline}.historyTop strong:first-child{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:17px;font-weight:560}.historyTop strong:last-child{font-size:19px;font-weight:640;font-variant-numeric:tabular-nums;color:#e9ede8}.historyItem>.meta{margin-top:4px}.manualPanel.collapsed{display:none}
+.manualSegment{display:grid;grid-template-columns:minmax(0,1fr) 120px 36px;gap:8px;align-items:end;border:1px solid rgba(194,219,208,.085);background:rgba(5,8,7,.46);border-radius:12px;padding:10px;margin-top:8px}.manualSegment.last{grid-template-columns:minmax(0,1fr) 120px}.manualSegment .until{min-height:41px;display:flex;align-items:center;color:var(--muted2);font-size:10.5px}
+
+/* Places */
+#locationList>.meta{padding:15px}.location{position:relative;border-bottom:1px solid rgba(194,219,208,.07);padding:14px 15px}.location:last-child{border-bottom:0}.location::before{content:"";position:absolute;left:7px;top:20px;width:3px;height:24px;border-radius:4px;background:#33453e}.locationHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.locationName{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:16px;font-weight:560}.actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.locationType{display:inline-flex;font-family:Inter,sans-serif;font-size:8px;text-transform:uppercase;letter-spacing:.11em;color:var(--muted2);margin-left:7px;font-weight:760}.quickRegister{display:grid;grid-template-columns:1fr 1fr;gap:8px}.locationEditor{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+
+/* Settings */
+.settingGroup{padding:3px 0 14px}.settingGroup+.settingGroup{border-top:1px solid rgba(194,219,208,.07);padding-top:16px}.settingGroup h3{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:16px;font-weight:560;margin:0 0 4px}.settingGroup p{font-size:11px;color:var(--muted);margin:0 0 9px;line-height:1.45}.permissionRow{display:grid;grid-template-columns:1fr 1fr;gap:8px}.testDetails{margin-top:13px;border:1px solid var(--line);border-radius:16px;background:rgba(8,12,10,.7);overflow:hidden}.testDetails summary{cursor:pointer;padding:14px 15px;color:var(--muted);font-size:10.5px;font-weight:730;text-transform:uppercase;letter-spacing:.07em}.testDetails[open] summary{border-bottom:1px solid rgba(194,219,208,.07)}.testInner{padding:2px 15px 15px}
+
+/* Modal */
+.modalBack{position:fixed;inset:0;background:rgba(0,0,0,.76);display:none;align-items:flex-end;justify-content:center;z-index:80;backdrop-filter:blur(8px)}.modalBack.show{display:flex}.modal{position:relative;width:min(760px,100%);background:linear-gradient(180deg,#121916,#0c110f);border:1px solid rgba(194,219,208,.16);border-radius:26px 26px 0 0;padding:27px 17px max(24px,env(safe-area-inset-bottom));box-shadow:0 -28px 90px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.025)}.modal::before{content:"";position:absolute;top:10px;left:50%;transform:translateX(-50%);width:38px;height:3px;border-radius:99px;background:rgba(204,221,213,.18)}.modal h3{font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;font-size:23px;font-weight:560;margin:0 0 5px}.modal p{margin:0 0 14px;color:var(--muted);font-size:12px}.offsets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.offsets button{border:1px solid rgba(194,219,208,.11);background:linear-gradient(180deg,#151d19,#101613);color:var(--text-soft);padding:13px 8px;border-radius:13px;font-size:11.5px}.offsets button:active{transform:translateY(1px)}.offsets .customTimeChoice{grid-column:1/-1;border-color:rgba(115,215,188,.24);color:var(--accent-strong)}.customTimeEditor{margin-top:12px;padding:12px;border:1px solid rgba(194,219,208,.12);border-radius:13px;background:rgba(5,8,7,.55)}.customTimeEditor label{margin-bottom:8px}.customTimeEditor input{width:100%;color-scheme:dark}.customTimeEditor .btn{width:100%;margin-top:10px}.customTimeEditor .notice{margin-top:9px}.modalButtons{display:flex;gap:8px;margin-top:12px}.modalButtons>*{flex:1}
+
+/* Floating navigation */
+.bottomNav{position:fixed;z-index:60;left:50%;bottom:max(9px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(720px,calc(100% - 20px));height:var(--nav-h);padding:6px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:rgba(10,14,12,.88);border:1px solid rgba(194,219,208,.12);border-radius:22px;backdrop-filter:blur(22px) saturate(1.2);box-shadow:0 20px 50px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.025)}
+.navBtn{position:relative;border:0;background:transparent;color:#65716b;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:9px;letter-spacing:.04em;min-width:0;transition:color .16s ease,background .16s ease,transform .12s ease}.navBtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.65}.navBtn.active{color:var(--accent-strong);background:linear-gradient(180deg,rgba(35,73,63,.46),rgba(20,43,37,.38));box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}.navBtn.active::after{content:"";position:absolute;bottom:5px;width:14px;height:2px;border-radius:99px;background:var(--accent);box-shadow:0 0 12px rgba(115,215,188,.4)}.navBtn:active{transform:scale(.97)}
+.divider{height:1px;background:rgba(194,219,208,.07);margin:15px 0}#gpsStatus,#notificationStatus{display:none!important}.hidden{display:none!important}
+
+@media(max-width:560px){
+  .app{padding-left:11px;padding-right:11px}.appHeader{padding-top:17px}.timer{font-size:55px;margin-top:33px}.hero{border-radius:24px;padding:15px 14px 14px}.hero::after{width:280px;height:126px;top:56px}.summaryGrid{grid-template-columns:1fr 1fr}.summaryStat:nth-child(3),.summaryStat:nth-child(4){border-top:1px solid rgba(194,219,208,.065)}.summaryStat:nth-child(3){border-left:0}.grid2,.grid3{grid-template-columns:1fr}.quickRegister,.permissionRow{grid-template-columns:1fr}.offsets{grid-template-columns:repeat(2,1fr)}.manualSegment,.manualSegment.last{grid-template-columns:1fr}.manualSegment .removeSeg{width:100%}.currentSection{margin-top:28px}.viewTitle h1{font-size:29px}}
+@media(max-width:360px){.timer{font-size:49px}.appHeader{padding-left:2px;padding-right:2px}.brand{font-size:20px}.statusMini{max-width:52%}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="appHeader">
+    <div><div class="brand">WorkClock</div><div class="dateLine" id="appDateLine">Work administration</div></div>
+    <div class="headerSignal"><span class="signalDot"></span><span>Local data</span></div>
+  </header>
+
+  <main>
+    <section class="view active" data-view="today" id="viewToday">
+      <div class="hero">
+        <div class="heroTop">
+          <div class="workState" id="workState">OFF THE CLOCK</div>
+          <div class="statusMini">
+            <div class="pill" id="dayAutomationStatus">Automation</div>
+            <div class="pill" id="placeStatus">No saved place</div>
+          </div>
+        </div>
+        <div class="timer" id="timer">00:00:00</div>
+        <div class="timerLabel" id="timerLabel">Not working</div>
+        <div class="currentSection" id="currentSection"><span>Current section</span><strong>Starts when you clock in</strong></div>
+        <button class="hold" id="mainHold"><div class="fill"></div><span>HOLD TO START WORK</span></button>
+        <button class="projectAction" id="endProject">END PROJECT · KEEP WORKING</button>
+        <div class="help hidden" id="projectQuickHelp">Start work first.</div>
+        <div class="hidden" id="gpsStatus">Location not enabled</div>
+        <div class="hidden" id="notificationStatus">Notifications unknown</div>
+      </div>
+
+      <div class="section">
+        <div class="sectionHead"><h2>Today</h2><span class="hint">Review before confirming</span></div>
+        <div class="card">
+          <div id="todayReview"></div>
+          <div class="buttonRow" style="margin-top:11px">
+            <button class="btn small" id="editStart">Edit start</button>
+            <button class="btn small" id="editStop">Edit finish</button>
+            <button class="btn small" id="clearDraft">Clear draft</button>
+          </div>
+          <label>Break</label>
+          <div class="chips" id="breakChips"></div>
+        </div>
+        <button class="hold" id="confirmDayHold"><div class="fill"></div><span>HOLD TO CONFIRM DAY</span></button>
+      </div>
+    </section>
+
+    <section class="view" data-view="history" id="viewHistory">
+      <div class="viewTitle"><h1>History</h1><p>Confirmed workdays, corrections and older work.</p></div>
+      <div class="historyToolbar">
+        <button class="btn primary" id="showManualEntry">＋ Add past workday</button>
+      </div>
+
+      <section class="card manualPanel collapsed" id="manualCard">
+        <div class="sectionHead"><h2 id="manualTitle">Add a past workday manually</h2><button class="btn small" id="hideManualEntry">Close</button></div>
+        <div class="sub" id="manualSubtitle">For missed detection, forgotten registration, or work from before the app existed.</div>
+        <label>Date</label><input type="date" id="manualDate">
+        <div class="grid2"><div><label>Start</label><input type="time" id="manualStart" value="07:00"></div><div><label>Finish</label><input type="time" id="manualFinish" value="16:00"></div></div>
+        <label>Break</label><select id="manualBreak"><option value="0">No break</option><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">60 min</option><option value="75">75 min</option><option value="90">90 min</option></select>
+        <label>Workplace</label><select id="manualWork"></select>
+        <label>Distance method</label><select id="manualDistanceMode"><option value="auto">Calculate road distances automatically</option><option value="manual">Enter total kilometres manually</option><option value="none">No kilometres</option><option value="keep">Keep existing recorded kilometres</option></select>
+        <div class="grid2"><div><label>Start home</label><select id="manualStartHome"></select></div><div><label>Return home</label><select id="manualEndHome"></select></div></div>
+        <label>Manual total kilometres</label><input type="number" id="manualKm" min="0" step="0.1" placeholder="e.g. 64.2">
+        <div class="buttonRow" style="margin-top:9px"><button class="btn" id="manualCalculate">Calculate road kilometres</button></div>
+        <div class="divider"></div>
+        <div class="sectionHead"><h2>Projects</h2><span class="hint">Every section needs a name</span></div>
+        <div id="manualSegments"></div>
+        <div class="buttonRow" style="margin-top:9px"><button class="btn small" id="addManualSegment">＋ Add project split</button></div>
+        <div class="notice" id="manualMessage">Choose the details for the historical workday.</div>
+        <div style="height:10px"></div>
+        <button class="hold" id="manualSaveHold"><div class="fill"></div><span>HOLD TO ADD PAST WORKDAY</span></button>
+        <div style="height:8px"></div><button class="btn" style="width:100%" id="cancelManualEdit" disabled>Cancel editing</button>
+      </section>
+
+      <div id="historyList"></div>
+      <div class="section" style="margin-top:22px">
+        <button class="hold mini danger" id="clearHistory"><div class="fill"></div><span>HOLD TO CLEAR ALL HISTORY</span></button>
+      </div>
+    </section>
+
+    <section class="view" data-view="places" id="viewPlaces">
+      <div class="viewTitle"><h1>Places</h1><p>Homes and workplaces used for arrival detection and road-distance calculation.</p></div>
+
+      <section class="card">
+        <div class="sectionHead"><h2>Location access</h2><span class="hint">Foreground web prototype</span></div>
+        <button class="btn primary" style="width:100%" id="enableLocation">Enable location</button>
+        <div class="help" id="locationHelp" style="margin-top:8px">Press Enable location to ask the browser for permission.</div>
+        <div class="quickRegister" style="margin-top:11px">
+          <button class="hold mini" id="saveCurrentHome"><div class="fill"></div><span>HOLD · SAVE HOME HERE</span></button>
+          <button class="hold mini" id="saveCurrentWork"><div class="fill"></div><span>HOLD · SAVE WORK HERE</span></button>
+        </div>
+      </section>
+
+      <section class="card flush"><div id="locationList"></div></section>
+
+      <section class="card">
+        <div class="sectionHead"><h2 id="locationEditorTitle">Add location manually</h2><span class="hint">Coordinates can be corrected later</span></div>
+        <div class="grid2"><div><label>Type</label><select id="locType"><option value="home">Home</option><option value="work">Workplace</option></select></div><div><label>Name</label><input id="locName" placeholder="e.g. Home Utrecht"></div></div>
+        <div class="grid2"><div><label>Latitude</label><input id="locLat" inputmode="decimal" placeholder="52.0907"></div><div><label>Longitude</label><input id="locLon" inputmode="decimal" placeholder="5.1214"></div></div>
+        <label>Detection radius</label><input id="locRadius" type="number" min="30" max="2000" step="10" value="150">
+        <div class="buttonRow" style="margin-top:10px"><button class="btn" id="fillCurrentLocation">Use current GPS</button><button class="btn primary" id="saveLocation">Add location</button><button class="btn" id="cancelLocationEdit">Cancel edit</button></div>
+        <div class="notice" id="locationEditorMessage">You can add any number of homes and workplaces.</div>
+      </section>
+    </section>
+
+    <section class="view" data-view="settings" id="viewSettings">
+      <div class="viewTitle"><h1>Settings</h1><p>Automation, permissions and routing. These should rarely need attention.</p></div>
+
+      <section class="card">
+        <div class="settingGroup">
+          <h3>Permissions</h3><p>Notifications are used for forgotten start/finish reminders.</p>
+          <div class="permissionRow"><button class="btn" id="enableNotifications">Enable notifications</button><button class="btn" id="testNotification">Test notification</button><button class="btn" id="goPlacesForLocation">Location settings</button></div>
+          <div class="notice" id="notificationHelp">Notification service has not been checked yet.</div>
+          <div id="nativeTrackingBox" class="hidden" style="margin-top:15px">
+            <button class="btn primary" id="enableNativeBackground">Enable background location</button>
+            <div class="notice" id="nativeTrackingHelp" style="margin-top:9px">Android location setup</div>
+          </div>
+        </div>
+        <div class="settingGroup">
+          <h3>Data and backups</h3><p>Keep a copy of your workdays before changing phones or reinstalling.</p>
+          <div class="buttonRow"><button class="btn" id="exportBackup">Export backup</button><button class="btn" id="importBackup">Import backup</button></div>
+          <input type="file" id="backupFile" accept=".json,application/json" class="hidden">
+          <div class="notice" id="backupMessage">Backups contain your saved locations, projects, hours and settings.</div>
+        </div>
+        <div class="settingGroup">
+          <h3>Automatic work detection</h3><p>Weekdays only. Time windows are confidence signals, not your recorded hours.</p>
+          <div class="grid2"><div><label>Start from</label><input type="time" id="startFrom"></div><div><label>Start until</label><input type="time" id="startUntil"></div></div>
+          <div class="grid2"><div><label>Finish from</label><input type="time" id="finishFrom"></div><div><label>Finish until</label><input type="time" id="finishUntil"></div></div>
+          <label>Default location radius (metres)</label><input type="number" id="defaultRadius" min="30" max="2000" step="10">
+        </div>
+        <div class="settingGroup">
+          <h3>Road kilometres</h3><p>Routes are calculated from saved locations, not from a recorded GPS trail.</p>
+          <label>Routing service</label><select id="routingProvider"><option value="osrm">OSRM road route — no API key</option><option value="ors">OpenRouteService shortest route — API key required</option></select>
+          <label>OpenRouteService API key</label><input type="password" id="orsKey" autocomplete="off" placeholder="Only needed for shortest-route mode">
+          <div class="buttonRow" style="margin-top:10px"><button class="btn primary" id="saveSettings">Save settings</button><button class="btn" id="clearRouteCache">Clear route cache</button></div>
+          <div class="notice" id="settingsMessage">Settings loaded.</div>
+        </div>
+      </section>
+
+      <details class="testDetails">
+        <summary>Test tools · simulation</summary>
+        <div class="testInner">
+          <div class="sub">Simulation bypasses real weekday and time-window restrictions.</div>
+          <div class="grid2"><div><label>Home</label><select id="simHome"></select></div><div><label>Workplace</label><select id="simWork"></select></div></div>
+          <div class="grid2" style="margin-top:10px"><button class="btn" id="simAtHome">Set simulated home</button><button class="btn" id="simArriveWork">Home → Work</button><button class="btn" id="simLeaveWork">Leave Work</button><button class="btn" id="simReturnHome">Work → Home</button></div>
+          <div class="notice" id="simMessage">Simulation ready.</div>
+        </div>
+      </details>
+    </section>
+  </main>
+</div>
+
+<div class="toast" id="mainMessage" role="status" aria-live="polite"></div>
+
+<nav class="bottomNav" aria-label="Primary">
+  <button class="navBtn active" data-target="today" aria-label="Today"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5V20H4z"/><path d="M9 20v-6h6v6"/></svg><span>Today</span></button>
+  <button class="navBtn" data-target="history" aria-label="History"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>History</span></button>
+  <button class="navBtn" data-target="places" aria-label="Places"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.4 6-11a6 6 0 1 0-12 0c0 5.6 6 11 6 11Z"/><circle cx="12" cy="10" r="2"/></svg><span>Places</span></button>
+  <button class="navBtn" data-target="settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.5 1a8 8 0 0 0-1.7-1L14.3 3h-4.6L9.3 6a8 8 0 0 0-1.7 1L5 6 3 9.4 5.1 11a7 7 0 0 0 0 2L3 14.6 5 18l2.6-1a8 8 0 0 0 1.7 1l.4 3h4.6l.4-3a8 8 0 0 0 1.7-1l2.6 1 2-3.4-2.1-1.6a7 7 0 0 0 .1-1Z"/></svg><span>Settings</span></button>
+</nav>
+
+<datalist id="projectSuggestions"></datalist>
+<div class="modalBack" id="timeModal"><div class="modal"><h3 id="timeModalTitle">When?</h3><p id="timeModalText"></p><div class="offsets" id="timeChoices"></div><div class="customTimeEditor hidden" id="customTimeEditor"><label for="customTimeInput">Exact date and time</label><input id="customTimeInput" type="datetime-local" step="60"><button class="btn primary" id="confirmCustomTime" type="button">Use this time</button><div class="notice bad hidden" id="customTimeError" role="alert"></div></div><div style="height:10px"></div><button class="btn" style="width:100%" id="closeTimeModal">Cancel</button></div></div>
+<div class="modalBack" id="projectModal"><div class="modal"><h3 id="projectModalTitle">Name project</h3><p id="projectModalText"></p><label>Project</label><input id="projectModalInput" list="projectSuggestions" autocomplete="off" placeholder="Type or choose a previous project"><div class="modalButtons"><button class="btn" id="cancelProjectModal">Cancel</button><button class="btn primary" id="saveProjectModal">Save project</button></div><div class="notice" id="projectModalMessage">The timestamp is already held while this dialog is open.</div></div></div>
+<script>
+(() => {
+"use strict";
+const $=s=>document.querySelector(s);
+const STORAGE_KEY="workclock-v4";
+const PREVIOUS_KEYS=["workclock-v3","workclock-prototype-v1"];
+const HOLD_MS=1200;
+const HOLD_MOVE_PX=10;
+const OSRM_ENDPOINT="https://router.project-osrm.org/route/v1/driving/";
+const DEFAULT_SETTINGS={automationDays:[1,2,3,4,5],startFrom:"05:00",startUntil:"11:30",finishFrom:"13:00",finishUntil:"21:00",defaultRadius:150,routingProvider:"osrm",orsKey:""};
+let state=loadState();
+let currentPosition=null,geoWatchId=null,editingLocationId=null,timerInterval=null;
+let pendingProjectAction=null;
+let manualEditDayId=null;
+let manualSegmentDraft=[];
+let manualOriginalTimestamps=null;
+const activeHoldCancels=new Set();
+window.addEventListener("scroll",()=>{for(const cancel of [...activeHoldCancels])cancel();},{passive:true});
+
+function uid(prefix="id"){if(globalThis.crypto?.randomUUID)return `${prefix}-${crypto.randomUUID()}`;return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,9)}`}
+function nowISO(){return new Date().toISOString()}
+function deepCopy(x){return JSON.parse(JSON.stringify(x))}
+function localDateKey(d=new Date()){const p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`}
+function localDateTime(dateStr,timeStr){if(!dateStr||!timeStr)return null;const [y,m,d]=dateStr.split("-").map(Number),[hh,mm]=timeStr.split(":").map(Number),x=new Date(y,m-1,d,hh,mm,0,0);return Number.isFinite(x.getTime())?x:null}
+function timeValue(v){if(!v)return "";const d=v instanceof Date?v:new Date(v),p=n=>String(n).padStart(2,"0");return `${p(d.getHours())}:${p(d.getMinutes())}`}
+function parseTime(s){const [h,m]=String(s).split(":").map(Number);return h*60+m}
+function minutesOfDay(d=new Date()){return d.getHours()*60+d.getMinutes()}
+function inWindow(date,from,to){const n=minutesOfDay(date),a=parseTime(from),b=parseTime(to);return n>=a&&n<=b}
+function fmtTime(v){if(!v)return "—";const d=v instanceof Date?v:new Date(v);return d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}
+function fmtDate(v){const d=v instanceof Date?v:new Date(v);return d.toLocaleDateString([], {weekday:"short",day:"numeric",month:"short",year:"numeric"})}
+function fmtDuration(ms){ms=Math.max(0,Number(ms)||0);const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000);return `${h}h ${String(m).padStart(2,"0")}m`}
+function fmtTimer(ms){ms=Math.max(0,Number(ms)||0);const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`}
+function esc(x){return String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
+
+function newState(){return {version:4,locations:[],projects:[],routeCache:{},currentDay:null,history:[],presence:{currentId:null,currentType:null,currentName:null,changedAt:null,source:null,lastHomeId:null,lastWorkId:null},settings:deepCopy(DEFAULT_SETTINGS)}}
+function validLocation(x){return x&&["home","work"].includes(x.type)&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lon))}
+function normalizeSegment(s,fallbackStart=null,fallbackStop=null,legacyName="Unspecified project (legacy)"){if(!s&&!(fallbackStart&&fallbackStop))return null;const start=s?.start||fallbackStart,stop=s?.stop||fallbackStop;if(!start||!stop)return null;return {id:s?.id||uid("seg"),start,stop,projectId:s?.projectId||null,projectName:String(s?.projectName||s?.name||legacyName).trim()||legacyName,createdAt:s?.createdAt||nowISO()}}
+function normalizeDay(d){if(!d||typeof d!=="object")return null;const day={id:d.id||uid("day"),date:d.date||localDateKey(d.start?new Date(d.start):new Date()),start:d.start||null,stop:d.stop||null,breakMin:Number(d.breakMin)||0,startSource:d.startSource||null,stopSource:d.stopSource||null,status:d.status||"draft",commuteOut:d.commuteOut||null,commuteBack:d.commuteBack||null,workplaceId:d.workplaceId||null,startHomeId:d.startHomeId||null,endHomeId:d.endHomeId||null,manuallyAdded:!!d.manuallyAdded,createdAt:d.createdAt||d.addedAt||nowISO(),segments:[]};if(Array.isArray(d.segments)&&d.segments.length)day.segments=d.segments.map(x=>normalizeSegment(x)).filter(Boolean);else if(day.start&&day.stop)day.segments=[normalizeSegment(null,day.start,day.stop)];return day}
+function migrateOld(old){const n=newState();if(!old||typeof old!=="object")return n;if(Array.isArray(old.locations))n.locations=old.locations.filter(validLocation).map(x=>({...x,lat:Number(x.lat),lon:Number(x.lon),radius:Number(x.radius)||150}));else{const homes=Array.isArray(old.homes)?old.homes:(old.home?[old.home]:[]),works=Array.isArray(old.workplaces)?old.workplaces:[];for(const h of homes)if(validLocation({...h,type:"home"}))n.locations.push({id:h.id||uid("loc"),type:"home",name:h.name||"Home",lat:Number(h.lat),lon:Number(h.lon),radius:Number(h.radius)||150,createdAt:h.created||nowISO(),lastVisitedAt:h.lastVisited||null});for(const w of works)if(validLocation({...w,type:"work"}))n.locations.push({id:w.id||uid("loc"),type:"work",name:w.name||"Workplace",lat:Number(w.lat),lon:Number(w.lon),radius:Number(w.radius)||150,createdAt:w.created||nowISO(),lastVisitedAt:w.lastVisited||null})}n.routeCache=old.routeCache&&typeof old.routeCache==="object"?old.routeCache:{};n.history=Array.isArray(old.history)?old.history.map(normalizeDay).filter(Boolean):[];n.currentDay=old.currentDay?normalizeDay(old.currentDay):null;n.presence={...n.presence,...(old.presence||{})};const s=old.settings||{};n.settings={...n.settings,...s,startFrom:s.startFrom||s.morningStart||n.settings.startFrom,startUntil:s.startUntil||s.morningEnd||n.settings.startUntil,finishFrom:s.finishFrom||s.finishStart||n.settings.finishFrom,finishUntil:s.finishUntil||s.finishEnd||n.settings.finishUntil,defaultRadius:Number(s.defaultRadius)||150};if(Array.isArray(old.projects))n.projects=old.projects;rebuildProjectCatalog(n);return n}
+function rebuildProjectCatalog(target=state){const map=new Map();for(const p of Array.isArray(target.projects)?target.projects:[]){const name=String(p.name||"").trim();if(name)map.set(name.toLowerCase(),{id:p.id||uid("proj"),name,lastUsedAt:p.lastUsedAt||null,useCount:Number(p.useCount)||0})}for(const day of [...(target.history||[]),target.currentDay].filter(Boolean))for(const seg of day.segments||[]){const name=String(seg.projectName||"").trim();if(!name)continue;const k=name.toLowerCase();if(!map.has(k))map.set(k,{id:seg.projectId||uid("proj"),name,lastUsedAt:seg.stop||day.stop||null,useCount:1});const p=map.get(k);seg.projectId=p.id;seg.projectName=p.name}target.projects=[...map.values()].sort((a,b)=>a.name.localeCompare(b.name))}
+function validateState(s){const n=newState();if(!s||typeof s!=="object")return n;n.locations=Array.isArray(s.locations)?s.locations.filter(validLocation).map(x=>({...x,lat:Number(x.lat),lon:Number(x.lon),radius:Number(x.radius)||150})):[];n.routeCache=s.routeCache&&typeof s.routeCache==="object"?s.routeCache:{};n.history=Array.isArray(s.history)?s.history.map(normalizeDay).filter(Boolean):[];n.currentDay=s.currentDay?normalizeDay(s.currentDay):null;n.presence={...n.presence,...(s.presence||{})};n.settings={...n.settings,...(s.settings||{})};n.settings.defaultRadius=Number(n.settings.defaultRadius)||150;n.projects=Array.isArray(s.projects)?s.projects:[];rebuildProjectCatalog(n);return n}
+function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)return validateState(JSON.parse(raw));for(const key of PREVIOUS_KEYS){const legacy=localStorage.getItem(key);if(legacy){const migrated=migrateOld(JSON.parse(legacy));localStorage.setItem(STORAGE_KEY,JSON.stringify(migrated));return migrated}}}catch(e){console.error("State load failed",e)}return newState()}
+function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));syncAndroidPlaces()}catch(e){console.error("Persist failed",e);setNotice("mainMessage","Could not save data in this browser.","bad")}}
+function syncAndroidPlaces(){if(!window.WorkClockAndroid)return;try{WorkClockAndroid.syncPlaces(JSON.stringify(state.locations.map(({id,name,type,lat,lon,radius})=>({id,name,type,lat,lon,radius}))))}catch(e){console.warn("Android place sync failed",e)}}
+function refreshAndroidStatus(){if(!window.WorkClockAndroid)return;try{const p=JSON.parse(WorkClockAndroid.permissionStatus());$("#nativeTrackingBox").classList.remove("hidden");setNotice("nativeTrackingHelp",p.background&&p.location?"Background detection enabled. Android checks saved places with low-power geofences.":p.location?"Location enabled. Tap above and choose Always allow in Android location settings.":"Enable location first, then allow background location so reminders work while WorkClock is closed.",p.background&&p.location?"good":"");}catch(e){console.warn(e)}}
+async function syncAndroidEvents(){if(!window.WorkClockAndroid)return;syncAndroidPlaces();refreshAndroidStatus();let events=[];try{events=JSON.parse(WorkClockAndroid.getEvents()||"[]")}catch(e){console.warn("Cannot read Android events",e);return}for(const event of events){const loc=locationById(event.placeId);try{if(loc){if(event.transition==="ENTER"){await processPosition({lat:loc.lat,lon:loc.lon,accuracy:Math.max(100,loc.radius||150)},{source:"android"})}else if(event.transition==="EXIT"&&loc.type==="work"){state.presence.currentId=null;state.presence.currentType=null;state.presence.currentName=null;state.presence.changedAt=new Date(event.at).toISOString();state.presence.source="android";state.presence.lastWorkId=loc.id;persist();renderStatus(null,"android");const d=getToday();if(d.start&&!d.stop&&isAutomationDay(new Date(event.at)))showTimeChoice("stop",`Android detected leaving ${loc.name} at ${fmtTime(event.at)}. When did you finish?`)}}WorkClockAndroid.acknowledgeEvent(event.id)}catch(e){console.error("Failed to process Android location event",e);break}}}
+window.__WorkClockNativeSync=syncAndroidEvents;
+window.__WorkClockBackupResult=message=>setNotice("backupMessage",message);
+window.__WorkClockReceiveImport=function(raw){try{const parsed=JSON.parse(raw);if(!parsed||typeof parsed!=="object"||!Array.isArray(parsed.locations)||!Array.isArray(parsed.history))throw new Error("Not a valid WorkClock backup");if(!confirm("Replace existing WorkClock data with this backup? A safety copy of your current data will be stored on this device."))return;localStorage.setItem("workclock-before-import-"+Date.now(),JSON.stringify(state));state=validateState(parsed);persist();resetLocationEditor();resetManualEditor();renderAll();refreshAndroidStatus();setNotice("backupMessage","Backup imported. Workdays and places restored.","good")}catch(e){setNotice("backupMessage","Import failed: "+(e.message||e),"bad")}};
+function exportWorkClockBackup(){const json=JSON.stringify(state,null,2);if(window.WorkClockAndroid){WorkClockAndroid.exportBackup(json);return}const blob=new Blob([json],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`workclock-${localDateKey()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);setNotice("backupMessage","Backup download started.","good")}
+function importWorkClockBackup(){if(window.WorkClockAndroid)WorkClockAndroid.importBackup();else $("#backupFile").click()}
+const noticeTimers=new Map();function setNotice(id,text,kind=""){const el=$("#"+id);if(!el)return;el.textContent=text;if(id==="mainMessage"){el.className="toast show"+(kind?` ${kind}`:"");if(noticeTimers.has(id))clearTimeout(noticeTimers.get(id));noticeTimers.set(id,setTimeout(()=>el.classList.remove("show"),4200));return}el.className="notice"+(kind?` ${kind}`:"")}
+function ensureProject(name){name=String(name||"").trim();if(!name)return null;let p=state.projects.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:uid("proj"),name,lastUsedAt:nowISO(),useCount:0};state.projects.push(p)}p.lastUsedAt=nowISO();p.useCount=(Number(p.useCount)||0)+1;renderProjectSuggestions();return p}
+function renderProjectSuggestions(){const dl=$("#projectSuggestions");if(!dl)return;dl.innerHTML=state.projects.slice().sort((a,b)=>(new Date(b.lastUsedAt||0))-(new Date(a.lastUsedAt||0))||a.name.localeCompare(b.name)).map(p=>`<option value="${esc(p.name)}"></option>`).join("")}
+function isAutomationDay(date=new Date()){return state.settings.automationDays.includes(date.getDay())}
+function blankDay(date=localDateKey()){return {id:uid("day"),date,start:null,stop:null,breakMin:30,startSource:null,stopSource:null,status:"draft",commuteOut:null,commuteBack:null,workplaceId:null,startHomeId:null,endHomeId:null,manuallyAdded:false,createdAt:nowISO(),segments:[]}}
+function dayHasData(day){return !!(day&&(day.start||day.stop||day.commuteOut||day.commuteBack||(Array.isArray(day.segments)&&day.segments.length)))}
+function getToday(){const key=localDateKey();if(!state.currentDay){state.currentDay=blankDay(key);persist()}else if(state.currentDay.date!==key&&!dayHasData(state.currentDay)){state.currentDay=blankDay(key);persist()}return state.currentDay}
+function findDay(id){if(state.currentDay?.id===id)return state.currentDay;return state.history.find(x=>x.id===id)||null}
+function locationById(id){return state.locations.find(x=>x.id===id)||null}
+function locationsOf(type){return state.locations.filter(x=>x.type===type)}
+function openSegmentStart(day){return day.segments?.length?day.segments[day.segments.length-1].stop:day.start}
+function coverageError(day){if(!(day.start&&day.stop))return "Start and finish are required.";if(!Array.isArray(day.segments)||!day.segments.length)return "At least one project section is required.";const eps=1000;if(Math.abs(new Date(day.segments[0].start)-new Date(day.start))>eps)return "The first project section must start with the workday.";for(let i=0;i<day.segments.length;i++){const s=day.segments[i];if(!String(s.projectName||"").trim())return `Project section ${i+1} has no name.`;if(!(new Date(s.stop)>new Date(s.start)))return `Project section ${i+1} has an invalid time range.`;if(i&&Math.abs(new Date(s.start)-new Date(day.segments[i-1].stop))>eps)return `There is a gap or overlap before project section ${i+1}.`}if(Math.abs(new Date(day.segments.at(-1).stop)-new Date(day.stop))>eps)return "The last project section must end with the workday.";return null}
+function appendProjectSegment(day,start,stop,projectName){const p=ensureProject(projectName);if(!p)throw new Error("Project name required");const a=new Date(start),b=new Date(stop);if(!(b>a))throw new Error("Project section must have positive duration");const seg={id:uid("seg"),start:a.toISOString(),stop:b.toISOString(),projectId:p.id,projectName:p.name,createdAt:nowISO()};day.segments.push(seg);return seg}
+
+function haversineM(a,b){const R=6371000,p1=a.lat*Math.PI/180,p2=b.lat*Math.PI/180,dp=(b.lat-a.lat)*Math.PI/180,dl=(b.lon-a.lon)*Math.PI/180,q=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 2*R*Math.atan2(Math.sqrt(q),Math.sqrt(1-q))}
+function nearestSavedLocation(pos){let best=null;for(const loc of state.locations){const m=haversineM(pos,loc);if(m<=(loc.radius||150)&&(!best||m<best.distanceM))best={...loc,distanceM:m}}return best}
+
+function wireHold(el,callback){if(!el)return;const fill=el.querySelector(".fill");let start=0,raf=null,active=false,done=false,startX=0,startY=0,pointerId=null;const reset=()=>{active=false;done=false;pointerId=null;if(raf)cancelAnimationFrame(raf);raf=null;if(fill)fill.style.width="0%";activeHoldCancels.delete(reset)};const frame=()=>{if(!active||el.disabled)return reset();const p=Math.min(1,(performance.now()-start)/HOLD_MS);if(fill)fill.style.width=`${p*100}%`;if(p>=1){active=false;done=true;activeHoldCancels.delete(reset);if(navigator.vibrate)navigator.vibrate(60);Promise.resolve(callback()).catch(e=>console.error(e));setTimeout(()=>{if(fill)fill.style.width="0%";done=false},120);return}raf=requestAnimationFrame(frame)};el.addEventListener("pointerdown",e=>{if(el.disabled||e.button>0)return;startX=e.clientX;startY=e.clientY;pointerId=e.pointerId;active=true;done=false;start=performance.now();activeHoldCancels.add(reset);frame()});el.addEventListener("pointermove",e=>{if(!active||e.pointerId!==pointerId)return;if(Math.abs(e.clientY-startY)>HOLD_MOVE_PX||Math.abs(e.clientX-startX)>HOLD_MOVE_PX)reset()});el.addEventListener("pointerup",()=>{if(!done)reset()});el.addEventListener("pointercancel",reset);el.addEventListener("lostpointercapture",()=>{if(!done)reset()});el.addEventListener("contextmenu",e=>e.preventDefault())}
+
+let customTimeKind="start";
+function localDateTimeValue(date){const n=number=>String(number).padStart(2,"0");return `${date.getFullYear()}-${n(date.getMonth()+1)}-${n(date.getDate())}T${n(date.getHours())}:${n(date.getMinutes())}`}
+function showTimeChoice(kind,reason){const isStart=kind==="start";customTimeKind=kind;$("#timeModalTitle").textContent=isStart?"When did you start?":"When did you finish?";$("#timeModalText").textContent=reason||"Choose the closest option.";const box=$("#timeChoices");box.innerHTML="";$("#customTimeEditor").classList.add("hidden");$("#customTimeError").classList.add("hidden");const options=[["Now",0],["15 min ago",15],["30 min ago",30],["45 min ago",45],["60 min ago",60],[isStart?"Not working":"Still working",null]];for(const [label,minutes] of options){const b=document.createElement("button");b.type="button";b.textContent=label;b.addEventListener("click",()=>{hideTimeChoice();if(minutes===null)return;const ts=new Date(Date.now()-minutes*60000).toISOString();if(isStart)applyStart(ts,"assisted");else requestStop(ts,"assisted")});box.appendChild(b)}const custom=document.createElement("button");custom.type="button";custom.className="customTimeChoice";custom.textContent="Custom · enter exact time";custom.addEventListener("click",()=>{const editor=$("#customTimeEditor");editor.classList.remove("hidden");$("#customTimeError").classList.add("hidden");const day=getToday();const existing=isStart?day.start:day.stop;$("#customTimeInput").value=localDateTimeValue(existing?new Date(existing):new Date());$("#customTimeInput").focus()});box.appendChild(custom);$("#timeModal").classList.add("show")}
+function confirmCustomTime(){const input=$("#customTimeInput"),message=$("#customTimeError"),date=new Date(input.value),day=getToday(),isStart=customTimeKind==="start";let error="";if(!input.value||!Number.isFinite(date.getTime()))error="Enter a valid date and time.";else if(date.getTime()>Date.now()+59999)error="The time cannot be in the future.";else if(!isStart&&!day.start)error="Set a start time first.";else if(!isStart&&date.getTime()<=new Date(day.start).getTime())error="Finish must be after start.";else if(!isStart&&day.segments.length&&date.getTime()<=new Date(day.segments.at(-1).start).getTime())error="Finish must be after the last project started.";else if(isStart&&day.segments.length&&date.getTime()>=new Date(day.segments[0].stop).getTime())error="Start must be before the first project finished.";if(error){message.textContent=error;message.classList.remove("hidden");return}hideTimeChoice();if(isStart)applyStart(date.toISOString(),"custom");else requestStop(date.toISOString(),"custom")}
+
+function hideTimeChoice(){$("#timeModal").classList.remove("show")}
+function applyStart(iso,source){const d=getToday(),t=new Date(iso);if(d.segments.length&&!(new Date(d.segments[0].stop)>t)){setNotice("mainMessage","The new start would be after the first project section ends.","bad");return}d.start=t.toISOString();d.startSource=source;if(d.segments.length)d.segments[0].start=d.start;if(d.stop&&new Date(d.stop)<=t){d.stop=null;d.segments=[]}d.status="draft";persist();renderAll();setNotice("mainMessage",`Start set to ${fmtTime(d.start)}.`,"good")}
+function requestStop(iso,source){const d=getToday(),t=new Date(iso);if(!d.start)return setNotice("mainMessage","Set a start time first.","bad");if(!(t>new Date(d.start)))return setNotice("mainMessage","Finish must be after start.","bad");if(d.stop&&d.segments.length){const last=d.segments.at(-1);if(!(t>new Date(last.start)))return setNotice("mainMessage","The finish would be before the final project section starts.","bad");d.stop=t.toISOString();d.stopSource=source;last.stop=d.stop;persist();renderAll();setNotice("mainMessage",`Finish changed to ${fmtTime(d.stop)}.`,"good");return}openProjectNaming({mode:"finish",marker:t.toISOString(),source})}
+function openProjectNaming(action){const d=getToday(),start=openSegmentStart(d);if(!start)return setNotice("mainMessage","Start work first.","bad");if(!(new Date(action.marker)>new Date(start)))return setNotice("mainMessage","Project marker must be after the current section started.","bad");pendingProjectAction={...action,dayId:d.id,segmentStart:start};$("#projectModalTitle").textContent=action.mode==="split"?"Name the project you just finished":"What was the last project?";$("#projectModalText").textContent=action.mode==="split"?`Marker saved at ${fmtTime(action.marker)}. Work continues after this marker.`:`Work finish is ${fmtTime(action.marker)}. Name the final project section before the day is stopped.`;$("#projectModalInput").value="";setNotice("projectModalMessage","Type a project name or choose a previous one.");$("#projectModal").classList.add("show");setTimeout(()=>$("#projectModalInput").focus(),50)}
+function saveProjectNaming(){if(!pendingProjectAction)return;const name=$("#projectModalInput").value.trim();if(!name)return setNotice("projectModalMessage","Project name is required.","bad");const day=findDay(pendingProjectAction.dayId);if(!day)return cancelProjectNaming();try{appendProjectSegment(day,pendingProjectAction.segmentStart,pendingProjectAction.marker,name);if(pendingProjectAction.mode==="finish"){day.stop=pendingProjectAction.marker;day.stopSource=pendingProjectAction.source||"manual";day.status="draft";setNotice("mainMessage",`Finish set to ${fmtTime(day.stop)}. Review the day and confirm it.`,"good")}else setNotice("mainMessage",`Project section saved. Work continues from ${fmtTime(pendingProjectAction.marker)}.`,"good");pendingProjectAction=null;$("#projectModal").classList.remove("show");persist();renderAll()}catch(e){setNotice("projectModalMessage",e.message||String(e),"bad")}}
+function cancelProjectNaming(){pendingProjectAction=null;$("#projectModal").classList.remove("show");setNotice("mainMessage","Project marker cancelled. Work continues unchanged.")}
+function endProjectNow(){const d=getToday();if(!(d.start&&!d.stop))return;openProjectNaming({mode:"split",marker:nowISO(),source:"quick-project"})}
+
+async function routeBetween(from,to){if(!from||!to)return null;const provider=state.settings.routingProvider||"osrm",key=`${provider}:${from.id}>${to.id}`;if(state.routeCache[key])return state.routeCache[key];try{let result;if(provider==="ors"){const apiKey=(state.settings.orsKey||"").trim();if(!apiKey)throw new Error("OpenRouteService API key missing");const r=await fetch("https://api.openrouteservice.org/v2/directions/driving-car",{method:"POST",headers:{Authorization:apiKey,"Content-Type":"application/json"},body:JSON.stringify({coordinates:[[from.lon,from.lat],[to.lon,to.lat]],preference:"shortest"})});if(!r.ok)throw new Error(`ORS HTTP ${r.status}`);const j=await r.json(),summary=j.routes?.[0]?.summary;if(!summary)throw new Error("No route returned");result={km:summary.distance/1000,seconds:summary.duration,source:"OpenRouteService shortest",updatedAt:nowISO()}}else{const url=`${OSRM_ENDPOINT}${from.lon},${from.lat};${to.lon},${to.lat}?overview=false&alternatives=false&steps=false`,r=await fetch(url,{cache:"no-store"});if(!r.ok)throw new Error(`OSRM HTTP ${r.status}`);const j=await r.json(),route=j.routes?.[0];if(!route)throw new Error("No route returned");result={km:route.distance/1000,seconds:route.duration,source:"OSRM road route",updatedAt:nowISO()}}state.routeCache[key]=result;persist();return result}catch(e){console.warn("Route calculation failed",e);return null}}
+async function attachCommute(dayId,slot,from,to){const route=await routeBetween(from,to),day=findDay(dayId);if(!day)return;if(!route){setNotice("mainMessage",`Road distance could not be calculated for ${from.name} → ${to.name}.`,"bad");return}day[slot]={fromId:from.id,toId:to.id,from:from.name,to:to.name,km:route.km,source:route.source,at:nowISO()};if(slot==="commuteOut"){day.startHomeId=from.type==="home"?from.id:day.startHomeId;day.workplaceId=to.type==="work"?to.id:day.workplaceId}if(slot==="commuteBack"){day.endHomeId=to.type==="home"?to.id:day.endHomeId;day.workplaceId=from.type==="work"?from.id:day.workplaceId}persist();renderAll()}
+function pendingReturnDay(){
+  const all=[state.currentDay,...state.history].filter(Boolean);
+  const eligible=all.filter(day=>{
+    if(!day.start||!day.stop||day.commuteBack||!day.workplaceId||day.manuallyAdded)return false;
+    const stop=new Date(day.stop).getTime();
+    if(!Number.isFinite(stop))return false;
+    const age=Date.now()-stop;
+    return age>=-5*60*1000&&age<=7*24*3600000;
+  }).sort((a,b)=>new Date(b.stop)-new Date(a.stop));
+
+  const candidate=eligible[0];
+  if(!candidate)return null;
+
+  const candidateStop=new Date(candidate.stop).getTime();
+  const laterWorkday=all.some(day=>
+    day.id!==candidate.id &&
+    day.start &&
+    new Date(day.start).getTime()>candidateStop
+  );
+  return laterWorkday?null:candidate;
+}
+async function recoverPendingReturn(home,{source="gps"}={}){
+  if(home?.type!=="home")return false;
+  const candidate=pendingReturnDay();
+  if(!candidate)return false;
+  const work=locationById(candidate.workplaceId);
+  if(work?.type!=="work")return false;
+
+  const route=await routeBetween(work,home);
+  const day=findDay(candidate.id);
+  if(!route||!day||day.commuteBack)return false;
+
+  day.commuteBack={
+    fromId:work.id,
+    toId:home.id,
+    from:work.name,
+    to:home.name,
+    km:route.km,
+    source:route.source,
+    at:nowISO()
+  };
+  day.endHomeId=home.id;
+  day.workplaceId=work.id;
+  persist();
+  renderAll();
+
+  const label=day===state.currentDay?"today's draft":fmtDate(day.start);
+  setNotice("mainMessage",`Added missing return commute to ${label}: ${work.name} → ${home.name}, ${route.km.toFixed(1)} km.`,"good");
+  return true;
+}
+function updatePresence(found,source){const prev={...state.presence};state.presence.currentId=found?.id||null;state.presence.currentType=found?.type||null;state.presence.currentName=found?.name||null;state.presence.changedAt=nowISO();state.presence.source=source;if(found?.type==="home")state.presence.lastHomeId=found.id;if(found?.type==="work")state.presence.lastWorkId=found.id;persist();return prev}
+async function processPosition(pos,{source="gps",force=false,forcePreviousId=null}={}){
+  currentPosition={lat:Number(pos.lat),lon:Number(pos.lon),accuracy:Number(pos.accuracy)||null};
+  const found=nearestSavedLocation(currentPosition);
+  let prev={...state.presence};
+
+  if(forcePreviousId){
+    const p=locationById(forcePreviousId);
+    prev={...prev,currentId:p?.id||null,currentType:p?.type||null,currentName:p?.name||null};
+  }
+
+  const unchanged=found?.id===state.presence.currentId;
+  if(!unchanged||force)prev=updatePresence(found,source);
+  renderStatus(found,source);
+
+  // Recovery happens before the normal short-circuits. Merely opening the app
+  // while already at a saved home can therefore complete a previously
+  // confirmed workday whose return route is still missing.
+  if(found?.type==="home"){
+    await recoverPendingReturn(found,{source});
+  }
+
+  if(unchanged&&!force)return;
+  if(!force&&!isAutomationDay())return;
+
+  const day=getToday(),
+        now=new Date(),
+        startOK=force||inWindow(now,state.settings.startFrom,state.settings.startUntil),
+        finishOK=force||inWindow(now,state.settings.finishFrom,state.settings.finishUntil);
+
+  if(found?.type==="work"){
+    const original=locationById(found.id);
+    if(original)original.lastVisitedAt=nowISO();
+    day.workplaceId=found.id;
+
+    const homeId=prev.currentType==="home"?prev.currentId:prev.lastHomeId,
+          home=locationById(homeId);
+    if(home?.type==="home"&&!day.commuteOut){
+      attachCommute(day.id,"commuteOut",home,found);
+    }
+
+    if(!day.start&&startOK){
+      showTimeChoice("start",`${force?"Simulation: ":""}Detected at ${found.name}. How long ago did you start?`);
+      notifyUser("WorkClock",`You are at ${found.name}, but work is not started.`,{tag:"workclock-start-missing"});
+    }
+  }
+
+  if(prev.currentType==="work"&&!found&&day.start&&!day.stop&&finishOK){
+    showTimeChoice("stop",`${force?"Simulation: ":""}Detected leaving ${prev.currentName}. When did you finish?`);
+    notifyUser("WorkClock","You appear to have left work while the timer is running.",{tag:"workclock-finish-missing"});
+  }
+
+  if(found?.type==="home"){
+    const workId=prev.currentType==="work"?prev.currentId:prev.lastWorkId,
+          work=locationById(workId);
+
+    // Never attach a return route to an empty new day. If the real workday was
+    // already confirmed, recoverPendingReturn() above updates History instead.
+    if(day.start&&work?.type==="work"&&!day.commuteBack){
+      attachCommute(day.id,"commuteBack",work,found);
+    }
+
+    if(day.start&&!day.stop&&finishOK&&work?.type==="work"){
+      showTimeChoice("stop",`${force?"Simulation: ":""}You arrived at ${found.name}. When did you finish work?`);
+      notifyUser("WorkClock",`You are at ${found.name}, but today's finish time is missing.`,{tag:"workclock-home-finish-missing"});
+    }
+  }
+
+  persist();
+  renderAll();
+}
+let notificationRegistration=null;
+async function ensureNotificationWorker(){
+  if(!("serviceWorker" in navigator))throw new Error("Service workers are not supported by this browser.");
+  if(!window.isSecureContext)throw new Error("Notifications require HTTPS or localhost.");
+  if(notificationRegistration?.active)return notificationRegistration;
+  await navigator.serviceWorker.register("./workclock-sw.js",{scope:"./"});
+  notificationRegistration=await navigator.serviceWorker.ready;
+  return notificationRegistration;
+}
+async function notifyUser(title,body,{tag="workclock-reminder"}={}){
+  if(window.WorkClockAndroid){try{WorkClockAndroid.showNotification(title,body,tag);return true}catch(e){console.warn(e);return false}}
+  if(!("Notification" in window)||Notification.permission!=="granted")return false;
+  try{
+    if("serviceWorker" in navigator){
+      const reg=await ensureNotificationWorker();
+      await reg.showNotification(title,{
+        body,
+        tag,
+        renotify:true,
+        requireInteraction:false,
+        data:{url:location.href}
+      });
+      return true;
+    }
+    new Notification(title,{body,tag});
+    return true;
+  }catch(e){
+    console.error("Notification failed",e);
+    if($("#notificationHelp"))setNotice("notificationHelp",`Notification failed: ${e.message||e}`,"bad");
+    return false;
+  }
+}
+async function enableNotifications(){
+  if(window.WorkClockAndroid){WorkClockAndroid.requestNotifications();setNotice("notificationHelp","Android notification permission requested. Check the system prompt or app settings.");refreshAndroidStatus();return}
+  if(!("Notification" in window)){
+    setNotice("notificationHelp","Notifications are not supported in this browser.","bad");
+    return;
+  }
+  if(!window.isSecureContext){
+    setNotice("notificationHelp","Notifications require HTTPS or localhost.","bad");
+    return;
+  }
+  try{
+    const permission=await Notification.requestPermission();
+    renderStatus();
+    if(permission!=="granted"){
+      setNotice("notificationHelp",`Notification permission is ${permission}. Allow notifications in Android/site settings.`,"bad");
+      return;
+    }
+    await ensureNotificationWorker();
+    setNotice("notificationHelp","Permission granted and Android notification service is ready.","good");
+    await notifyUser("WorkClock","Notifications are working on this device.",{tag:"workclock-test"});
+  }catch(e){
+    console.error(e);
+    setNotice("notificationHelp",`Could not enable notifications: ${e.message||e}`,"bad");
+  }
+}
+async function testNotification(){
+  if(window.WorkClockAndroid){WorkClockAndroid.testNotification();setNotice("notificationHelp","Android test notification requested.","good");return}
+  if(!("Notification" in window)||Notification.permission!=="granted"){
+    setNotice("notificationHelp","Enable notifications first.","bad");
+    return;
+  }
+  const ok=await notifyUser("WorkClock","Test notification — Android notification delivery is working.",{tag:"workclock-test"});
+  if(ok)setNotice("notificationHelp","Test notification sent to Android.","good");
+}
+function geoErrorMessage(e){if(e?.code===1)return "Location permission denied. Allow Location in this page's site permissions, then try again.";if(e?.code===2)return "The phone could not determine a location.";if(e?.code===3)return "Location request timed out.";return e?.message||"Unknown location error."}
+function beginGeoWatch(){if(geoWatchId!==null||!navigator.geolocation)return;geoWatchId=navigator.geolocation.watchPosition(p=>{processPosition({lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy},{source:"gps"});$("#locationHelp").textContent=`Location active. Browser accuracy: about ${Math.round(p.coords.accuracy||0)} m.`},e=>{$("#locationHelp").textContent=geoErrorMessage(e);$("#gpsStatus").textContent="Location unavailable";$("#gpsStatus").className="pill bad"},{enableHighAccuracy:false,maximumAge:30000,timeout:20000})}
+function requestLocation(){if(!navigator.geolocation){$("#locationHelp").textContent="This browser does not expose geolocation.";return}$("#locationHelp").textContent="Requesting location permission…";navigator.geolocation.getCurrentPosition(p=>{currentPosition={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy};$("#locationHelp").textContent=`Location enabled. Browser accuracy: about ${Math.round(p.coords.accuracy||0)} m.`;processPosition(currentPosition,{source:"gps"});beginGeoWatch()},e=>{$("#locationHelp").textContent=geoErrorMessage(e)},{enableHighAccuracy:false,maximumAge:0,timeout:20000})}
+async function refreshPermissionUI(){if(!navigator.geolocation){$("#enableLocation").disabled=true;$("#locationHelp").textContent="Geolocation is unavailable in this browser.";return}if(!window.isSecureContext)$("#locationHelp").textContent=`This page is running as ${location.protocol}. Mobile browsers may block real geolocation outside HTTPS or localhost.`;try{if(navigator.permissions?.query){const p=await navigator.permissions.query({name:"geolocation"});if(p.state==="granted")beginGeoWatch();p.onchange=refreshPermissionUI}}catch{}}
+
+function addLocation(type,name,lat,lon,radius){const loc={id:uid("loc"),type,name:name.trim()||`${type==="home"?"Home":"Workplace"} ${locationsOf(type).length+1}`,lat:Number(lat),lon:Number(lon),radius:Number(radius)||state.settings.defaultRadius,createdAt:nowISO(),lastVisitedAt:null};if(!validLocation(loc)||loc.lat<-90||loc.lat>90||loc.lon<-180||loc.lon>180)throw new Error("Invalid coordinates");state.locations.push(loc);state.routeCache={};persist();return loc}
+function resetLocationEditor(){editingLocationId=null;$("#locationEditorTitle").textContent="Add location manually";$("#saveLocation").textContent="Add location";$("#locType").value="home";$("#locName").value="";$("#locLat").value="";$("#locLon").value="";$("#locRadius").value=state.settings.defaultRadius;setNotice("locationEditorMessage","You can add any number of homes and workplaces.")}
+function editLocation(id){const l=locationById(id);if(!l)return;editingLocationId=id;$("#locationEditorTitle").textContent="Edit location";$("#saveLocation").textContent="Save changes";$("#locType").value=l.type;$("#locName").value=l.name;$("#locLat").value=l.lat;$("#locLon").value=l.lon;$("#locRadius").value=l.radius;setNotice("locationEditorMessage",`Editing ${l.name}.`);$("#locationEditorTitle").scrollIntoView({behavior:"smooth",block:"start"})}
+function saveLocationEditor(){const type=$("#locType").value,name=$("#locName").value.trim(),lat=Number($("#locLat").value),lon=Number($("#locLon").value),radius=Number($("#locRadius").value);if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180){setNotice("locationEditorMessage","Enter valid latitude and longitude.","bad");return}if(!Number.isFinite(radius)||radius<30){setNotice("locationEditorMessage","Detection radius must be at least 30 m.","bad");return}if(editingLocationId){const l=locationById(editingLocationId);if(!l)return;Object.assign(l,{type,name:name||l.name,lat,lon,radius});state.routeCache={};persist();setNotice("locationEditorMessage",`Saved ${l.name}.`,"good")}else{const l=addLocation(type,name,lat,lon,radius);setNotice("locationEditorMessage",`Added ${l.name}.`,"good")}resetLocationEditor();renderAll()}
+function deleteLocation(id){const l=locationById(id);if(!l)return;if(!confirm(`Delete saved location “${l.name}”? Historical records keep their stored names and kilometres.`))return;state.locations=state.locations.filter(x=>x.id!==id);state.routeCache={};for(const key of ["currentId","lastHomeId","lastWorkId"])if(state.presence[key]===id)state.presence[key]=null;persist();renderAll();setNotice("locationEditorMessage",`Deleted ${l.name}.`,"good")}
+function addCurrentLocation(type){if(!currentPosition){setNotice("locationEditorMessage","No current GPS position is available. Enable location first or add coordinates manually.","bad");return}const l=addLocation(type,"",currentPosition.lat,currentPosition.lon,state.settings.defaultRadius);renderAll();setNotice("locationEditorMessage",`Added ${l.name} from current GPS position.`,"good")}
+
+function renderStatus(found=null,source=null){const auto=isAutomationDay();$("#dayAutomationStatus").textContent=auto?"Auto ON":"Auto OFF";$("#dayAutomationStatus").className=`pill ${auto?"good":""}`;if(currentPosition){$("#gpsStatus").textContent=`${source==="simulation"?"SIM":"Location"} ${currentPosition.lat.toFixed(5)}, ${currentPosition.lon.toFixed(5)}`;$("#gpsStatus").className="pill good"}const loc=found||locationById(state.presence.currentId);$("#placeStatus").textContent=loc?`At ${loc.name}`:"No saved place";if("Notification" in window){$("#notificationStatus").textContent=`Notifications ${Notification.permission}`;$("#notificationStatus").className=`pill ${Notification.permission==="granted"?"good":""}`}else $("#notificationStatus").textContent="Notifications unsupported"}
+function projectLines(day){if(!day.segments?.length)return '<div class="meta">No completed project sections yet.</div>';return `<div class="projectList">${day.segments.map(s=>`<div class="projectLine"><span class="name">${esc(s.projectName)}</span><span class="time">${fmtTime(s.start)}–${fmtTime(s.stop)} · ${fmtDuration(new Date(s.stop)-new Date(s.start))}</span></div>`).join("")}</div>`}
+function renderToday(){const d=getToday(),running=!!(d.start&&!d.stop),stopped=!!(d.start&&d.stop),main=$("#mainHold");document.body.classList.toggle("work-running",running);document.body.classList.toggle("work-review",stopped);const openStart=openSegmentStart(d);const stateEl=$("#workState"),sectionEl=$("#currentSection");if(stateEl){stateEl.textContent=running?"WORKING":stopped?"READY TO REVIEW":"OFF THE CLOCK";stateEl.className=`workState ${running?"active":stopped?"review":""}`}if(sectionEl){sectionEl.innerHTML=running?`<span>Current section</span><strong>Started ${fmtTime(openStart)}</strong>`:stopped?`<span>Workday</span><strong>${d.segments.length} project${d.segments.length===1?"":"s"}</strong>`:`<span>Current section</span><strong>Starts when you clock in</strong>`};main.disabled=stopped;main.classList.toggle("finish",running);main.querySelector("span").textContent=running?"HOLD TO FINISH WORK":stopped?"WORKDAY STOPPED — REVIEW BELOW":"HOLD TO START WORK";$("#endProject").disabled=!running;$("#projectQuickHelp").textContent=running?`Current section started ${fmtTime(openSegmentStart(d))}. Tap End Project / Switch to place an exact marker without stopping work.`:"Start work first. A project marker does not stop the work timer.";$("#timerLabel").textContent=running?`Working since ${fmtTime(d.start)}`:stopped?`Draft finished at ${fmtTime(d.stop)}`:"Not working";$("#editStart").disabled=!d.start;$("#editStop").disabled=!d.stop;$("#clearDraft").disabled=!d.start&&!d.stop&&!d.commuteOut&&!d.commuteBack;const gross=d.start&&d.stop?new Date(d.stop)-new Date(d.start):null,net=gross===null?null:Math.max(0,gross-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),coverage=d.stop?coverageError(d):null;$("#todayReview").innerHTML=`<div class="summaryGrid"><div class="summaryStat"><span>Start</span><strong>${fmtTime(d.start)}</strong></div><div class="summaryStat"><span>Finish</span><strong>${fmtTime(d.stop)}</strong></div><div class="summaryStat"><span>Worked</span><strong>${net===null?"—":fmtDuration(net)}</strong></div><div class="summaryStat"><span>Road</span><strong>${km?km.toFixed(1)+" km":"—"}</strong></div></div>${d.commuteOut?`<div class="meta">Out · ${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)} · ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">Back · ${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)} · ${d.commuteBack.km.toFixed(1)} km</div>`:(d.start&&d.stop&&d.workplaceId&&!d.manuallyAdded?`<div class="notice">Return route pending · open WorkClock when you reach a saved home.</div>`:"")}${projectLines(d)}${coverage?`<div class="notice bad">${esc(coverage)}</div>`:""}`;$("#breakChips").innerHTML="";for(const n of [0,15,30,45,60,75,90]){const b=document.createElement("button");b.type="button";b.className=`chip ${d.breakMin===n?"selected":""}`;b.textContent=n?`${n} min`:"No break";b.addEventListener("click",()=>{d.breakMin=n;persist();renderToday()});$("#breakChips").appendChild(b)}$("#confirmDayHold").disabled=!(d.start&&d.stop&&!coverage);updateTimer()}
+function renderLocations(){const list=$("#locationList");list.innerHTML="";if(!state.locations.length)list.innerHTML='<div class="meta">No saved locations yet.</div>';for(const l of state.locations){const el=document.createElement("div");el.className="location";el.innerHTML=`<div class="locationHead"><div><div class="locationName">${esc(l.name)} <span class="meta">(${l.type==="home"?"home":"work"})</span></div><div class="meta">${l.lat.toFixed(6)}, ${l.lon.toFixed(6)} · radius ${l.radius} m</div></div><div class="actions"><button class="btn small edit">Edit</button><button class="btn small del">Delete</button></div></div>`;el.querySelector(".edit").addEventListener("click",()=>editLocation(l.id));el.querySelector(".del").addEventListener("click",()=>deleteLocation(l.id));list.appendChild(el)}fillLocationSelects()}
+function fillSelect(el,items,placeholder,preferred=null){const old=preferred??el.value;el.innerHTML=`<option value="">${esc(placeholder)}</option>`+items.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");if(items.some(x=>x.id===old))el.value=old;else if(items.length===1)el.value=items[0].id}
+function fillLocationSelects(){const homes=locationsOf("home"),works=locationsOf("work");fillSelect($("#simHome"),homes,"Choose home");fillSelect($("#simWork"),works,"Choose workplace");fillSelect($("#manualStartHome"),homes,"Choose start home");fillSelect($("#manualEndHome"),homes,"Choose return home");fillSelect($("#manualWork"),works,"Choose workplace");updateManualModeUI()}
+function renderSettings(){const s=state.settings;$("#startFrom").value=s.startFrom;$("#startUntil").value=s.startUntil;$("#finishFrom").value=s.finishFrom;$("#finishUntil").value=s.finishUntil;$("#defaultRadius").value=s.defaultRadius;$("#routingProvider").value=s.routingProvider;$("#orsKey").value=s.orsKey}
+function renderHistory(){const box=$("#historyList");if(!state.history.length){box.innerHTML='<div class="meta">No confirmed workdays yet.</div>';return}box.innerHTML="";for(const d of state.history.slice().sort((a,b)=>new Date(b.start)-new Date(a.start))){const ms=Math.max(0,new Date(d.stop)-new Date(d.start)-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),el=document.createElement("div");el.className="historyItem";el.dataset.dayId=d.id;el.innerHTML=`<div class="historyTop"><strong>${fmtDate(d.start)}</strong><strong>${fmtDuration(ms)}</strong></div><div class="meta">${fmtTime(d.start)}–${fmtTime(d.stop)} · break ${d.breakMin} min · ${km.toFixed(1)} km${d.manuallyAdded?" · manual entry":""}</div>${projectLines(d)}${d.commuteOut?`<div class="meta" style="margin-top:7px">${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)}: ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)}: ${d.commuteBack.km.toFixed(1)} km</div>`:(!d.manuallyAdded&&d.workplaceId?`<div class="notice">Return route pending · open WorkClock at a saved home.</div>`:"")}<div class="buttonRow" style="margin-top:10px"><button class="hold mini editDay"><div class="fill"></div><span>HOLD TO EDIT</span></button><button class="hold mini danger deleteDay"><div class="fill"></div><span>HOLD TO DELETE</span></button></div>`;wireHold(el.querySelector(".editDay"),()=>beginEditDay(d.id));wireHold(el.querySelector(".deleteDay"),()=>deletePastDay(d.id));box.appendChild(el)}}
+function renderAll(){renderStatus();renderToday();renderLocations();renderSettings();renderProjectSuggestions();renderHistory()}
+function updateTimer(){const d=getToday();let ms=0;if(d.start)ms=(d.stop?new Date(d.stop):new Date())-new Date(d.start);$("#timer").textContent=fmtTimer(ms)}
+function confirmToday(){const d=getToday(),err=coverageError(d);if(err){setNotice("mainMessage",err,"bad");return}const returnPending=!!(d.workplaceId&&!d.commuteBack&&!d.manuallyAdded);d.status="confirmed";state.history.push(deepCopy(d));state.history.sort((a,b)=>new Date(a.start)-new Date(b.start));state.currentDay=blankDay();persist();renderAll();setNotice("mainMessage",returnPending?"Workday confirmed. Return route is pending and will be added when WorkClock sees you at a saved home.":"Workday confirmed and added to history.","good")}
+function clearToday(){if(!confirm("Clear today's unconfirmed draft?"))return;state.currentDay=blankDay();persist();renderAll();setNotice("mainMessage","Today's draft cleared.")}
+
+function updateManualModeUI(){const mode=$("#manualDistanceMode").value,auto=mode==="auto",manual=mode==="manual",keep=mode==="keep";$("#manualStartHome").disabled=!auto;$("#manualEndHome").disabled=!auto;$("#manualCalculate").disabled=!auto;$("#manualKm").disabled=!manual;$("#manualDistanceMode").querySelector('option[value="keep"]').disabled=!manualEditDayId;if(keep&&!manualEditDayId)$("#manualDistanceMode").value="auto"}
+async function manualDistancePreview(){const w=locationById($("#manualWork").value),h1=locationById($("#manualStartHome").value),h2=locationById($("#manualEndHome").value);if(w?.type!=="work"||h1?.type!=="home"||h2?.type!=="home"){setNotice("manualMessage","Choose a workplace, start home and return home.","bad");return null}setNotice("manualMessage","Calculating road distances…");const out=await routeBetween(h1,w),back=await routeBetween(w,h2);if(!out||!back){setNotice("manualMessage","Road-distance calculation failed. Check internet/routing settings.","bad");return null}const result={out,back,h1,h2,w,total:out.km+back.km};setNotice("manualMessage",`${h1.name} → ${w.name}: ${out.km.toFixed(1)} km · ${w.name} → ${h2.name}: ${back.km.toFixed(1)} km · total ${result.total.toFixed(1)} km`,"good");return result}
+function resetManualEditor(){manualEditDayId=null;manualOriginalTimestamps=null;const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);$("#manualTitle").textContent="Add a past workday manually";$("#manualSubtitle").textContent="For missed detection, forgotten registration, or work from before the app existed.";$("#manualDate").value=localDateKey(yesterday);$("#manualStart").value="07:00";$("#manualFinish").value="16:00";$("#manualBreak").value="30";$("#manualDistanceMode").value="auto";$("#manualKm").value="";$("#manualSaveHold span").textContent="HOLD TO ADD PAST WORKDAY";$("#cancelManualEdit").disabled=true;manualSegmentDraft=[{id:uid("draftseg"),projectName:"",endTime:null,endISO:null}];renderManualSegments();updateManualModeUI();setNotice("manualMessage","Choose the details for the historical workday.")}
+function beginEditDay(id){const d=findDay(id);if(!d||d===state.currentDay)return;manualEditDayId=id;manualOriginalTimestamps={date:d.date||localDateKey(new Date(d.start)),startISO:d.start,stopISO:d.stop,startTime:timeValue(d.start),finishTime:timeValue(d.stop)};$("#manualTitle").textContent="Edit past workday";$("#manualSubtitle").textContent=`Editing ${fmtDate(d.start)}. Saving replaces this historical record.`;$("#manualDate").value=manualOriginalTimestamps.date;$("#manualStart").value=manualOriginalTimestamps.startTime;$("#manualFinish").value=manualOriginalTimestamps.finishTime;$("#manualBreak").value=String(d.breakMin);fillLocationSelects();$("#manualWork").value=d.workplaceId||"";$("#manualStartHome").value=d.startHomeId||"";$("#manualEndHome").value=d.endHomeId||"";$("#manualDistanceMode").value="keep";$("#manualKm").value=((d.commuteOut?.km||0)+(d.commuteBack?.km||0)).toFixed(1);manualSegmentDraft=(d.segments||[]).map((s,i,a)=>({id:s.id||uid("draftseg"),projectName:s.projectName||"",endTime:i<a.length-1?timeValue(s.stop):null,endISO:i<a.length-1?s.stop:null}));if(!manualSegmentDraft.length)manualSegmentDraft=[{id:uid("draftseg"),projectName:"",endTime:null,endISO:null}];$("#manualSaveHold span").textContent="HOLD TO SAVE CHANGES";$("#cancelManualEdit").disabled=false;renderManualSegments();updateManualModeUI();setNotice("manualMessage","Edit the day, then hold Save Changes.","good");$("#manualCard").classList.remove("collapsed");window.__activateWorkClockView?.("history");setTimeout(()=>$("#manualCard").scrollIntoView({behavior:"smooth",block:"start"}),40)}
+function deletePastDay(id){const d=state.history.find(x=>x.id===id);if(!d)return;state.history=state.history.filter(x=>x.id!==id);if(manualEditDayId===id)resetManualEditor();persist();renderHistory();setNotice("mainMessage",`Deleted ${fmtDate(d.start)} from history.`,"good")}
+function renderManualSegments(){const box=$("#manualSegments");box.innerHTML="";manualSegmentDraft.forEach((seg,i)=>{const last=i===manualSegmentDraft.length-1,el=document.createElement("div");el.className=`manualSegment ${last?"last":""}`;el.dataset.segmentId=seg.id;el.innerHTML=`<div><label>Project ${i+1}</label><input class="segProject" list="projectSuggestions" autocomplete="off" placeholder="Type or choose project" value="${esc(seg.projectName)}"></div>${last?'<div><label>Ends</label><div class="until">At workday finish</div></div>':`<div><label>Ends at</label><input class="segEnd" type="time" value="${esc(seg.endTime||"")}"></div><button class="btn small removeSeg" title="Remove split">×</button>`}`;el.querySelector(".segProject").addEventListener("input",e=>seg.projectName=e.target.value);if(!last){el.querySelector(".segEnd").addEventListener("input",e=>{seg.endTime=e.target.value;seg.endISO=null});el.querySelector(".removeSeg").addEventListener("click",()=>{manualSegmentDraft.splice(i,1);renderManualSegments()})}box.appendChild(el)})}
+function addManualSegmentSplit(){const start=$("#manualStart").value,finish=$("#manualFinish").value;if(!start||!finish)return setNotice("manualMessage","Set start and finish first.","bad");let prev=start;if(manualSegmentDraft.length>1)prev=manualSegmentDraft[manualSegmentDraft.length-2].endTime||start;const a=parseTime(prev),b=parseTime(finish)+(parseTime(finish)<=a?1440:0);if(b-a<10)return setNotice("manualMessage","There is not enough time left for another project section.","bad");const mid=(a+Math.round((b-a)/2/5)*5)%1440,p=n=>String(n).padStart(2,"0"),midStr=`${p(Math.floor(mid/60))}:${p(mid%60)}`;manualSegmentDraft.splice(manualSegmentDraft.length-1,0,{id:uid("draftseg"),projectName:"",endTime:midStr,endISO:null});renderManualSegments()}
+function buildManualSegments(start,finish){if(!manualSegmentDraft.length)return {error:"At least one project section is required."};const out=[];let cursor=new Date(start);for(let i=0;i<manualSegmentDraft.length;i++){const draft=manualSegmentDraft[i],name=String(draft.projectName||"").trim();if(!name)return {error:`Project ${i+1} needs a name.`};let end;if(i===manualSegmentDraft.length-1)end=new Date(finish);else{if(!draft.endTime)return {error:`Project ${i+1} needs an end time.`};end=draft.endISO?new Date(draft.endISO):localDateTime($("#manualDate").value,draft.endTime);while(end<=cursor&&!draft.endISO)end.setDate(end.getDate()+1);if(!(end>cursor))return {error:`Project ${i+1} must end after it starts.`};if(end>=finish)return {error:`Project ${i+1} must end before the workday finish.`}}const p=ensureProject(name);out.push({id:draft.id?.startsWith("seg-")?draft.id:uid("seg"),start:cursor.toISOString(),stop:end.toISOString(),projectId:p.id,projectName:p.name,createdAt:nowISO()});cursor=new Date(end)}return {segments:out}}
+async function saveManualDay(){const date=$("#manualDate").value,startTime=$("#manualStart").value,finishTime=$("#manualFinish").value,breakMin=Number($("#manualBreak").value)||0,mode=$("#manualDistanceMode").value;if(!date||!startTime||!finishTime){setNotice("manualMessage","Date, start and finish are required.","bad");return}let start=(manualEditDayId&&manualOriginalTimestamps&&date===manualOriginalTimestamps.date&&startTime===manualOriginalTimestamps.startTime)?new Date(manualOriginalTimestamps.startISO):localDateTime(date,startTime),finish=(manualEditDayId&&manualOriginalTimestamps&&date===manualOriginalTimestamps.date&&finishTime===manualOriginalTimestamps.finishTime)?new Date(manualOriginalTimestamps.stopISO):localDateTime(date,finishTime);if(!start||!finish){setNotice("manualMessage","Invalid date or time.","bad");return}if(finish<=start)finish.setDate(finish.getDate()+1);if(finish-start>24*3600000){setNotice("manualMessage","Workday cannot exceed 24 hours.","bad");return}const built=buildManualSegments(start,finish);if(built.error){setNotice("manualMessage",built.error,"bad");return}const existing=manualEditDayId?state.history.find(x=>x.id===manualEditDayId):null,day=existing?deepCopy(existing):blankDay(date);day.date=date;day.start=start.toISOString();day.stop=finish.toISOString();day.breakMin=breakMin;day.startSource=existing?.startSource||"manual-history";day.stopSource=existing?.stopSource||"manual-history";day.status="confirmed";day.manuallyAdded=existing?.manuallyAdded??true;day.segments=built.segments;const work=locationById($("#manualWork").value);day.workplaceId=work?.type==="work"?work.id:null;if(mode==="auto"){const calc=await manualDistancePreview();if(!calc)return;day.startHomeId=calc.h1.id;day.endHomeId=calc.h2.id;day.workplaceId=calc.w.id;day.commuteOut={fromId:calc.h1.id,toId:calc.w.id,from:calc.h1.name,to:calc.w.name,km:calc.out.km,source:calc.out.source,at:day.start};day.commuteBack={fromId:calc.w.id,toId:calc.h2.id,from:calc.w.name,to:calc.h2.name,km:calc.back.km,source:calc.back.source,at:day.stop}}else if(mode==="manual"){const km=Number($("#manualKm").value);if(!Number.isFinite(km)||km<0){setNotice("manualMessage","Enter valid total kilometres.","bad");return}day.startHomeId=null;day.endHomeId=null;day.commuteOut={fromId:null,toId:work?.id||null,from:"Manual total",to:work?.name||"Work",km,source:"manual kilometres",at:day.start};day.commuteBack=null}else if(mode==="none"){day.startHomeId=null;day.endHomeId=null;day.commuteOut=null;day.commuteBack=null}else if(mode==="keep"&&!existing){setNotice("manualMessage","There are no existing kilometres to keep.","bad");return}const err=coverageError(day);if(err){setNotice("manualMessage",err,"bad");return}if(existing){const ix=state.history.findIndex(x=>x.id===existing.id);state.history[ix]=day}else state.history.push(day);state.history.sort((a,b)=>new Date(a.start)-new Date(b.start));persist();renderAll();const msg=existing?`Saved changes to ${fmtDate(day.start)}.`:`Added ${fmtDate(day.start)}, ${fmtTime(day.start)}–${fmtTime(day.stop)}.`;resetManualEditor();setNotice("manualMessage",msg,"good")}
+function saveSettings(){const r=Number($("#defaultRadius").value);if(!Number.isFinite(r)||r<30){setNotice("settingsMessage","Default radius must be at least 30 m.","bad");return}state.settings.startFrom=$("#startFrom").value;state.settings.startUntil=$("#startUntil").value;state.settings.finishFrom=$("#finishFrom").value;state.settings.finishUntil=$("#finishUntil").value;state.settings.defaultRadius=r;state.settings.routingProvider=$("#routingProvider").value;state.settings.orsKey=$("#orsKey").value.trim();state.routeCache={};persist();renderAll();setNotice("settingsMessage","Settings saved. Route cache cleared.","good")}
+
+function simulationSelection(){return {h:locationById($("#simHome").value),w:locationById($("#simWork").value)}}
+function simAtHome(){const {h}=simulationSelection();if(h?.type!=="home")return setNotice("simMessage","Choose a home first.","bad");currentPosition={lat:h.lat,lon:h.lon};updatePresence(h,"simulation");renderStatus(h,"simulation");setNotice("simMessage",`Simulated position set to ${h.name}.`,"good")}
+function simArrive(){const {h,w}=simulationSelection();if(h?.type!=="home"||w?.type!=="work")return setNotice("simMessage","Choose both a home and a workplace.","bad");currentPosition={lat:w.lat,lon:w.lon};state.presence.currentId=h.id;state.presence.currentType="home";state.presence.currentName=h.name;state.presence.lastHomeId=h.id;persist();setNotice("simMessage",`Simulating ${h.name} → ${w.name}.`,"good");processPosition(currentPosition,{source:"simulation",force:true,forcePreviousId:h.id})}
+function simLeave(){const {w}=simulationSelection();if(w?.type!=="work")return setNotice("simMessage","Choose a workplace.","bad");const d=getToday();if(!d.start||d.stop)return setNotice("simMessage","Start a running work session first.","bad");state.presence.currentId=w.id;state.presence.currentType="work";state.presence.currentName=w.name;state.presence.lastWorkId=w.id;persist();const pos={lat:w.lat+(w.radius+300)/111320,lon:w.lon};currentPosition=pos;setNotice("simMessage",`Simulating departure from ${w.name}.`,"good");processPosition(pos,{source:"simulation",force:true,forcePreviousId:w.id})}
+function simReturn(){const {h,w}=simulationSelection();if(h?.type!=="home"||w?.type!=="work")return setNotice("simMessage","Choose both a home and a workplace.","bad");const live=state.currentDay&&state.currentDay.start&&!state.currentDay.commuteBack?state.currentDay:null,pending=pendingReturnDay(),target=live||pending;if(!target)return setNotice("simMessage","There is no current or recently confirmed workday waiting for a return-home route.","bad");const origin=locationById(target.workplaceId)||w;if(origin?.type!=="work")return setNotice("simMessage","The pending workday has no saved workplace.","bad");state.presence.currentId=origin.id;state.presence.currentType="work";state.presence.currentName=origin.name;state.presence.lastWorkId=origin.id;persist();currentPosition={lat:h.lat,lon:h.lon};setNotice("simMessage",`Simulating ${origin.name} → ${h.name}.`,"good");processPosition(currentPosition,{source:"simulation",force:true,forcePreviousId:origin.id})}
+
+wireHold($("#mainHold"),()=>{const d=getToday();if(!d.start)applyStart(nowISO(),"manual-hold");else if(!d.stop)showTimeChoice("stop","Manual finish. When did you actually finish?")});
+wireHold($("#confirmDayHold"),confirmToday);wireHold($("#saveCurrentHome"),()=>addCurrentLocation("home"));wireHold($("#saveCurrentWork"),()=>addCurrentLocation("work"));wireHold($("#manualSaveHold"),saveManualDay);wireHold($("#clearHistory"),()=>{state.history=[];if(manualEditDayId)resetManualEditor();persist();renderHistory();setNotice("mainMessage","All confirmed history cleared.","good")});
+$("#endProject").addEventListener("click",endProjectNow);$("#saveProjectModal").addEventListener("click",saveProjectNaming);$("#cancelProjectModal").addEventListener("click",cancelProjectNaming);$("#projectModalInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();saveProjectNaming()}});
+$("#editStart").addEventListener("click",()=>showTimeChoice("start","Change today's start time."));$("#editStop").addEventListener("click",()=>showTimeChoice("stop","Change today's finish time."));$("#clearDraft").addEventListener("click",clearToday);$("#enableLocation").addEventListener("click",requestLocation);$("#enableNotifications").addEventListener("click",enableNotifications);$("#testNotification").addEventListener("click",testNotification);$("#closeTimeModal").addEventListener("click",hideTimeChoice);$("#confirmCustomTime").addEventListener("click",confirmCustomTime);$("#timeModal").addEventListener("click",e=>{if(e.target===$("#timeModal"))hideTimeChoice()});
+$("#fillCurrentLocation").addEventListener("click",()=>{if(!currentPosition)return setNotice("locationEditorMessage","No current GPS position available.","bad");$("#locLat").value=currentPosition.lat;$("#locLon").value=currentPosition.lon;setNotice("locationEditorMessage","Filled current GPS coordinates.","good")});$("#saveLocation").addEventListener("click",saveLocationEditor);$("#cancelLocationEdit").addEventListener("click",resetLocationEditor);$("#saveSettings").addEventListener("click",saveSettings);$("#clearRouteCache").addEventListener("click",()=>{state.routeCache={};persist();setNotice("settingsMessage","Route cache cleared.","good")});
+$("#enableNativeBackground").addEventListener("click",()=>{WorkClockAndroid.requestBackgroundTracking();setNotice("nativeTrackingHelp","Follow the Android permission screens, then reopen WorkClock. Choose Allow all the time where available.");});
+$("#exportBackup").addEventListener("click",exportWorkClockBackup);
+$("#importBackup").addEventListener("click",importWorkClockBackup);
+$("#backupFile").addEventListener("change",async e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>10*1024*1024){setNotice("backupMessage","Backup file is too large.","bad");return}window.__WorkClockReceiveImport(await f.text());e.target.value=""});
+$("#simAtHome").addEventListener("click",simAtHome);$("#simArriveWork").addEventListener("click",simArrive);$("#simLeaveWork").addEventListener("click",simLeave);$("#simReturnHome").addEventListener("click",simReturn);$("#manualDistanceMode").addEventListener("change",updateManualModeUI);$("#manualCalculate").addEventListener("click",manualDistancePreview);$("#addManualSegment").addEventListener("click",addManualSegmentSplit);$("#cancelManualEdit").addEventListener("click",resetManualEditor);$("#manualStart").addEventListener("change",renderManualSegments);$("#manualFinish").addEventListener("change",renderManualSegments);
+
+resetLocationEditor();resetManualEditor();renderAll();refreshPermissionUI();
+if(window.WorkClockAndroid){syncAndroidEvents()}
+if("Notification" in window&&Notification.permission==="granted"){
+  ensureNotificationWorker()
+    .then(()=>setNotice("notificationHelp","Notification permission granted; Android notification service is ready.","good"))
+    .catch(e=>setNotice("notificationHelp",`Notification service unavailable: ${e.message||e}`,"bad"));
+}
+timerInterval=setInterval(updateTimer,1000);
+window.__WorkClockTest={getState:()=>deepCopy(state),reset:()=>{localStorage.removeItem(STORAGE_KEY);state=newState();persist();resetManualEditor();renderAll()},processPosition,routeBetween,locationById,coverageError,endProjectNow,pendingReturnDay,recoverPendingReturn,activeHoldCount:()=>activeHoldCancels.size};
+})();
+</script>
+<script>
+(function(){
+  const views=[...document.querySelectorAll('.view')];
+  const buttons=[...document.querySelectorAll('.navBtn')];
+  function activate(name){
+    views.forEach(v=>v.classList.toggle('active',v.dataset.view===name));
+    buttons.forEach(b=>b.classList.toggle('active',b.dataset.target===name));
+    sessionStorage.setItem('workclock-view',name);
+    window.scrollTo({top:0,behavior:'instant'});
+  }
+  window.__activateWorkClockView=activate;
+  buttons.forEach(b=>b.addEventListener('click',()=>activate(b.dataset.target)));
+  document.getElementById('goPlacesForLocation').addEventListener('click',()=>activate('places'));
+  const manual=document.getElementById('manualCard');
+  document.getElementById('showManualEntry').addEventListener('click',()=>{manual.classList.remove('collapsed');setTimeout(()=>manual.scrollIntoView({behavior:'smooth',block:'start'}),30)});
+  document.getElementById('hideManualEntry').addEventListener('click',()=>manual.classList.add('collapsed'));
+  const saved=sessionStorage.getItem('workclock-view'); if(saved&&views.some(v=>v.dataset.view===saved)) activate(saved);
+  const d=new Date(); document.getElementById('appDateLine').textContent=d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});
+})();
+</script>
+</body>
+</html>
