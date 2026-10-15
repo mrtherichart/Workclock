@@ -42,8 +42,8 @@ class MainActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.statusBarColor = android.graphics.Color.rgb(5, 7, 6)
-        window.navigationBarColor = android.graphics.Color.rgb(5, 7, 6)
+        window.statusBarColor = android.graphics.Color.rgb(7, 11, 15)
+        window.navigationBarColor = android.graphics.Color.rgb(7, 11, 15)
         updater = WorkClockUpdater(this) { info -> sendToPage("__WorkClockUpdateStatus", info) }
         foregroundLocator = ForegroundLocator(this,
             { fix ->
