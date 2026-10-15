@@ -70,3 +70,11 @@ Current stable signing certificate SHA-256: `d321aebe6255506998d22009a6d46deb98a
 ### Publishing later versions
 
 Increment **both** `versionName` and `versionCode` in `app/build.gradle.kts` on each published change. The Release workflow only publishes a new version tag once. There is no continuous location tracking or network access added by the updater: it checks on app launch and on demand, and only downloads when the user taps the install button.
+
+## Visual design 0.3.0
+
+WorkClock now uses a cohesive slate-blue color palette inspired by `#253e4e`. The timer, forms, nav, overlays and active controls retain their existing interaction patterns. The functional warm amber finish/review state and red destructive controls remain distinct.
+
+Typography uses only two font stacks: system UI sans-serif for body/control/timer text and a serif display stack for headings. No external font downloading is needed.
+
+The Android launcher now uses the approved briefcase/clock/location icon, with a legacy fallback and adaptive icon foreground on a `#253e4e` background.
