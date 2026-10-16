@@ -152,7 +152,14 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
 .historySwitch button.active{background:var(--accent-deep);color:var(--accent-strong);box-shadow:inset 0 0 0 1px rgba(143,180,201,.20)}
 .weekCard{overflow:hidden;padding:15px 12px 14px;border:1px solid var(--line-strong);border-radius:19px;background:linear-gradient(180deg,var(--surface2),var(--surface));box-shadow:var(--shadow)}
 .weekHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 1px 14px}
-.weekHead h2{margin:0 0 3px;font-family:var(--font-display);font-size:25px;font-weight:560;letter-spacing:-.025em;color:var(--text)}
+.weekTitle{min-width:0}
+.weekHeadingButton{display:inline-flex;align-items:baseline;gap:8px;margin:0 0 3px;padding:0;border:0;background:transparent;color:var(--text);font-family:var(--font-display);font-size:25px;font-weight:560;letter-spacing:-.025em;text-align:left;cursor:pointer}
+.weekHeadingButton::after{content:"⌄";font:500 15px var(--font-sans);color:var(--muted);position:relative;top:-1px}
+.weekHeadingButton:active,.weekHeadingButton:focus-visible{color:var(--accent-strong)}
+.weekInlineEdit{display:flex;align-items:center;gap:6px;margin:0 0 3px;height:35px;color:var(--text);font-family:var(--font-display);font-size:23px}
+.weekInlineEdit input{width:66px;min-height:34px;padding:3px 7px;font:600 19px var(--font-sans);text-align:center;appearance:textfield}
+.weekInlineEdit input::-webkit-inner-spin-button,.weekInlineEdit input::-webkit-outer-spin-button{appearance:none;margin:0}
+.weekInlineEdit button{min-width:34px;min-height:34px;border:1px solid var(--line-strong);border-radius:9px;background:var(--surface3);color:var(--accent-strong);font-size:17px;cursor:pointer}
 .weekHead p{margin:0;color:var(--muted);font-size:11px}
 .weekControls{display:flex;align-items:center;gap:5px}
 .weekControls button{min-height:38px;min-width:36px;padding:7px 10px;border:1px solid var(--line-strong);border-radius:10px;background:var(--surface3);color:var(--text-soft);font-size:15px;cursor:pointer}
@@ -179,10 +186,12 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
 .historyItem::before{content:"";position:absolute;left:0;top:18px;bottom:18px;width:2px;border-radius:4px;background:linear-gradient(180deg,rgba(143,180,201,.54),rgba(143,180,201,.06))}.historyTop{display:flex;justify-content:space-between;gap:12px;align-items:baseline}.historyTop strong:first-child{font-family:var(--font-display);font-size:17px;font-weight:560}.historyTop strong:last-child{font-size:19px;font-weight:640;font-variant-numeric:tabular-nums;color:#eff4f7}.historyItem>.meta{margin-top:4px}.manualPanel.collapsed{display:none}
 .manualSegment{display:grid;grid-template-columns:minmax(0,1fr) 120px 36px;gap:8px;align-items:end;border:1px solid rgba(190,212,225,.085);background:rgba(7,13,19,.46);border-radius:12px;padding:10px;margin-top:8px}.manualSegment.last{grid-template-columns:minmax(0,1fr) 120px}.manualSegment .until{min-height:41px;display:flex;align-items:center;color:var(--muted2);font-size:10.5px}
 
-.placeNameButton{border:0;background:transparent;color:var(--text);padding:0;text-align:left;font-family:var(--font-display);font-size:16px;cursor:pointer}
-.placeNameButton:active{color:var(--accent-strong)}.placeMapHint{display:inline-block;margin-top:4px;font-size:10px;color:var(--accent)}
+.placeTitleLine{display:flex;align-items:baseline;flex-wrap:wrap;column-gap:9px;row-gap:3px;margin-bottom:5px}
+.placeNameButton{display:inline-flex;align-items:baseline;gap:5px;min-width:0;border:0;background:transparent;color:var(--text);padding:0;text-align:left;font-family:var(--font-display);font-size:16px;cursor:pointer}
+.placeNameButton:active,.placeNameButton:focus-visible{color:var(--accent-strong)}
+.placeExternalArrow{font:600 12px var(--font-sans);color:var(--accent);white-space:nowrap}
+.placeKind{color:var(--muted);font-family:var(--font-sans);font-size:11px}
 .attentionStrip{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 13px;padding:12px 14px;border:1px solid rgba(215,173,103,.3);border-radius:13px;background:rgba(89,62,31,.14);color:var(--brass-soft);font-size:12px;text-align:left;cursor:pointer}
-.weekJump{display:flex;gap:6px;align-items:end;margin:-3px 2px 11px}.weekJump label{margin:0 0 4px}.weekJump input{min-height:35px;padding:5px 7px;font-size:12px}.weekJump .wkNr{width:70px}.weekJump .wkYear{width:85px}.weekJump button{min-height:35px;align-self:end}
 .weekTable tbody tr.weekAction{cursor:pointer}.weekTable tbody tr.weekAction:active{background:rgba(143,180,201,.18)}
 .weekProjectFilter{margin:3px 2px 12px;display:flex;align-items:center;gap:9px}.weekProjectFilter label{margin:0;white-space:nowrap}.weekProjectFilter select{min-width:0;min-height:38px;font-size:12px}
 .placeConfidence{margin:0 4px 9px;font-size:11px;line-height:1.5;color:var(--muted)}

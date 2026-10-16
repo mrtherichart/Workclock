@@ -435,7 +435,7 @@ function renderLocations(){
     const el=document.createElement("div");el.className="location";
     const visit=l.lastVisitedAt?new Date(l.lastVisitedAt):null;
     const visitText=visit&&Number.isFinite(visit.getTime())?"Last detected "+fmtDate(visit):"Not detected yet";
-    el.innerHTML=`<div class="locationHead"><div><button type="button" class="placeNameButton" title="View in Maps">${esc(l.name)} <span class="meta">(${l.type==="home"?"home":"work"})</span></button><div class="placeMapHint">View on map ↗</div><div class="meta">${esc(visitText)} · detection radius ${Number(l.radius)||150} m</div></div><div class="actions"><button class="btn small edit">Edit</button><button class="btn small del">Delete</button></div></div>`;
+    el.innerHTML=`<div class="locationHead"><div><div class="placeTitleLine"><button type="button" class="placeNameButton" title="Open in Maps">${esc(l.name)}<span class="placeExternalArrow" aria-hidden="true">↗</span></button><span class="placeKind">(${l.type==="home"?"home":"work"})</span></div><div class="meta">${esc(visitText)} · detection radius ${Number(l.radius)||150} m</div></div><div class="actions"><button class="btn small edit">Edit</button><button class="btn small del">Delete</button></div></div>`;
     el.querySelector(".placeNameButton").addEventListener("click",()=>WorkClockAndroid.openPlaceOnMap(l.id));
     el.querySelector(".edit").addEventListener("click",()=>editLocation(l.id));
     el.querySelector(".del").addEventListener("click",()=>deleteLocation(l.id));
@@ -484,9 +484,7 @@ function renderWeekSheet(){
   sunday.setDate(monday.getDate()+6);
   const label=d=>d.toLocaleDateString("nl-NL",{day:"numeric",month:"short"});
   $("#weekHeading").textContent=`Week ${week}`;
-  $("#weekJumpNumber").value=String(week);
-  $("#weekJumpYear").value=String(year);
-  const selector=$("#weekProjectSelect");
+   const selector=$("#weekProjectSelect");
   const names=[...new Set(state.history.flatMap(d=>(d.segments||[]).map(seg=>seg.projectName).filter(Boolean)))].sort((a,b)=>a.localeCompare(b));
   selector.innerHTML='<option value="">All projects</option>'+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");
   if(!names.includes(weekProjectFilter))weekProjectFilter="";
@@ -563,7 +561,13 @@ function attentionDays(){
   const issues=[];
   const d=state.currentDay;
   if(d&&dayHasData(d)){
-    if(d.start&&!d.stop)issues.push({day:d,reason:"Running or missing finish"});
+    if(d.start&&!d.stop){
+      // A running shift is normal, including one crossing midnight.
+      // Only a clock left running for over 24 hours needs review.
+      const elapsed=Date.now()-new Date(d.start).getTime();
+      if(Number.isFinite(elapsed)&&elapsed>24*3600000)
+        issues.push({day:d,reason:"Workday still running after 24 hours"});
+    }
     else if(d.start&&d.stop)issues.push({day:d,reason:"Unconfirmed workday"});
   }
   for(const day of state.history){
@@ -657,12 +661,47 @@ $("#weekPrevious").addEventListener("click",()=>{weekSheetAnchor=mondayOfWeek(we
 $("#weekNext").addEventListener("click",()=>{weekSheetAnchor=mondayOfWeek(weekSheetAnchor||new Date());weekSheetAnchor.setDate(weekSheetAnchor.getDate()+7);renderWeekSheet()});
 $("#repeatPreviousDay").addEventListener("click",repeatPreviousWorkday);
 $("#weekNow").addEventListener("click",()=>{weekSheetAnchor=mondayOfWeek(new Date());renderWeekSheet()});
-$("#weekJumpGo").addEventListener("click",()=>{
-  const year=Number($("#weekJumpYear").value),week=Number($("#weekJumpNumber").value);
-  if(!Number.isInteger(year)||year<2000||year>2100||!Number.isInteger(week)||week<1||week>53)return;
-  const monday=mondayOfWeek(new Date(year,0,4,12));monday.setDate(monday.getDate()+7*(week-1));
-  if(isoWeekData(monday).year!==year)return;
-  weekSheetAnchor=monday;renderWeekSheet();
+function finishWeekNumberEdit(apply){
+  const editor=$("#weekInlineEdit"),input=$("#weekInlineNumber"),heading=$("#weekHeading");
+  if(editor.classList.contains("hidden"))return;
+  if(apply){
+    const year=isoWeekData(mondayOfWeek(weekSheetAnchor||new Date())).year;
+    const week=Number(input.value);
+    const lastWeek=isoWeekData(mondayOfWeek(new Date(year,11,28,12))).week;
+    if(input.value.trim()===""||!Number.isInteger(week)||week<1||week>lastWeek){
+      input.setCustomValidity("Choose a week between 1 and "+lastWeek);
+      input.reportValidity();
+      input.focus();
+      return;
+    }
+    const monday=mondayOfWeek(new Date(year,0,4,12));
+    monday.setDate(monday.getDate()+7*(week-1));
+    weekSheetAnchor=monday;
+  }
+  input.setCustomValidity("");
+  editor.classList.add("hidden");
+  heading.classList.remove("hidden");
+  if(apply)renderWeekSheet();
+}
+$("#weekHeading").addEventListener("click",()=>{
+  const anchor=mondayOfWeek(weekSheetAnchor||new Date()),{year,week}=isoWeekData(anchor);
+  const input=$("#weekInlineNumber");
+  input.value=String(week);
+  input.max=String(isoWeekData(mondayOfWeek(new Date(year,11,28,12))).week);
+  input.setCustomValidity("");
+  $("#weekHeading").classList.add("hidden");
+  $("#weekInlineEdit").classList.remove("hidden");
+  input.focus();
+  input.select();
+});
+$("#weekInlineEdit").addEventListener("submit",e=>{e.preventDefault();finishWeekNumberEdit(true)});
+$("#weekInlineNumber").addEventListener("input",e=>e.target.setCustomValidity(""));
+$("#weekInlineNumber").addEventListener("keydown",e=>{
+  if(e.key==="Escape"){e.preventDefault();finishWeekNumberEdit(false)}
+});
+$("#weekInlineNumber").addEventListener("blur",e=>{
+  if(e.relatedTarget&&$("#weekInlineEdit").contains(e.relatedTarget))return;
+  finishWeekNumberEdit(true);
 });
 $("#weekProjectSelect").addEventListener("change",e=>{weekProjectFilter=e.target.value;renderWeekSheet()});
 $("#weekTableBody").addEventListener("click",e=>{
