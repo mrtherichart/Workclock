@@ -82,6 +82,12 @@ class MainActivity : Activity() {
         webView.loadUrl("$LOCAL_ORIGIN/assets/index.html")
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (::webView.isInitialized && pageReady) deliverEvents()
+    }
+
     override fun onResume() {
         super.onResume()
         screenVisible = true
