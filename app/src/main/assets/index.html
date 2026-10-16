@@ -521,7 +521,65 @@ window.__WorkClockNativeLocationError=function(error){
   $("#gpsStatus").className="pill bad";
   refreshAndroidStatus();
 };
-async function syncAndroidEvents(){syncAndroidPlaces();refreshAndroidStatus();let events=[];try{events=JSON.parse(WorkClockAndroid.getEvents()||"[]")}catch(e){console.warn("Cannot read Android events",e);return}for(const event of events){const loc=locationById(event.placeId);try{if(loc){if(event.transition==="ENTER"){await processPosition({lat:loc.lat,lon:loc.lon,accuracy:Math.max(100,loc.radius||150)},{source:"android"})}else if(event.transition==="EXIT"&&loc.type==="work"){state.presence.currentId=null;state.presence.currentType=null;state.presence.currentName=null;state.presence.changedAt=new Date(event.at).toISOString();state.presence.source="android";state.presence.lastWorkId=loc.id;persist();renderStatus(null,"android");const d=getToday();if(d.start&&!d.stop&&isAutomationDay(new Date(event.at)))showTimeChoice("stop",`Android detected leaving ${loc.name} at ${fmtTime(event.at)}. When did you finish?`)}}WorkClockAndroid.acknowledgeEvent(event.id)}catch(e){console.error("Failed to process Android location event",e);break}}}
+let syncingAndroidEvents=false;
+async function applyNotificationDecision(event){
+  const action=String(event.action||""),stamp=Number(event.at)||Date.now(),date=new Date(stamp);
+  const d=getToday();
+  if(action==="START_NOW"){
+    if(!d.start)applyStart(date.toISOString(),"android-notification");
+    else setNotice("mainMessage","Work was already started.");
+  } else if(action==="START_EARLIER"){
+    window.__activateWorkClockView?.("today");
+    showTimeChoice("start","When did work actually start?");
+  } else if(action==="NOT_WORKING"){
+    setNotice("mainMessage","No workday started.");
+  } else if(action==="FINISH_NOW"){
+    if(d.start&&!d.stop)requestStop(date.toISOString(),"android-notification");
+    else setNotice("mainMessage","No running workday to finish.");
+  } else if(action==="FINISH_EARLIER"){
+    if(d.start&&!d.stop){window.__activateWorkClockView?.("today");showTimeChoice("stop","When did you actually finish?")}
+  } else if(action==="STILL_WORKING"){
+    setNotice("mainMessage","Work continues.");
+  }
+}
+async function syncAndroidEvents(){
+  if(syncingAndroidEvents)return;
+  syncingAndroidEvents=true;
+  try{
+    syncAndroidPlaces();refreshAndroidStatus();
+    let events=[];
+    try{events=JSON.parse(WorkClockAndroid.getEvents()||"[]")}
+    catch(e){console.warn("Cannot read Android events",e);return}
+    events.sort((a,b)=>(Number(a.at)||0)-(Number(b.at)||0));
+    for(const event of events){
+      const loc=locationById(event.placeId);
+      try{
+        if(event.transition==="ACTION"){
+          await applyNotificationDecision(event);
+        }else if(loc){
+          const at=Number(event.at)||Date.now();
+          const age=Date.now()-at;
+          if(event.transition==="ENTER"){
+            await processPosition({lat:loc.lat,lon:loc.lon,accuracy:Math.max(100,loc.radius||150)},
+              {source:"android",eventAt:at});
+          }else if(event.transition==="EXIT"&&loc.type==="work"){
+            // Persist the original geofence timestamp, not the time the app opened.
+            state.presence.currentId=null;state.presence.currentType=null;state.presence.currentName=null;
+            state.presence.changedAt=new Date(at).toISOString();
+            state.presence.source="android";state.presence.lastWorkId=loc.id;
+            persist();renderStatus(null,"android");
+            const d=getToday();
+            if(age>=-60000&&age<2*3600000&&d.start&&!d.stop&&isAutomationDay(new Date(at))){
+              showTimeChoice("stop",`Android detected leaving ${loc.name} at ${fmtTime(at)}. When did you finish?`);
+            }
+          }
+        }
+        WorkClockAndroid.acknowledgeEvent(event.id);
+      }catch(e){console.error("Failed to process Android location event",e);break}
+    }
+    renderAttention();
+  }finally{syncingAndroidEvents=false}
+}
 window.__WorkClockNativeSync=syncAndroidEvents;
 window.__WorkClockBackupResult=message=>setNotice("backupMessage",message);
 window.__WorkClockReceiveImport=function(raw){try{const parsed=JSON.parse(raw);if(!parsed||typeof parsed!=="object"||!Array.isArray(parsed.locations)||!Array.isArray(parsed.history))throw new Error("Not a valid WorkClock backup");if(!confirm("Replace existing WorkClock data with this backup? A safety copy of your current data will be stored on this device."))return;saveSafetySnapshot("Before importing data");state=validateState(parsed);persist();resetLocationEditor();resetManualEditor();renderAll();refreshAndroidStatus();setNotice("backupMessage","Backup imported. Workdays and places restored.","good")}catch(e){setNotice("backupMessage","Import failed: "+(e.message||e),"bad")}};
@@ -648,10 +706,10 @@ async function recoverPendingReturn(home,{source="gps"}={}){
   setNotice("mainMessage",`Added missing return commute to ${label}: ${work.name} → ${home.name}, ${route.km.toFixed(1)} km.`,"good");
   return true;
 }
-function updatePresence(found,source){
+function updatePresence(found,source,at=nowISO()){
   if(found){const loc=locationById(found.id);if(loc)loc.lastVisitedAt=nowISO()}
-  const prev={...state.presence};state.presence.currentId=found?.id||null;state.presence.currentType=found?.type||null;state.presence.currentName=found?.name||null;state.presence.changedAt=nowISO();state.presence.source=source;if(found?.type==="home")state.presence.lastHomeId=found.id;if(found?.type==="work")state.presence.lastWorkId=found.id;persist();return prev}
-async function processPosition(pos,{source="gps",force=false,forcePreviousId=null}={}){
+  const prev={...state.presence};state.presence.currentId=found?.id||null;state.presence.currentType=found?.type||null;state.presence.currentName=found?.name||null;state.presence.changedAt=at;state.presence.source=source;if(found?.type==="home")state.presence.lastHomeId=found.id;if(found?.type==="work")state.presence.lastWorkId=found.id;persist();return prev}
+async function processPosition(pos,{source="gps",force=false,forcePreviousId=null,eventAt=null}={}){
   currentPosition={lat:Number(pos.lat),lon:Number(pos.lon),accuracy:Number(pos.accuracy)||null};
   const found=nearestSavedLocation(currentPosition);
   let prev={...state.presence};
@@ -662,7 +720,7 @@ async function processPosition(pos,{source="gps",force=false,forcePreviousId=nul
   }
 
   const unchanged=found?.id===state.presence.currentId;
-  if(!unchanged||force)prev=updatePresence(found,source);
+  if(!unchanged||force)prev=updatePresence(found,source,eventAt?new Date(eventAt).toISOString():nowISO());
   renderStatus(found,source);
 
   // Recovery happens before the normal short-circuits. Merely opening the app
@@ -672,11 +730,14 @@ async function processPosition(pos,{source="gps",force=false,forcePreviousId=nul
     await recoverPendingReturn(found,{source});
   }
 
+  // Old native geofence transitions can arrive after several hours offline.
+  // They may complete a pending return journey, but must never open a stale work prompt.
+  if(source==="android"&&eventAt&&Date.now()-Number(eventAt)>2*3600000)return;
   if(unchanged&&!force)return;
-  if(!force&&!isAutomationDay())return;
+  if(!force&&!isAutomationDay(eventAt?new Date(eventAt):new Date()))return;
 
   const day=getToday(),
-        now=new Date(),
+        now=eventAt?new Date(eventAt):new Date(),
         startOK=force||inWindow(now,state.settings.startFrom,state.settings.startUntil),
         finishOK=force||inWindow(now,state.settings.finishFrom,state.settings.finishUntil);
 
