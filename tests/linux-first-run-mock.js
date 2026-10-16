@@ -5,12 +5,13 @@
   for(const key of ["workclock-v4","workclock-v3","workclock-prototype-v1","workclock-first-run-hints-v1","workclock-first-run-started-v1","workclock-first-run-skip-place-v1"])
     localStorage.removeItem(key);
   const calls=[];
+  const nativeEvents=[];
   window.WorkClockAndroid={
     appVersion:()=>"linux-first-run",
     permissionStatus:()=>JSON.stringify({location:true,precise:true,background:true,
       services:true,geofences:"active",notification:true}),
-    getEvents:()=>"[]",
-    acknowledgeEvent:id=>calls.push(["ack",id]),
+    getEvents:()=>JSON.stringify(nativeEvents),
+    acknowledgeEvent:id=>{calls.push(["ack",id]);const i=nativeEvents.findIndex(x=>x.id===id);if(i>=0)nativeEvents.splice(i,1)},
     syncPlaces:json=>calls.push(["places",json]),
     requestForegroundTracking:()=>{},
     requestBackgroundTracking:()=>{},
@@ -32,7 +33,7 @@
   window.addEventListener("unhandledrejection",event=>errors.push(String(event.reason)));
   function check(ok,message){if(!ok)throw Error(message)}
   window.addEventListener("load",()=>{
-    setTimeout(()=>{
+    setTimeout(async()=>{
       try{
         check(!errors.length,errors.join("; "));
         const guide=document.getElementById("rhythmGuide"),
@@ -71,6 +72,20 @@
         document.querySelector('.navBtn[data-target="today"]').click();
         check(message.textContent.includes("Hold the Start"),"Next tip should describe the start action");
         check(go.classList.contains("hidden"),"No redundant next button should appear");
+        // Native notification choices should move guidance through the real workday states.
+        nativeEvents.push({id:"test-start",transition:"ACTION",action:"START_NOW",at:Date.now()});
+        await window.__WorkClockNativeSync();
+        check(document.getElementById("rhythmGuideStep").textContent==="WHILE YOU WORK",
+          "Starting work should advance to the working hint");
+        nativeEvents.push({id:"test-finish",transition:"ACTION",action:"FINISH_NOW",at:Date.now()+15000});
+        await window.__WorkClockNativeSync();
+        check(document.getElementById("projectModal").classList.contains("show"),
+          "Finishing a first day should ask for the project");
+        document.getElementById("projectModalInput").value="Workshop Project";
+        document.getElementById("saveProjectModal").click();
+        check(document.getElementById("rhythmGuideStep").textContent==="FINISH YOUR DAY",
+          "Saving the project finish should show the confirm-your-day hint");
+
         document.getElementById("rhythmGuideDismiss").click();
         check(guide.classList.contains("hidden"),"Dismiss should hide hints");
         check(localStorage.getItem("workclock-first-run-hints-v1")==="dismissed","Dismiss preference not saved");
