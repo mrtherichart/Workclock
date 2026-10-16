@@ -3,13 +3,14 @@ const fs=require("node:fs");
 const vm=require("node:vm");
 const assert=require("node:assert/strict");
 const html=fs.readFileSync("app/src/main/assets/index.html","utf8");
-const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
+const scripts=["app.js","navigation.js"].map(name=>fs.readFileSync("app/src/main/assets/"+name,"utf8"));
 for(const [index,script] of scripts.entries())new vm.Script(script,{filename:`workclock-inline-${index}.js`});
 assert(html.includes('id="weekSheetPanel"'));
 assert(html.includes('id="weekTableBody"'));
 for(const col of ["dag","datum","van","tot","pauze","totaal","zakelijke km"])assert(html.includes('>'+col+'</th>'));
+const source=scripts[0];
 const marker="// Weekstaat is a temporary view";
-const start=html.indexOf(marker),end=html.indexOf("function renderHistory(){",start);
+const start=source.indexOf(marker),end=source.indexOf("function renderHistory(){",start);
 assert(start!==-1&&end>start,"Weekstaat calculations must exist");
 const state={history:[],currentDay:null};
 const elements=new Map();
@@ -24,7 +25,7 @@ const context=vm.createContext({
   fmtTime:iso=>new Date(iso).toISOString().slice(11,16),
   $:selector=>element(selector.slice(1))
 });
-vm.runInContext(html.slice(start,end),context,{filename:"weekstaat.js"});
+vm.runInContext(source.slice(start,end),context,{filename:"weekstaat.js"});
 const run=expr=>vm.runInContext(expr,context);
 const info=date=>run(`isoWeekData(mondayOfWeek(new Date(${JSON.stringify(date)})))`);
 assert.equal(info("2026-09-28T12:00:00").week,40);
