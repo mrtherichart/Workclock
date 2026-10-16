@@ -9,21 +9,16 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.webkit.GeolocationPermissions
 import android.webkit.JavascriptInterface
-import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
 import org.json.JSONObject
 
 class MainActivity : Activity() {
     private lateinit var webView: WebView
-    private var permissionCallback: GeolocationPermissions.Callback? = null
-    private var permissionOrigin: String? = null
     private var pendingBackup: String? = null
     private var pageReady = false
     private var screenVisible = false
@@ -56,7 +51,6 @@ class MainActivity : Activity() {
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
-            setGeolocationEnabled(true)
             allowFileAccess = false
             allowContentAccess = false
             setSupportMultipleWindows(false)
@@ -82,25 +76,6 @@ class MainActivity : Activity() {
                 pageReady = url.startsWith("$LOCAL_ORIGIN/assets/")
                 webView.evaluateJavascript("window.__WorkClockAppResume?.();", null)
                 lastNativeFix?.let { sendToPage("__WorkClockNativeLocation", it) }
-            }
-        }
-        webView.webChromeClient = object : WebChromeClient() {
-            override fun onGeolocationPermissionsShowPrompt(
-                origin: String, callback: GeolocationPermissions.Callback
-            ) {
-                val requested = Uri.parse(origin)
-                if (requested.scheme != "https" || requested.host != "appassets.androidplatform.net" ||
-                    requested.port !in listOf(-1, 443)) {
-                    callback.invoke(origin, false, false)
-                    return
-                }
-                if (GeoManager.hasForegroundPermission(this@MainActivity)) {
-                    callback.invoke(origin, true, false)
-                } else {
-                    permissionCallback = callback
-                    permissionOrigin = origin
-                    requestForegroundLocation()
-                }
             }
         }
         setContentView(webView)
@@ -178,9 +153,6 @@ class MainActivity : Activity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == FOREGROUND_PERMISSION) {
             val granted = GeoManager.hasForegroundPermission(this)
-            permissionCallback?.invoke(permissionOrigin ?: LOCAL_ORIGIN, granted, false)
-            permissionCallback = null
-            permissionOrigin = null
             if (granted) {
                 foregroundLocator.start()
                 GeoManager.registerSaved(this)
