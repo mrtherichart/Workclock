@@ -9,7 +9,7 @@ assert(html.includes('id="weekSheetPanel"'));
 assert(html.includes('id="weekTableBody"'));
 for(const col of ["dag","datum","van","tot","pauze","totaal","zakelijke km"])assert(html.includes('>'+col+'</th>'));
 const source=scripts[0];
-const marker="// Weekstaat is a temporary view";
+const marker="let weekSheetMode=";
 const start=source.indexOf(marker),end=source.indexOf("function renderHistory(){",start);
 assert(start!==-1&&end>start,"Weekstaat calculations must exist");
 const state={history:[],currentDay:null};
