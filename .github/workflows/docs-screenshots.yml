@@ -1,0 +1,33 @@
+name: Capture guide screenshots
+on:
+  push:
+    branches: [docs-and-source-tidy]
+    paths:
+      - tests/capture-docs.cjs
+      - .github/workflows/docs-screenshots.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Capture WorkClock screens with sample records
+        run: node tests/capture-docs.cjs
+      - name: Commit screenshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots/*.png
+          if git diff --cached --quiet; then
+            echo "Images unchanged"
+          else
+            git commit -m "Capture guide screenshots from current WorkClock UI"
+            git push origin HEAD:docs-and-source-tidy
+          fi
