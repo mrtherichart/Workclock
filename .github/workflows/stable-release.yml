@@ -49,6 +49,7 @@ jobs:
         run: |
           node tests/weekstaat.test.cjs
           node tests/linux-ui-smoke.cjs
+          node tests/linux-ui-smoke.cjs --first-run
       - uses: actions/setup-java@v4
         if: steps.signing.outputs.ready == 'true' && steps.version.outputs.new == 'true'
         with:
