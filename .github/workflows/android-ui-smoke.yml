@@ -19,6 +19,8 @@ jobs:
       - name: Check Linux browser availability
         run: |
           command -v google-chrome || command -v google-chrome-stable || command -v chromium
+      - name: Check documentation links and screenshots
+        run: node tests/docs-check.cjs
       - name: Test the Android-only HTML in headless Chromium
         run: |
           node tests/linux-ui-smoke.cjs

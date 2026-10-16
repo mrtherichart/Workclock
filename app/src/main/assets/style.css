@@ -1,4 +1,3 @@
-/* WorkClock 0.3.0 visual system: steel navy from #253e4e, two typefaces. */
 
 :root{
   color-scheme:dark;
@@ -76,7 +75,7 @@ button{cursor:pointer}
 .signalDot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(143,180,201,.07),0 0 18px rgba(143,180,201,.22)}
 .view{display:none}.view.active{display:block;animation:viewIn .16s cubic-bezier(.2,.8,.2,1) both}
 @keyframes viewIn{from{opacity:.88;transform:translateY(3px)}to{opacity:1;transform:none}}
-/* One clear, optional first-use card, above the timer; matches WorkClock's warm review accent. */
+/* First-run guide */
 .rhythmGuide{
   margin:0 3px 15px;padding:12px 14px 13px;
   border:1px solid #f5d781;border-radius:15px;
@@ -143,7 +142,7 @@ button{cursor:pointer}
 .projectAction{width:100%;margin-top:9px;min-height:48px;border-radius:14px;border:1px solid rgba(143,180,201,.14);background:rgba(19,37,51,.70);color:var(--accent-strong);font-weight:760;font-size:11px;letter-spacing:.08em;box-shadow:inset 0 1px 0 rgba(255,255,255,.02);transition:background .16s ease,border-color .16s ease,transform .12s ease}.projectAction:active{transform:translateY(1px)}.projectAction:disabled{color:var(--muted2);background:#0b131a;border-color:var(--line);opacity:.55}
 .toast{position:fixed;z-index:75;left:50%;bottom:calc(var(--nav-h) + 30px + env(safe-area-inset-bottom));transform:translate(-50%,12px);width:min(500px,calc(100% - 34px));padding:12px 14px;border-radius:14px;background:rgba(20,32,42,.92);backdrop-filter:blur(18px);border:1px solid rgba(190,212,225,.13);color:var(--text);font-size:12px;line-height:1.4;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;box-shadow:0 16px 45px rgba(0,0,0,.55)}.toast.show{opacity:1;transform:translate(-50%,0)}.toast.good{color:var(--good);border-color:rgba(159,197,213,.25);background:rgba(18,34,45,.94)}.toast.bad{color:var(--bad-soft);border-color:rgba(225,130,130,.28);background:rgba(37,16,19,.95)}
 
-/* Sections and crafted surfaces */
+/* Sections */
 .section{margin-top:22px}.sectionHead{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:0 3px 10px}.sectionHead h2{font-family:var(--font-display);font-size:18px;font-weight:560;margin:0;letter-spacing:-.02em;color:#eaf1f5}.sectionHead .hint{font-size:9.5px;color:var(--muted2);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
 .card{position:relative;background:linear-gradient(180deg,rgba(16,26,35,.97),rgba(12,22,31,.97));border:1px solid var(--line);border-radius:var(--radius);padding:15px;margin:0 0 12px;box-shadow:0 10px 32px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.018)}
 .card.subtle{background:#0c131a}.card.flush{padding:0;overflow:hidden}
@@ -226,7 +225,7 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
 /* Floating navigation */
 .bottomNav{position:fixed;z-index:60;left:50%;bottom:max(9px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(720px,calc(100% - 20px));height:var(--nav-h);padding:6px;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:rgba(11,20,27,.88);border:1px solid rgba(190,212,225,.12);border-radius:22px;backdrop-filter:blur(22px) saturate(1.2);box-shadow:0 20px 50px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.025)}
 .navBtn{position:relative;border:0;background:transparent;color:#6a7c88;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10.5px;letter-spacing:.02em;min-width:0;transition:color .16s ease,background .16s ease,transform .12s ease}.navBtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.65}.navBtn.active{color:var(--accent-strong);background:linear-gradient(180deg,rgba(45,76,96,.46),rgba(32,54,68,.38));box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}.navBtn.active::after{content:"";position:absolute;bottom:5px;width:14px;height:2px;border-radius:99px;background:var(--accent);box-shadow:0 0 12px rgba(143,180,201,.4)}.navBtn:active{transform:scale(.97)}
-.divider{height:1px;background:rgba(190,212,225,.07);margin:15px 0}#gpsStatus,#notificationStatus{display:none!important}.hidden{display:none!important}
+.divider{height:1px;background:rgba(190,212,225,.07);margin:15px 0}.hidden{display:none!important}
 
 @media(max-width:560px){
   .app{padding-left:11px;padding-right:11px}.appHeader{padding-top:17px}.timer{font-size:55px}.hero{border-radius:24px;padding:15px 14px 14px}.summaryGrid{grid-template-columns:1fr 1fr}.summaryStat:nth-child(3),.summaryStat:nth-child(4){border-top:1px solid rgba(190,212,225,.065)}.summaryStat:nth-child(3){border-left:0}.grid2,.grid3{grid-template-columns:1fr}.quickRegister{grid-template-columns:1fr}.permissionRow{grid-template-columns:repeat(2,minmax(0,1fr))}.permissionRow #goPlacesForLocation{grid-column:1/-1}.offsets{grid-template-columns:repeat(2,1fr)}.manualSegment,.manualSegment.last{grid-template-columns:1fr}.manualSegment .removeSeg{width:100%}.currentSection{margin-top:28px}.sectionHead .hint{max-width:45%;text-align:right;line-height:1.35}.viewTitle h1{font-size:29px}}
