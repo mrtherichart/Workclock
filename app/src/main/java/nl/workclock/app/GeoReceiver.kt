@@ -27,7 +27,10 @@ class GeoReceiver : BroadcastReceiver() {
         event.triggeringGeofences?.forEach { geofence ->
             val placeId = geofence.requestId
             val place = GeoManager.place(context, placeId) ?: return@forEach
-            EventStore.append(context, placeId, transition)
+            val triggerTime = event.triggeringLocation?.time ?: 0L
+            val now = System.currentTimeMillis()
+            val eventTime = if (triggerTime in 1L..(now + 60_000L)) triggerTime else now
+            EventStore.append(context, placeId, transition, eventTime)
             val label = place.optString("name", "this place")
             val type = place.optString("type")
             if (type == "work" && transition == "ENTER") {
