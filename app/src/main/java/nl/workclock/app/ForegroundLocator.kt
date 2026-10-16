@@ -81,7 +81,18 @@ class ForegroundLocator(
                 error("provider", "Android location updates failed: ${e.message ?: e.javaClass.simpleName}")
             }
         }
-        refresh()
+        // Reuse a recent, accurate fix instead of forcing a high-accuracy GPS wakeup.
+        val recent = lastFix?.let { System.currentTimeMillis() - it.time in 0..90_000L && it.hasAccuracy() && it.accuracy <= 200f } ?: false
+        if (!recent) {
+            try {
+                client.lastLocation.addOnSuccessListener { location ->
+                    val usable = location != null && System.currentTimeMillis() - location.time in 0..90_000L &&
+                        location.hasAccuracy() && location.accuracy <= 200f
+                    if (usable) report(location!!)
+                    else refresh()
+                }.addOnFailureListener { refresh() }
+            } catch (_: Exception) { refresh() }
+        }
     }
 
     @SuppressLint("MissingPermission")
