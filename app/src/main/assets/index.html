@@ -186,6 +186,13 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
 .historyItem::before{content:"";position:absolute;left:0;top:18px;bottom:18px;width:2px;border-radius:4px;background:linear-gradient(180deg,rgba(143,180,201,.54),rgba(143,180,201,.06))}.historyTop{display:flex;justify-content:space-between;gap:12px;align-items:baseline}.historyTop strong:first-child{font-family:var(--font-display);font-size:17px;font-weight:560}.historyTop strong:last-child{font-size:19px;font-weight:640;font-variant-numeric:tabular-nums;color:#eff4f7}.historyItem>.meta{margin-top:4px}.manualPanel.collapsed{display:none}
 .manualSegment{display:grid;grid-template-columns:minmax(0,1fr) 120px 36px;gap:8px;align-items:end;border:1px solid rgba(190,212,225,.085);background:rgba(7,13,19,.46);border-radius:12px;padding:10px;margin-top:8px}.manualSegment.last{grid-template-columns:minmax(0,1fr) 120px}.manualSegment .until{min-height:41px;display:flex;align-items:center;color:var(--muted2);font-size:10.5px}
 
+.placeNameButton{border:0;background:transparent;color:var(--text);padding:0;text-align:left;font-family:var(--font-display);font-size:16px;cursor:pointer}
+.placeNameButton:active{color:var(--accent-strong)}.placeMapHint{display:inline-block;margin-top:4px;font-size:10px;color:var(--accent)}
+.attentionStrip{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 13px;padding:12px 14px;border:1px solid rgba(215,173,103,.3);border-radius:13px;background:rgba(89,62,31,.14);color:var(--brass-soft);font-size:12px;text-align:left;cursor:pointer}
+.weekJump{display:flex;gap:6px;align-items:end;margin:-3px 2px 11px}.weekJump label{margin:0 0 4px}.weekJump input{min-height:35px;padding:5px 7px;font-size:12px}.weekJump .wkNr{width:70px}.weekJump .wkYear{width:85px}.weekJump button{min-height:35px;align-self:end}
+.weekTable tbody tr.weekAction{cursor:pointer}.weekTable tbody tr.weekAction:active{background:rgba(143,180,201,.18)}
+.weekProjectFilter{margin:3px 2px 12px;display:flex;align-items:center;gap:9px}.weekProjectFilter label{margin:0;white-space:nowrap}.weekProjectFilter select{min-width:0;min-height:38px;font-size:12px}
+.placeConfidence{margin:0 4px 9px;font-size:11px;line-height:1.5;color:var(--muted)}
 /* Places */
 #locationList>.meta{padding:15px}.location{position:relative;border-bottom:1px solid rgba(190,212,225,.07);padding:14px 15px}.location:last-child{border-bottom:0}.location::before{content:"";position:absolute;left:7px;top:20px;width:3px;height:24px;border-radius:4px;background:#3b5465}.locationHead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.locationName{font-family:var(--font-display);font-size:16px;font-weight:560}.actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.locationType{display:inline-flex;font-family:var(--font-sans);font-size:8px;text-transform:uppercase;letter-spacing:.11em;color:var(--muted2);margin-left:7px;font-weight:760}.quickRegister{display:grid;grid-template-columns:1fr 1fr;gap:8px}.locationEditor{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 
@@ -274,6 +281,7 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
         <button type="button" id="historyShowDays" class="active" aria-pressed="true">Dagen</button>
         <button type="button" id="historyShowWeek" aria-pressed="false">Weekstaat</button>
       </div>
+      <button id="attentionStrip" class="attentionStrip hidden" type="button"><span id="attentionLabel"></span><span>Review →</span></button>
       <div id="historyDaysPanel">
       <div class="historyToolbar">
         <button class="btn primary" id="showManualEntry">＋ Add past workday</button>
@@ -282,6 +290,7 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
       <section class="card manualPanel collapsed" id="manualCard">
         <div class="sectionHead"><h2 id="manualTitle">Add a past workday manually</h2><button class="btn small" id="hideManualEntry">Close</button></div>
         <div class="sub" id="manualSubtitle">For missed detection, forgotten registration, or work from before the app existed.</div>
+        <div class="buttonRow"><button class="btn small" type="button" id="repeatPreviousDay">Use previous workday</button></div>
         <label>Date</label><input type="date" id="manualDate">
         <div class="grid2"><div><label>Start</label><input type="time" id="manualStart" value="07:00"></div><div><label>Finish</label><input type="time" id="manualFinish" value="16:00"></div></div>
         <label>Break</label><select id="manualBreak"><option value="0">No break</option><option value="15">15 min</option><option value="30" selected>30 min</option><option value="45">45 min</option><option value="60">60 min</option><option value="75">75 min</option><option value="90">90 min</option></select>
@@ -315,6 +324,8 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
               <button type="button" id="weekNext" aria-label="Volgende week">›</button>
             </div>
           </div>
+          <div class="weekJump"><div><label for="weekJumpNumber">Week</label><input class="wkNr" id="weekJumpNumber" type="number" min="1" max="53"></div><div><label for="weekJumpYear">Year</label><input class="wkYear" id="weekJumpYear" type="number" min="2000" max="2100"></div><button class="btn small" type="button" id="weekJumpGo">Go</button></div>
+          <div class="weekProjectFilter"><label for="weekProjectSelect">Project</label><select id="weekProjectSelect"><option value="">All projects</option></select></div>
           <div class="weekScroll">
             <table class="weekTable" aria-label="Urenstaat per week">
               <colgroup><col style="width:8%"><col style="width:19%"><col style="width:13%"><col style="width:13%"><col style="width:14%"><col style="width:17%"><col style="width:16%"></colgroup>
@@ -325,7 +336,7 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
           </div>
           <div class="weekFoot"><strong>Project(en):</strong> <span id="weekProjects">—</span></div>
           <div id="weekDraftNote" class="weekInfo hidden">* Conceptdag: nog niet bevestigd. Onvoltooide uren tellen nog niet mee bij het weektotaal.</div>
-          <div class="weekInfo">Uren zijn exclusief pauze. Reiskilometers komen uit je geregistreerde ritten. Corrigeer een dag via Dagen.</div>
+          <div class="weekInfo" id="weekFilterInfo">Tap a row to edit a recorded day. Times exclude breaks; kilometres are from registered journeys.</div>
         </div>
       </div>
     </section>
@@ -343,6 +354,7 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
         </div>
       </section>
 
+      <div class="placeConfidence" id="placeConfidence">Checking Android background detection…</div>
       <section class="card flush"><div id="locationList"></div></section>
 
       <section class="card">
@@ -370,7 +382,7 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
         </div>
         <div class="settingGroup">
           <h3>Data and backups</h3><p>Keep a copy of your workdays before changing phones or reinstalling.</p>
-          <div class="buttonRow"><button class="btn" id="exportBackup">Export backup</button><button class="btn" id="importBackup">Import backup</button></div>
+          <div class="buttonRow"><button class="btn" id="exportBackup">Export backup</button><button class="btn" id="importBackup">Import backup</button><button class="btn" id="restoreSnapshot">Restore local snapshot</button></div>
           <div class="notice" id="backupMessage">Backups contain your saved locations, projects, hours and settings.</div>
         </div>
         <div class="settingGroup" id="updatesSetting">
@@ -464,8 +476,9 @@ function migrateOld(old){const n=newState();if(!old||typeof old!=="object")retur
 function rebuildProjectCatalog(target=state){const map=new Map();for(const p of Array.isArray(target.projects)?target.projects:[]){const name=String(p.name||"").trim();if(name)map.set(name.toLowerCase(),{id:p.id||uid("proj"),name,lastUsedAt:p.lastUsedAt||null,useCount:Number(p.useCount)||0})}for(const day of [...(target.history||[]),target.currentDay].filter(Boolean))for(const seg of day.segments||[]){const name=String(seg.projectName||"").trim();if(!name)continue;const k=name.toLowerCase();if(!map.has(k))map.set(k,{id:seg.projectId||uid("proj"),name,lastUsedAt:seg.stop||day.stop||null,useCount:1});const p=map.get(k);seg.projectId=p.id;seg.projectName=p.name}target.projects=[...map.values()].sort((a,b)=>a.name.localeCompare(b.name))}
 function validateState(s){const n=newState();if(!s||typeof s!=="object")return n;n.locations=Array.isArray(s.locations)?s.locations.filter(validLocation).map(x=>({...x,lat:Number(x.lat),lon:Number(x.lon),radius:Number(x.radius)||150})):[];n.routeCache=s.routeCache&&typeof s.routeCache==="object"?s.routeCache:{};n.history=Array.isArray(s.history)?s.history.map(normalizeDay).filter(Boolean):[];n.currentDay=s.currentDay?normalizeDay(s.currentDay):null;n.presence={...n.presence,...(s.presence||{})};n.settings={...n.settings,...(s.settings||{})};n.settings.defaultRadius=Number(n.settings.defaultRadius)||150;n.projects=Array.isArray(s.projects)?s.projects:[];rebuildProjectCatalog(n);return n}
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)return validateState(JSON.parse(raw));for(const key of PREVIOUS_KEYS){const legacy=localStorage.getItem(key);if(legacy){const migrated=migrateOld(JSON.parse(legacy));localStorage.setItem(STORAGE_KEY,JSON.stringify(migrated));return migrated}}}catch(e){console.error("State load failed",e)}return newState()}
+let syncedPlacesJSON=null;
 function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));syncAndroidPlaces()}catch(e){console.error("Persist failed",e);setNotice("mainMessage","Could not save WorkClock data on this device.","bad")}}
-function syncAndroidPlaces(){try{WorkClockAndroid.syncPlaces(JSON.stringify(state.locations.map(({id,name,type,lat,lon,radius})=>({id,name,type,lat,lon,radius}))))}catch(e){console.warn("Android place sync failed",e)}}
+function syncAndroidPlaces(){try{const json=JSON.stringify(state.locations.map(({id,name,type,lat,lon,radius})=>({id,name,type,lat,lon,radius})));if(json===syncedPlacesJSON)return;WorkClockAndroid.syncPlaces(json);syncedPlacesJSON=json}catch(e){console.warn("Android place sync failed",e)}}
 function refreshAndroidStatus(){
   try{
     const p=JSON.parse(WorkClockAndroid.permissionStatus());
@@ -704,7 +717,9 @@ function fillLocationSelects(){const homes=locationsOf("home"),works=locationsOf
 function renderSettings(){const s=state.settings;$("#startFrom").value=s.startFrom;$("#startUntil").value=s.startUntil;$("#finishFrom").value=s.finishFrom;$("#finishUntil").value=s.finishUntil;$("#defaultRadius").value=s.defaultRadius;$("#routingProvider").value=s.routingProvider;$("#orsKey").value=s.orsKey}
 
 // Weekstaat is a temporary view over saved workdays — no separate or duplicated data.
-let weekSheetMode="days",weekSheetAnchor=null;
+let weekSheetMode=localStorage.getItem("workclock-history-mode")==="week"?"week":"days";
+let weekSheetAnchor=(()=>{const val=localStorage.getItem("workclock-week-anchor");if(!val||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(val))return null;const date=new Date(val+"T12:00:00");return Number.isFinite(date.getTime())?date:null})();
+let weekProjectFilter="";
 function mondayOfWeek(date){
   const d=new Date(date.getFullYear(),date.getMonth(),date.getDate(),12);
   d.setDate(d.getDate()-((d.getDay()+6)%7));return d;
@@ -733,10 +748,18 @@ function daysInWeek(anchor){
 function renderWeekSheet(){
   const anchor=weekSheetAnchor||mondayOfWeek(new Date()),monday=mondayOfWeek(anchor);
   weekSheetAnchor=monday;
+  localStorage.setItem("workclock-week-anchor",localDateKey(monday));
   const {year,week}=isoWeekData(monday),sunday=new Date(monday);
   sunday.setDate(monday.getDate()+6);
   const label=d=>d.toLocaleDateString("nl-NL",{day:"numeric",month:"short"});
   $("#weekHeading").textContent=`Week ${week}`;
+  $("#weekJumpNumber").value=String(week);
+  $("#weekJumpYear").value=String(year);
+  const selector=$("#weekProjectSelect");
+  const names=[...new Set(state.history.flatMap(d=>(d.segments||[]).map(seg=>seg.projectName).filter(Boolean)))].sort((a,b)=>a.localeCompare(b));
+  selector.innerHTML='<option value="">All projects</option>'+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");
+  if(!names.includes(weekProjectFilter))weekProjectFilter="";
+  selector.value=weekProjectFilter;
   $("#weekRange").textContent=`${label(monday)} – ${label(sunday)} ${year}`;
   $("#weekNow").disabled=localDateKey(monday)===localDateKey(mondayOfWeek(new Date()));
   const weekdays=["ma","di","wo","do","vr","za","zo"];
@@ -758,6 +781,26 @@ function renderWeekSheet(){
       }
       for(const seg of d.segments||[])if(seg.projectName)projects.add(seg.projectName.trim());
     }
+    if(weekProjectFilter){
+      const matching=entries.flatMap(d=>(d.segments||[]).filter(seg=>seg.projectName===weekProjectFilter).map(seg=>({day:d,seg})));
+      if(!matching.length){first=null;last=null;minutes=0;breaks=0;validDistance=false;finishedCount=0;km=0;}
+      else{
+        first=Math.min(...matching.map(x=>new Date(x.seg.start).getTime()));
+        last=Math.max(...matching.map(x=>new Date(x.seg.stop).getTime()));
+        minutes=0;breaks=0;finishedCount=0;km=0;validDistance=false;
+        for(const d of entries){
+          const all=(d.segments||[]),hits=all.filter(seg=>seg.projectName===weekProjectFilter);
+          if(!hits.length||!d.stop)continue;
+          const gross=Math.max(0,Math.floor((new Date(d.stop)-new Date(d.start))/60000));
+          const selected=hits.reduce((v,seg)=>v+Math.max(0,Math.round((new Date(seg.stop)-new Date(seg.start))/60000)),0);
+          const pause=Math.round((Number(d.breakMin)||0)*selected/Math.max(1,gross));
+          minutes+=Math.max(0,selected-pause);breaks+=pause;finishedCount++;
+          if(all.length===hits.length){
+            for(const c of [d.commuteOut,d.commuteBack])if(c&&Number.isFinite(Number(c.km))){km+=Math.max(0,Number(c.km));validDistance=true;}
+          }
+        }
+      }
+    }
     totalMinutes+=minutes;if(validDistance){totalDistance+=km;hasDistance=true;}
     const blank=!entries.length,partial=!!entries.length&&(finishedCount!==entries.length||entries.some(d=>d.status!=="confirmed"));if(partial)hasDraft=true;
     const dateLabel=`${String(date.getDate()).padStart(2,"0")}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getFullYear()).slice(-2)}`;
@@ -765,15 +808,17 @@ function renderWeekSheet(){
     const pauseLabel=finishedCount?`${Math.floor(breaks/60)}:${String(breaks%60).padStart(2,"0")}`:"—";
     const hoursLabel=finishedCount?weekDuration(minutes):"—";
     const distLabel=validDistance?weekKm(km):"—";
-    return `<tr class="${blank?"weekBlank":""} ${partial?"weekDraft":""}"><td>${weekdays[i]}${partial?"*":""}</td><td>${dateLabel}</td><td>${startLabel}</td><td>${endLabel}</td><td>${pauseLabel}</td><td>${hoursLabel}</td><td>${distLabel}</td></tr>`;
+    return `<tr data-date="${localDateKey(date)}" class="${blank?"weekBlank":""} ${partial?"weekDraft":""} ${entries.length?"weekAction":""}"><td>${weekdays[i]}${partial?"*":""}</td><td>${dateLabel}</td><td>${startLabel}</td><td>${endLabel}</td><td>${pauseLabel}</td><td>${hoursLabel}</td><td>${distLabel}</td></tr>`;
   }).join("");
   $("#weekTotalHours").textContent=totalMinutes?weekDuration(totalMinutes):"—";
   $("#weekTotalKm").textContent=hasDistance?weekKm(totalDistance):"—";
-  $("#weekProjects").textContent=[...projects].filter(Boolean).join(" · ")||"—";
+  $("#weekProjects").textContent=weekProjectFilter||[...projects].filter(Boolean).join(" · ")||"—";
+  $("#weekFilterInfo").textContent=weekProjectFilter?"Project hours: breaks divided proportionally. Journeys are shown only when the whole workday belongs to this project. Tap a row to edit.":"Tap a day to edit it. Hours exclude breaks; kilometres use registered journeys.";
   $("#weekDraftNote").classList.toggle("hidden",!hasDraft);
 }
 function showHistoryMode(mode){
   weekSheetMode=mode==="week"?"week":"days";
+  localStorage.setItem("workclock-history-mode",weekSheetMode);
   $("#historyDaysPanel").classList.toggle("hidden",weekSheetMode!=="days");
   $("#weekSheetPanel").classList.toggle("hidden",weekSheetMode!=="week");
   $("#historyShowDays").classList.toggle("active",weekSheetMode==="days");
@@ -783,7 +828,20 @@ function showHistoryMode(mode){
   if(weekSheetMode==="week")renderWeekSheet();
 }
 function renderHistory(){const box=$("#historyList");$("#clearHistory").closest(".section").classList.toggle("hidden",!state.history.length);if(!state.history.length){box.innerHTML='<div class="meta">No confirmed workdays yet.</div>';return}box.innerHTML="";for(const d of state.history.slice().sort((a,b)=>new Date(b.start)-new Date(a.start))){const ms=Math.max(0,new Date(d.stop)-new Date(d.start)-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),el=document.createElement("div");el.className="historyItem";el.dataset.dayId=d.id;el.innerHTML=`<div class="historyTop"><strong>${fmtDate(d.start)}</strong><strong>${fmtDuration(ms)}</strong></div><div class="meta">${fmtTime(d.start)}–${fmtTime(d.stop)} · break ${d.breakMin} min · ${km.toFixed(1)} km${d.manuallyAdded?" · manual entry":""}</div>${projectLines(d)}${d.commuteOut?`<div class="meta" style="margin-top:7px">${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)}: ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)}: ${d.commuteBack.km.toFixed(1)} km</div>`:(!d.manuallyAdded&&d.workplaceId?`<div class="notice">Return route pending · open WorkClock at a saved home.</div>`:"")}<div class="buttonRow" style="margin-top:10px"><button class="hold mini editDay"><div class="fill"></div><span>HOLD TO EDIT</span></button><button class="hold mini danger deleteDay"><div class="fill"></div><span>HOLD TO DELETE</span></button></div>`;wireHold(el.querySelector(".editDay"),()=>beginEditDay(d.id));wireHold(el.querySelector(".deleteDay"),()=>deletePastDay(d.id));box.appendChild(el)}}
-function renderAll(){renderStatus();renderToday();renderLocations();renderSettings();renderProjectSuggestions();renderHistory();if(weekSheetMode==="week")renderWeekSheet()}
+let renderInitialized=false;
+function renderAll(){
+  renderStatus();renderToday();renderProjectSuggestions();
+  if(!renderInitialized){renderLocations();renderSettings();renderHistory();renderInitialized=true;return}
+  const active=document.querySelector(".view.active")?.dataset.view;
+  if(active==="places")renderLocations();
+  else if(active==="settings")renderSettings();
+  else if(active==="history"){renderHistory();if(weekSheetMode==="week")renderWeekSheet()}
+}
+window.__WorkClockRefreshView=function(name){
+  if(name==="history"){renderHistory();renderAttention();if(weekSheetMode==="week")renderWeekSheet()}
+  else if(name==="places"){renderLocations();refreshAndroidStatus()}
+  else if(name==="settings")renderSettings();
+};
 function updateTimer(){const d=getToday();let ms=0;if(d.start)ms=(d.stop?new Date(d.stop):new Date())-new Date(d.start);$("#timer").textContent=fmtTimer(ms)}
 function confirmToday(){const d=getToday(),err=coverageError(d);if(err){setNotice("mainMessage",err,"bad");return}const returnPending=!!(d.workplaceId&&!d.commuteBack&&!d.manuallyAdded);d.status="confirmed";state.history.push(deepCopy(d));state.history.sort((a,b)=>new Date(a.start)-new Date(b.start));state.currentDay=blankDay();persist();renderAll();setNotice("mainMessage",returnPending?"Workday confirmed. Return route is pending and will be added when WorkClock sees you at a saved home.":"Workday confirmed and added to history.","good")}
 function clearToday(){if(!confirm("Clear today's unconfirmed draft?"))return;state.currentDay=blankDay();persist();renderAll();setNotice("mainMessage","Today's draft cleared.")}
@@ -810,6 +868,21 @@ $("#historyShowWeek").addEventListener("click",()=>showHistoryMode("week"));
 $("#weekPrevious").addEventListener("click",()=>{weekSheetAnchor=mondayOfWeek(weekSheetAnchor||new Date());weekSheetAnchor.setDate(weekSheetAnchor.getDate()-7);renderWeekSheet()});
 $("#weekNext").addEventListener("click",()=>{weekSheetAnchor=mondayOfWeek(weekSheetAnchor||new Date());weekSheetAnchor.setDate(weekSheetAnchor.getDate()+7);renderWeekSheet()});
 $("#weekNow").addEventListener("click",()=>{weekSheetAnchor=mondayOfWeek(new Date());renderWeekSheet()});
+$("#weekJumpGo").addEventListener("click",()=>{
+  const year=Number($("#weekJumpYear").value),week=Number($("#weekJumpNumber").value);
+  if(!Number.isInteger(year)||year<2000||year>2100||!Number.isInteger(week)||week<1||week>53)return;
+  const monday=mondayOfWeek(new Date(year,0,4,12));monday.setDate(monday.getDate()+7*(week-1));
+  if(isoWeekData(monday).year!==year)return;
+  weekSheetAnchor=monday;renderWeekSheet();
+});
+$("#weekProjectSelect").addEventListener("change",e=>{weekProjectFilter=e.target.value;renderWeekSheet()});
+$("#weekTableBody").addEventListener("click",e=>{
+  const tr=e.target.closest("tr[data-date]");if(!tr)return;
+  const found=state.history.filter(d=>(d.date||localDateKey(new Date(d.start)))===tr.dataset.date);
+  if(found.length===1){showHistoryMode("days");beginEditDay(found[0].id)}
+  else if(found.length>1){showHistoryMode("days");$("#historyList").querySelector('[data-day-id="'+found[0].id+'"]')?.scrollIntoView({behavior:"smooth",block:"center"})}
+  else if(state.currentDay?.date===tr.dataset.date){window.__activateWorkClockView?.("today")}
+});
 
 wireHold($("#mainHold"),()=>{const d=getToday();if(!d.start)applyStart(nowISO(),"manual-hold");else if(!d.stop)showTimeChoice("stop","Manual finish. When did you actually finish?")});
 wireHold($("#confirmDayHold"),confirmToday);wireHold($("#saveCurrentHome"),()=>addCurrentLocation("home"));wireHold($("#saveCurrentWork"),()=>addCurrentLocation("work"));wireHold($("#manualSaveHold"),saveManualDay);wireHold($("#clearHistory"),()=>{state.history=[];if(manualEditDayId)resetManualEditor();persist();renderHistory();setNotice("mainMessage","All confirmed history cleared.","good")});
@@ -851,6 +924,7 @@ timerInterval=setInterval(updateTimer,1000);
     views.forEach(v=>v.classList.toggle('active',v.dataset.view===name));
     buttons.forEach(b=>b.classList.toggle('active',b.dataset.target===name));
     sessionStorage.setItem('workclock-view',name);
+    window.__WorkClockRefreshView?.(name);
     window.scrollTo({top:0,behavior:'instant'});
   }
   window.__activateWorkClockView=activate;
