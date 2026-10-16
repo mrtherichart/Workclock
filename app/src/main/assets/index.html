@@ -628,7 +628,24 @@ function renderProjectSuggestions(){const dl=$("#projectSuggestions");if(!dl)ret
 function isAutomationDay(date=new Date()){return state.settings.automationDays.includes(date.getDay())}
 function blankDay(date=localDateKey()){return {id:uid("day"),date,start:null,stop:null,breakMin:30,startSource:null,stopSource:null,status:"draft",commuteOut:null,commuteBack:null,workplaceId:null,startHomeId:null,endHomeId:null,manuallyAdded:false,createdAt:nowISO(),segments:[]}}
 function dayHasData(day){return !!(day&&(day.start||day.stop||day.commuteOut||day.commuteBack||(Array.isArray(day.segments)&&day.segments.length)))}
-function getToday(){const key=localDateKey();if(!state.currentDay){state.currentDay=blankDay(key);persist()}else if(state.currentDay.date!==key&&!dayHasData(state.currentDay)){state.currentDay=blankDay(key);persist()}return state.currentDay}
+function getToday(){
+  const key=localDateKey();
+  if(!state.currentDay){state.currentDay=blankDay(key);persist()}
+  else if(state.currentDay.date!==key){
+    if(!dayHasData(state.currentDay)){state.currentDay=blankDay(key);persist()}
+    else if(state.currentDay.stop){
+      // Preserve a previous completed-but-unconfirmed workday as a draft.
+      // Never silently merge its hours with the next day's clock.
+      if(!state.history.some(d=>d.id===state.currentDay.id)){
+        const previous=deepCopy(state.currentDay);previous.status="draft";
+        state.history.push(previous);
+      }
+      state.currentDay=blankDay(key);persist();
+    }
+    // A running overnight shift stays active on its original start date.
+  }
+  return state.currentDay
+}
 function findDay(id){if(state.currentDay?.id===id)return state.currentDay;return state.history.find(x=>x.id===id)||null}
 function locationById(id){return state.locations.find(x=>x.id===id)||null}
 function locationsOf(type){return state.locations.filter(x=>x.type===type)}
@@ -654,7 +671,13 @@ function saveProjectNaming(){if(!pendingProjectAction)return;const name=$("#proj
 function cancelProjectNaming(){pendingProjectAction=null;$("#projectModal").classList.remove("show");setNotice("mainMessage","Project marker cancelled. Work continues unchanged.")}
 function endProjectNow(){const d=getToday();if(!(d.start&&!d.stop))return;openProjectNaming({mode:"split",marker:nowISO(),source:"quick-project"})}
 
-async function routeBetween(from,to){if(!from||!to)return null;const provider=state.settings.routingProvider||"osrm",key=`${provider}:${from.id}>${to.id}`;if(state.routeCache[key])return state.routeCache[key];try{let result;if(provider==="ors"){const apiKey=(state.settings.orsKey||"").trim();if(!apiKey)throw new Error("OpenRouteService API key missing");const r=await fetch("https://api.openrouteservice.org/v2/directions/driving-car",{method:"POST",headers:{Authorization:apiKey,"Content-Type":"application/json"},body:JSON.stringify({coordinates:[[from.lon,from.lat],[to.lon,to.lat]],preference:"shortest"})});if(!r.ok)throw new Error(`ORS HTTP ${r.status}`);const j=await r.json(),summary=j.routes?.[0]?.summary;if(!summary)throw new Error("No route returned");result={km:summary.distance/1000,seconds:summary.duration,source:"OpenRouteService shortest",updatedAt:nowISO()}}else{const url=`${OSRM_ENDPOINT}${from.lon},${from.lat};${to.lon},${to.lat}?overview=false&alternatives=false&steps=false`,r=await fetch(url,{cache:"no-store"});if(!r.ok)throw new Error(`OSRM HTTP ${r.status}`);const j=await r.json(),route=j.routes?.[0];if(!route)throw new Error("No route returned");result={km:route.distance/1000,seconds:route.duration,source:"OSRM road route",updatedAt:nowISO()}}state.routeCache[key]=result;persist();return result}catch(e){console.warn("Route calculation failed",e);return null}}
+async function routeBetween(from,to){if(!from||!to)return null;const provider=state.settings.routingProvider||"osrm",key=`${provider}:${from.id}>${to.id}`;if(state.routeCache[key])return state.routeCache[key];try{let result;if(provider==="ors"){const apiKey=(state.settings.orsKey||"").trim();if(!apiKey)throw new Error("OpenRouteService API key missing");const r=await fetch("https://api.openrouteservice.org/v2/directions/driving-car",{method:"POST",headers:{Authorization:apiKey,"Content-Type":"application/json"},body:JSON.stringify({coordinates:[[from.lon,from.lat],[to.lon,to.lat]],preference:"shortest"})});if(!r.ok)throw new Error(`ORS HTTP ${r.status}`);const j=await r.json(),summary=j.routes?.[0]?.summary;if(!summary)throw new Error("No route returned");result={km:summary.distance/1000,seconds:summary.duration,source:"OpenRouteService shortest",updatedAt:nowISO()}}else{const url=`${OSRM_ENDPOINT}${from.lon},${from.lat};${to.lon},${to.lat}?overview=false&alternatives=false&steps=false`,r=await fetch(url,{cache:"no-store"});if(!r.ok)throw new Error(`OSRM HTTP ${r.status}`);const j=await r.json(),route=j.routes?.[0];if(!route)throw new Error("No route returned");result={km:route.distance/1000,seconds:route.duration,source:"OSRM road route",updatedAt:nowISO()}}state.routeCache[key]=result;
+    const entries=Object.entries(state.routeCache);
+    if(entries.length>150){
+      entries.sort((a,b)=>String(a[1]?.updatedAt||"").localeCompare(String(b[1]?.updatedAt||"")));
+      for(const [oldKey] of entries.slice(0,entries.length-120))delete state.routeCache[oldKey];
+    }
+    persist();return result}catch(e){console.warn("Route calculation failed",e);return null}}
 async function attachCommute(dayId,slot,from,to){const route=await routeBetween(from,to),day=findDay(dayId);if(!day)return;if(!route){setNotice("mainMessage",`Road distance could not be calculated for ${from.name} → ${to.name}.`,"bad");return}day[slot]={fromId:from.id,toId:to.id,from:from.name,to:to.name,km:route.km,source:route.source,at:nowISO()};if(slot==="commuteOut"){day.startHomeId=from.type==="home"?from.id:day.startHomeId;day.workplaceId=to.type==="work"?to.id:day.workplaceId}if(slot==="commuteBack"){day.endHomeId=to.type==="home"?to.id:day.endHomeId;day.workplaceId=from.type==="work"?from.id:day.workplaceId}persist();renderAll()}
 function pendingReturnDay(){
   const all=[state.currentDay,...state.history].filter(Boolean);
@@ -707,7 +730,7 @@ async function recoverPendingReturn(home,{source="gps"}={}){
   return true;
 }
 function updatePresence(found,source,at=nowISO()){
-  if(found){const loc=locationById(found.id);if(loc)loc.lastVisitedAt=nowISO()}
+  if(found){const loc=locationById(found.id);if(loc)loc.lastVisitedAt=at}
   const prev={...state.presence};state.presence.currentId=found?.id||null;state.presence.currentType=found?.type||null;state.presence.currentName=found?.name||null;state.presence.changedAt=at;state.presence.source=source;if(found?.type==="home")state.presence.lastHomeId=found.id;if(found?.type==="work")state.presence.lastWorkId=found.id;persist();return prev}
 async function processPosition(pos,{source="gps",force=false,forcePreviousId=null,eventAt=null}={}){
   currentPosition={lat:Number(pos.lat),lon:Number(pos.lon),accuracy:Number(pos.accuracy)||null};
