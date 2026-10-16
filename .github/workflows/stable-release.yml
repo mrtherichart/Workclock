@@ -40,6 +40,15 @@ jobs:
           else
             echo 'new=true' >> "$GITHUB_OUTPUT"
           fi
+      - uses: actions/setup-node@v4
+        if: steps.signing.outputs.ready == 'true' && steps.version.outputs.new == 'true'
+        with:
+          node-version: '22'
+      - name: Verify Android-only HTML with Linux Chromium
+        if: steps.signing.outputs.ready == 'true' && steps.version.outputs.new == 'true'
+        run: |
+          node tests/weekstaat.test.cjs
+          node tests/linux-ui-smoke.cjs
       - uses: actions/setup-java@v4
         if: steps.signing.outputs.ready == 'true' && steps.version.outputs.new == 'true'
         with:
