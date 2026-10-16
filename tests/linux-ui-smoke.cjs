@@ -32,15 +32,22 @@ const server=http.createServer((req,res)=>{
 server.listen(0,"127.0.0.1",()=>{
  const {port}=server.address();
  const args=["--headless=new","--disable-gpu","--no-sandbox","--disable-dev-shm-usage","--disable-background-networking","--no-first-run","--no-default-browser-check","--virtual-time-budget=2500","--dump-dom", "http://127.0.0.1:"+port+"/assets/index.html"];
- const result=cp.spawnSync(chromium,args,{encoding:"utf8",timeout:25000,maxBuffer:12*1024*1024});
- server.close();
- if(result.error){console.error(result.error);process.exitCode=1;return}
- if(result.status!==0){console.error("Chrome exited with",result.status,result.stderr?.slice(-1500));process.exitCode=1;return}
- const out=result.stdout||"";
- if(!out.includes('data-linux-smoke="pass"')){
-   const fail=out.match(/data-linux-smoke-note="([^"]+)"/);
-   console.error("Android HTML Linux smoke failed:",fail?.[1]||out.slice(-700));
-   process.exitCode=1;return;
- }
- console.log("Android-only HTML passed Chromium headless UI smoke test with Linux-only bridge.");
+ // Use asynchronous spawn: the Node HTTP server must remain responsive while Chrome loads it.
+ const child=cp.spawn(chromium,args,{stdio:["ignore","pipe","pipe"]});
+ let out="",err="",timedOut=false;
+ child.stdout.setEncoding("utf8");child.stderr.setEncoding("utf8");
+ child.stdout.on("data",chunk=>{out+=chunk;if(out.length>12*1024*1024)child.kill("SIGKILL")});
+ child.stderr.on("data",chunk=>{err+=chunk;if(err.length>250000)err=err.slice(-100000)});
+ const timeout=setTimeout(()=>{timedOut=true;child.kill("SIGKILL")},25000);
+ child.on("error",e=>{console.error(e);process.exitCode=1});
+ child.on("close",code=>{
+   clearTimeout(timeout);server.close();
+   if(timedOut||code!==0){console.error("Chrome failed or timed out:",code,err.slice(-1500));process.exitCode=1;return}
+   if(!out.includes('data-linux-smoke="pass"')){
+     const fail=out.match(/data-linux-smoke-note="([^"]+)"/);
+     console.error("Android HTML Linux smoke failed:",fail?.[1]||out.slice(-700));
+     process.exitCode=1;return;
+   }
+   console.log("Android-only HTML passed Chromium headless UI smoke test with Linux-only bridge.");
+ });
 });
