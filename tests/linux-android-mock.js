@@ -31,6 +31,9 @@
     installUpdate:()=>calls.push(["install"]),
     exportBackup:json=>calls.push(["exportBackup",json]),
     importBackup:()=>calls.push(["importBackup"]),
+    backupFolderEnabled:()=>false,
+    selectBackupFolder:()=>calls.push(["selectBackupFolder"]),
+    saveFolderBackup:json=>calls.push(["saveFolderBackup",json]),
     openPlaceOnMap:id=>calls.push(["openPlaceOnMap",id])
   };
   const errors=[];
