@@ -99,8 +99,6 @@ window.__WorkClockNativeLocation=function(position){
 window.__WorkClockNativeLocationError=function(error){
   $("#enableLocation").textContent="Retry location";
   $("#locationHelp").textContent=error?.message||"Android could not obtain your location.";
-  $("#gpsStatus").textContent="Location unavailable";
-  $("#gpsStatus").className="pill bad";
   refreshAndroidStatus();
 };
 let syncingAndroidEvents=false;
@@ -415,7 +413,7 @@ async function processPosition(pos,{source="gps",force=false,forcePreviousId=nul
   renderAll();
 }
 
-/* Android-only runtime: browser permissions, service workers and web GPS are not bundled. */
+// Android provides location and notifications through WorkClockAndroid.
 async function notifyUser(title,body,{tag="workclock-reminder"}={}){
   try{WorkClockAndroid.showNotification(title,body,tag);return true}
   catch(e){console.warn("Android notification failed",e);return false}
@@ -443,9 +441,9 @@ function saveLocationEditor(){const type=$("#locType").value,name=$("#locName").
 function deleteLocation(id){const l=locationById(id);if(!l)return;if(!confirm(`Delete saved location “${l.name}”? Historical records keep their stored names and kilometres.`))return;state.locations=state.locations.filter(x=>x.id!==id);state.routeCache={};for(const key of ["currentId","lastHomeId","lastWorkId"])if(state.presence[key]===id)state.presence[key]=null;persist();renderAll();setNotice("locationEditorMessage",`Deleted ${l.name}.`,"good")}
 function addCurrentLocation(type){if(!currentPosition){setNotice("locationEditorMessage","No current GPS position is available. Enable location first or add coordinates manually.","bad");return}const l=addLocation(type,"",currentPosition.lat,currentPosition.lon,state.settings.defaultRadius);renderAll();setNotice("locationEditorMessage",`Added ${l.name} from current GPS position.`,"good")}
 
-function renderStatus(found=null,source=null){const auto=isAutomationDay();$("#dayAutomationStatus").textContent=auto?"Auto ON":"Auto OFF";$("#dayAutomationStatus").className=`pill ${auto?"good":""}`;if(currentPosition){$("#gpsStatus").textContent=`${source==="simulation"?"SIM":"Location"} ${currentPosition.lat.toFixed(5)}, ${currentPosition.lon.toFixed(5)}`;$("#gpsStatus").className="pill good"}const loc=found||locationById(state.presence.currentId);$("#placeStatus").textContent=loc?`At ${loc.name}`:"No saved place";$("#notificationStatus").textContent="Android reminders"}
+function renderStatus(found=null,source=null){const auto=isAutomationDay();$("#dayAutomationStatus").textContent=auto?"Auto ON":"Auto OFF";$("#dayAutomationStatus").className=`pill ${auto?"good":""}`;const loc=found||locationById(state.presence.currentId);$("#placeStatus").textContent=loc?`At ${loc.name}`:"No saved place"}
 function projectLines(day){if(!day.segments?.length)return '<div class="meta">No completed project sections yet.</div>';return `<div class="projectList">${day.segments.map(s=>`<div class="projectLine"><span class="name">${esc(s.projectName)}</span><span class="time">${fmtTime(s.start)}–${fmtTime(s.stop)} · ${fmtDuration(new Date(s.stop)-new Date(s.start))}</span></div>`).join("")}</div>`}
-// Quiet, opt-out guidance follows actual workday progress, never a mandatory tour.
+// First-run tips follow the saved workday state.
 function rhythmStep(){
   if(rhythmMode!=="active")return null;
   const started=Number(localStorage.getItem(RHYTHM_STARTED_KEY));
@@ -530,7 +528,7 @@ function fillSelect(el,items,placeholder,preferred=null){const old=preferred??el
 function fillLocationSelects(){const homes=locationsOf("home"),works=locationsOf("work");fillSelect($("#simHome"),homes,"Choose home");fillSelect($("#simWork"),works,"Choose workplace");fillSelect($("#manualStartHome"),homes,"Choose start home");fillSelect($("#manualEndHome"),homes,"Choose return home");fillSelect($("#manualWork"),works,"Choose workplace");updateManualModeUI()}
 function renderSettings(){const s=state.settings;$("#startFrom").value=s.startFrom;$("#startUntil").value=s.startUntil;$("#finishFrom").value=s.finishFrom;$("#finishUntil").value=s.finishUntil;$("#defaultRadius").value=s.defaultRadius;$("#routingProvider").value=s.routingProvider;$("#orsKey").value=s.orsKey}
 
-// Weekstaat is a temporary view over saved workdays — no separate or duplicated data.
+// Weekstaat reads from the saved workdays.
 let weekSheetMode=localStorage.getItem("workclock-history-mode")==="week"?"week":"days";
 let weekSheetAnchor=(()=>{const val=localStorage.getItem("workclock-week-anchor");if(!val||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(val))return null;const date=new Date(val+"T12:00:00");return Number.isFinite(date.getTime())?date:null})();
 let weekProjectFilter="";
@@ -804,7 +802,7 @@ $("#endProject").addEventListener("click",endProjectNow);$("#saveProjectModal").
 $("#editStart").addEventListener("click",()=>showTimeChoice("start","Change today's start time."));$("#editStop").addEventListener("click",()=>showTimeChoice("stop","Change today's finish time."));$("#clearDraft").addEventListener("click",clearToday);$("#enableLocation").addEventListener("click",requestLocation);$("#enableNotifications").addEventListener("click",enableNotifications);$("#testNotification").addEventListener("click",testNotification);$("#closeTimeModal").addEventListener("click",hideTimeChoice);$("#confirmCustomTime").addEventListener("click",confirmCustomTime);$("#timeModal").addEventListener("click",e=>{if(e.target===$("#timeModal"))hideTimeChoice()});
 $("#fillCurrentLocation").addEventListener("click",()=>{if(!currentPosition)return setNotice("locationEditorMessage","No current GPS position available.","bad");$("#locLat").value=currentPosition.lat;$("#locLon").value=currentPosition.lon;setNotice("locationEditorMessage","Filled current GPS coordinates.","good")});$("#saveLocation").addEventListener("click",saveLocationEditor);$("#cancelLocationEdit").addEventListener("click",resetLocationEditor);$("#saveSettings").addEventListener("click",saveSettings);$("#clearRouteCache").addEventListener("click",()=>{state.routeCache={};persist();setNotice("settingsMessage","Route cache cleared.","good")});
 $("#enableNativeBackground").addEventListener("click",()=>{WorkClockAndroid.requestBackgroundTracking();setNotice("nativeTrackingHelp","Follow the Android permission screens, then reopen WorkClock. Choose Allow all the time where available.");});
-// Native-only updater; leaves the existing web UI and saved data untouched.
+// Native updater status is displayed in Settings.
 const updateBox=$("#updatesSetting"),updateButton=$("#checkUpdates"),installButton=$("#installUpdate");
 window.__WorkClockUpdateStatus=function(info){
   if(!info)return;
