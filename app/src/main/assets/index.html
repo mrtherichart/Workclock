@@ -96,14 +96,21 @@
       <div id="weekSheetPanel" class="hidden">
         <div class="weekCard">
           <div class="weekHead">
-            <div><h2 id="weekHeading">Weekstaat</h2><p id="weekRange"></p></div>
+            <div class="weekTitle">
+              <button type="button" id="weekHeading" class="weekHeadingButton" aria-label="Change week number">Weekstaat</button>
+              <form id="weekInlineEdit" class="weekInlineEdit hidden" aria-label="Choose week number">
+                <span>Week</span>
+                <input id="weekInlineNumber" type="number" inputmode="numeric" min="1" max="53" required aria-label="Week number">
+                <button type="submit" aria-label="Go to week">✓</button>
+              </form>
+              <p id="weekRange"></p>
+            </div>
             <div class="weekControls">
               <button type="button" id="weekPrevious" aria-label="Vorige week">‹</button>
               <button type="button" id="weekNow" aria-label="Deze week">Nu</button>
               <button type="button" id="weekNext" aria-label="Volgende week">›</button>
             </div>
           </div>
-          <div class="weekJump"><div><label for="weekJumpNumber">Week</label><input class="wkNr" id="weekJumpNumber" type="number" min="1" max="53"></div><div><label for="weekJumpYear">Year</label><input class="wkYear" id="weekJumpYear" type="number" min="2000" max="2100"></div><button class="btn small" type="button" id="weekJumpGo">Go</button></div>
           <div class="weekProjectFilter"><label for="weekProjectSelect">Project</label><select id="weekProjectSelect"><option value="">All projects</option></select></div>
           <div class="weekScroll">
             <table class="weekTable" aria-label="Urenstaat per week">
