@@ -7,7 +7,8 @@ const assert=require("node:assert/strict");
 const path=require("node:path");
 const root=path.resolve(__dirname,"..");
 const apkHtml=fs.readFileSync(path.join(root,"app/src/main/assets/index.html"),"utf8");
-const mock=fs.readFileSync(path.join(__dirname,"linux-android-mock.js"),"utf8");
+const firstRun=process.argv.includes("--first-run");
+const mock=fs.readFileSync(path.join(__dirname,firstRun?"linux-first-run-mock.js":"linux-android-mock.js"),"utf8");
 const appJs=fs.readFileSync(path.join(root,"app/src/main/assets/app.js"),"utf8");
 const navigationJs=fs.readFileSync(path.join(root,"app/src/main/assets/navigation.js"),"utf8");
 const forbidden=[
@@ -62,6 +63,6 @@ server.listen(0,"127.0.0.1",()=>{
      console.error("Android HTML Linux smoke failed:",fail?.[1]||out.slice(-700));
      process.exitCode=1;return;
    }
-   console.log("Android-only HTML passed Chromium headless UI smoke test with Linux-only bridge.");
+   console.log((firstRun?"Fresh first-run guidance":"Existing-user app")+" passed Chromium smoke test.");
  });
 });
