@@ -49,6 +49,7 @@
       try {
         assert(!errors.length,errors.join("; "));
         assert(document.querySelector("#timer"),"Today view failed to initialize");
+        assert(document.getElementById("rhythmGuide").classList.contains("hidden"),"An existing WorkClock user should not see new-user hints");
         assert(document.querySelector("#viewHistory"),"History view is missing");
         const places=document.querySelector('.navBtn[data-target="places"]');
         places.click();
