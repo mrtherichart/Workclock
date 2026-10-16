@@ -819,7 +819,7 @@ function renderWeekSheet(){
     }
     totalMinutes+=minutes;if(validDistance){totalDistance+=km;hasDistance=true;}
     const blank=!entries.length,partial=!!entries.length&&(finishedCount!==entries.length||entries.some(d=>d.status!=="confirmed"));if(partial)hasDraft=true;
-    const dateLabel=`${String(date.getDate()).padStart(2,"0")}-${String(date.getMonth()+1).padStart(2,"0")}`;
+    const dateLabel=`${String(date.getDate()).padStart(2,"0")}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getFullYear()).slice(-2)}`;
     const startLabel=first!==null?weekClock(first):"—",endLabel=last!==null?weekClock(last):"—";
     const pauseLabel=finishedCount?`${Math.floor(breaks/60)}:${String(breaks%60).padStart(2,"0")}`:"—";
     const hoursLabel=finishedCount?weekDuration(minutes):"—";
