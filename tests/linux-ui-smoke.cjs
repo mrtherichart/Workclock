@@ -8,13 +8,15 @@ const path=require("node:path");
 const root=path.resolve(__dirname,"..");
 const apkHtml=fs.readFileSync(path.join(root,"app/src/main/assets/index.html"),"utf8");
 const mock=fs.readFileSync(path.join(__dirname,"linux-android-mock.js"),"utf8");
+const appJs=fs.readFileSync(path.join(root,"app/src/main/assets/app.js"),"utf8");
+const navigationJs=fs.readFileSync(path.join(root,"app/src/main/assets/navigation.js"),"utf8");
 const forbidden=[
  "navigator.geolocation","navigator.serviceWorker","workclock-sw.js",
  "Notification.permission","new Notification(","__WorkClockTest",
  'id="backupFile"',"ensureNotificationWorker"
 ];
-for(const token of forbidden)assert(!apkHtml.includes(token),"Browser-only code in production: "+token);
-const scripts=[...apkHtml.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
+for(const token of forbidden)assert(![apkHtml,appJs,navigationJs].some(s=>s.includes(token)),"Browser-only code in production: "+token);
+const scripts=[appJs,navigationJs];
 const vm=require("node:vm");
 for(const [i,script] of scripts.entries())new vm.Script(script,{filename:"app-script-"+i});
 const chromium=process.env.CHROME_BIN||["chromium","chromium-browser","google-chrome-stable","google-chrome"].find(name=>{
@@ -25,9 +27,16 @@ if(!chromium){console.error("Install Chromium/Chrome or set CHROME_BIN for the L
 const html=apkHtml.replace("<head>","<head>\n<script>\n"+mock+"\n</script>");
 assert.notEqual(html,apkHtml,"Could not insert test bridge");
 const server=http.createServer((req,res)=>{
- if(req.url!=="/assets/index.html"){res.writeHead(404);res.end();return}
- res.writeHead(200,{"Content-Type":"text/html; charset=utf-8","Cache-Control":"no-store"});
- res.end(html);
+ const assets={
+    "/assets/index.html":[html,"text/html; charset=utf-8"],
+    "/assets/app.js":[appJs,"text/javascript; charset=utf-8"],
+    "/assets/navigation.js":[navigationJs,"text/javascript; charset=utf-8"],
+    "/assets/style.css":[fs.readFileSync(path.join(root,"app/src/main/assets/style.css"),"utf8"),"text/css; charset=utf-8"]
+ };
+ const item=assets[req.url];
+ if(!item){res.writeHead(404);res.end();return}
+ res.writeHead(200,{"Content-Type":item[1],"Cache-Control":"no-store"});
+ res.end(item[0]);
 });
 server.listen(0,"127.0.0.1",()=>{
  const {port}=server.address();
