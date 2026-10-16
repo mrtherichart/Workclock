@@ -540,7 +540,8 @@ function attentionDays(){
     else if(d.start&&d.stop)issues.push({day:d,reason:"Unconfirmed workday"});
   }
   for(const day of state.history){
-    if(day.start&&day.stop&&!day.manuallyAdded&&day.workplaceId&&!day.commuteBack)issues.push({day,reason:"Return trip missing"});
+    if(day.status!=="confirmed")issues.push({day,reason:"Unconfirmed previous day"});
+    else if(day.start&&day.stop&&!day.manuallyAdded&&day.workplaceId&&!day.commuteBack)issues.push({day,reason:"Return trip missing"});
     else if(!day.start||!day.stop||!day.segments?.length)issues.push({day,reason:"Incomplete workday"});
   }
   return issues;
@@ -554,10 +555,15 @@ function renderAttention(){
 function jumpToAttention(){
   const first=attentionDays()[0];if(!first)return;
   if(first.day===state.currentDay){window.__activateWorkClockView?.("today");return}
+  const index=state.history.slice().sort((a,b)=>new Date(b.start)-new Date(a.start)).findIndex(d=>d.id===first.day.id);
+  if(index>=historyLimit){historyLimit=index+1;renderHistory()}
   showHistoryMode("days");const el=$("#historyList").querySelector('[data-day-id="'+first.day.id+'"]');
   el?.scrollIntoView({behavior:"smooth",block:"center"});
 }
-function renderHistory(){const box=$("#historyList");$("#clearHistory").closest(".section").classList.toggle("hidden",!state.history.length);if(!state.history.length){box.innerHTML='<div class="meta">No confirmed workdays yet.</div>';return}box.innerHTML="";for(const d of state.history.slice().sort((a,b)=>new Date(b.start)-new Date(a.start))){const ms=Math.max(0,new Date(d.stop)-new Date(d.start)-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),el=document.createElement("div");el.className="historyItem";el.dataset.dayId=d.id;el.innerHTML=`<div class="historyTop"><strong>${fmtDate(d.start)}</strong><strong>${fmtDuration(ms)}</strong></div><div class="meta">${fmtTime(d.start)}–${fmtTime(d.stop)} · break ${d.breakMin} min · ${km.toFixed(1)} km${d.manuallyAdded?" · manual entry":""}</div>${projectLines(d)}${d.commuteOut?`<div class="meta" style="margin-top:7px">${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)}: ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)}: ${d.commuteBack.km.toFixed(1)} km</div>`:(!d.manuallyAdded&&d.workplaceId?`<div class="notice">Return route pending · open WorkClock at a saved home.</div>`:"")}<div class="buttonRow" style="margin-top:10px"><button class="hold mini editDay"><div class="fill"></div><span>HOLD TO EDIT</span></button><button class="hold mini danger deleteDay"><div class="fill"></div><span>HOLD TO DELETE</span></button></div>`;wireHold(el.querySelector(".editDay"),()=>beginEditDay(d.id));wireHold(el.querySelector(".deleteDay"),()=>deletePastDay(d.id));box.appendChild(el)}}
+let historyLimit=60;
+function renderHistory(){const box=$("#historyList");$("#clearHistory").closest(".section").classList.toggle("hidden",!state.history.length);if(!state.history.length){box.innerHTML='<div class="meta">No confirmed workdays yet.</div>';return}box.innerHTML="";for(const d of state.history.slice().sort((a,b)=>new Date(b.start)-new Date(a.start)).slice(0,historyLimit)){const ms=Math.max(0,new Date(d.stop)-new Date(d.start)-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),el=document.createElement("div");el.className="historyItem";el.dataset.dayId=d.id;el.innerHTML=`<div class="historyTop"><strong>${fmtDate(d.start)}</strong><strong>${fmtDuration(ms)}</strong></div><div class="meta">${fmtTime(d.start)}–${fmtTime(d.stop)} · break ${d.breakMin} min · ${km.toFixed(1)} km${d.manuallyAdded?" · manual entry":""}</div>${projectLines(d)}${d.commuteOut?`<div class="meta" style="margin-top:7px">${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)}: ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)}: ${d.commuteBack.km.toFixed(1)} km</div>`:(!d.manuallyAdded&&d.workplaceId?`<div class="notice">Return route pending · open WorkClock at a saved home.</div>`:"")}<div class="buttonRow" style="margin-top:10px"><button class="hold mini editDay"><div class="fill"></div><span>HOLD TO EDIT</span></button><button class="hold mini danger deleteDay"><div class="fill"></div><span>HOLD TO DELETE</span></button></div>`;wireHold(el.querySelector(".editDay"),()=>beginEditDay(d.id));wireHold(el.querySelector(".deleteDay"),()=>deletePastDay(d.id));box.appendChild(el)}
+const older=$("#historyShowOlder"),remaining=Math.max(0,state.history.length-historyLimit);
+older.classList.toggle("hidden",remaining===0);older.textContent=remaining?`Show older workdays (${remaining} remaining)`:"";}
 let renderInitialized=false;
 function renderAll(){
   renderStatus();renderToday();renderProjectSuggestions();renderAttention();
@@ -617,6 +623,7 @@ function simLeave(){const {w}=simulationSelection();if(w?.type!=="work")return s
 function simReturn(){const {h,w}=simulationSelection();if(h?.type!=="home"||w?.type!=="work")return setNotice("simMessage","Choose both a home and a workplace.","bad");const live=state.currentDay&&state.currentDay.start&&!state.currentDay.commuteBack?state.currentDay:null,pending=pendingReturnDay(),target=live||pending;if(!target)return setNotice("simMessage","There is no current or recently confirmed workday waiting for a return-home route.","bad");const origin=locationById(target.workplaceId)||w;if(origin?.type!=="work")return setNotice("simMessage","The pending workday has no saved workplace.","bad");state.presence.currentId=origin.id;state.presence.currentType="work";state.presence.currentName=origin.name;state.presence.lastWorkId=origin.id;persist();currentPosition={lat:h.lat,lon:h.lon};setNotice("simMessage",`Simulating ${origin.name} → ${h.name}.`,"good");processPosition(currentPosition,{source:"simulation",force:true,forcePreviousId:origin.id})}
 
 $("#attentionStrip").addEventListener("click",jumpToAttention);
+$("#historyShowOlder").addEventListener("click",()=>{historyLimit+=60;renderHistory()});
 $("#historyShowDays").addEventListener("click",()=>showHistoryMode("days"));
 $("#historyShowWeek").addEventListener("click",()=>showHistoryMode("week"));
 $("#weekPrevious").addEventListener("click",()=>{weekSheetAnchor=mondayOfWeek(weekSheetAnchor||new Date());weekSheetAnchor.setDate(weekSheetAnchor.getDate()-7);renderWeekSheet()});
