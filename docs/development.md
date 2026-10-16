@@ -23,3 +23,5 @@ To build a debug APK, use the **Android APK (test build)** GitHub Action or run 
 Signed releases use `.github/workflows/stable-release.yml`. Bump both `versionCode` and `versionName` in `app/build.gradle.kts` when preparing a release. The signing password is an Actions secret; the encrypted signing key is in `signing/`. Never commit the decrypted key or its password. Keep an independent private copy of both.
 
 The release workflow checks and signs the package before publishing `WorkClock.apk` to [Releases](https://github.com/mrtherichart/Workclock/releases).
+
+Screenshots in the guide are captured from the current UI with sample records. Regenerate them with `node tests/capture-docs.cjs` in Linux (Chromium required), and commit the resulting files in `docs/screenshots/`.
