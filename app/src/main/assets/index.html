@@ -16,6 +16,17 @@
 
   <main>
     <section class="view active" data-view="today" id="viewToday">
+      <aside id="rhythmGuide" class="rhythmGuide hidden" aria-label="Getting started">
+        <div class="rhythmGuideHead">
+          <span id="rhythmGuideStep" class="rhythmGuideStep">GETTING STARTED</span>
+          <button type="button" id="rhythmGuideDismiss" class="rhythmGuideDismiss" aria-label="Hide getting-started tips" title="Hide tips">×</button>
+        </div>
+        <div id="rhythmGuideMessage" class="rhythmGuideMessage" aria-live="polite"></div>
+        <div id="rhythmGuideButtons" class="rhythmGuideButtons">
+          <button type="button" id="rhythmGuideAction" class="rhythmGuideAction hidden"></button>
+          <button type="button" id="rhythmGuideSkip" class="rhythmGuideSkip hidden">Not now</button>
+        </div>
+      </aside>
       <div class="hero">
         <div class="heroTop">
           <div class="workState" id="workState">OFF THE CLOCK</div>
@@ -35,11 +46,6 @@
         <div class="help hidden" id="projectQuickHelp">Start work first.</div>
         <div class="hidden" id="gpsStatus">Location not enabled</div>
         <div class="hidden" id="notificationStatus">Notifications unknown</div>
-      </div>
-      <div id="rhythmGuide" class="rhythmGuide hidden" role="status" aria-live="polite">
-        <span id="rhythmGuideMessage" class="rhythmGuideMessage"></span>
-        <button type="button" id="rhythmGuideAction" class="rhythmGuideAction hidden"></button>
-        <button type="button" id="rhythmGuideDismiss" class="rhythmGuideDismiss" aria-label="Hide getting-started tips" title="Hide tips">×</button>
       </div>
 
       <div class="section">
@@ -134,6 +140,7 @@
 
     <section class="view" data-view="places" id="viewPlaces">
       <div class="viewTitle"><h1>Places</h1><p>Homes and workplaces used for arrival detection and road-distance calculation.</p></div>
+      <div id="rhythmPlacesHint" class="rhythmPlacesHint hidden">Save your current position here, or enter a place manually. You can add others later.</div>
 
       <section class="card">
         <div class="sectionHead"><h2>Location access</h2><span class="hint" id="locationModeHint">Android location</span></div>
@@ -145,7 +152,6 @@
         </div>
       </section>
 
-      <div id="rhythmPlacesHint" class="rhythmPlacesHint hidden">Save a place while you're there. You can add others later.</div>
       <div class="placeConfidence" id="placeConfidence">Checking Android background detection…</div>
       <section class="card flush"><div id="locationList"></div></section>
 
@@ -161,6 +167,7 @@
 
     <section class="view" data-view="settings" id="viewSettings">
       <div class="viewTitle"><h1>Settings</h1><p>Location, reminders and your work records.</p></div>
+      <button type="button" id="rhythmGuideReplay" class="rhythmReplay">Show getting-started guide →</button>
 
       <section class="card">
         <div class="settingGroup">
@@ -202,7 +209,6 @@
           <div class="notice" id="settingsMessage">Settings loaded.</div>
         </div>
       </section>
-      <button type="button" id="rhythmGuideReplay" class="rhythmReplay">Show getting-started tips</button>
 
       <details class="testDetails">
         <summary>Test tools · simulation</summary>
