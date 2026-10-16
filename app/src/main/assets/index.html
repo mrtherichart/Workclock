@@ -324,7 +324,7 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
             </table>
           </div>
           <div class="weekFoot"><strong>Project(en):</strong> <span id="weekProjects">—</span></div>
-          <div id="weekDraftNote" class="weekInfo hidden">* Conceptdag: nog niet bevestigd. Lopende dagen tellen nog niet mee bij het urentotaal.</div>
+          <div id="weekDraftNote" class="weekInfo hidden">* Conceptdag: nog niet bevestigd. Onvoltooide uren tellen nog niet mee bij het weektotaal.</div>
           <div class="weekInfo">Uren zijn exclusief pauze. Reiskilometers komen uit je geregistreerde ritten. Corrigeer een dag via Dagen.</div>
         </div>
       </div>
@@ -778,7 +778,7 @@ function isoWeekData(monday){
 }
 function weekClock(iso){return iso?fmtTime(iso):"—"}
 function weekDuration(minutes){const mins=Math.max(0,Math.floor(minutes));return `${Math.floor(mins/60)}u${String(mins%60).padStart(2,"0")}`}
-function weekKm(km){return Number.isFinite(km)?km.toFixed(1).replace(/\\.0$/,""):"—"}
+function weekKm(km){if(!Number.isFinite(km))return "—";const n=km.toFixed(1);return n.endsWith(".0")?n.slice(0,-2):n}
 function daysInWeek(anchor){
   const monday=mondayOfWeek(anchor);
   const keys=Array.from({length:7},(_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return {date:d,key:localDateKey(d)}});
@@ -818,7 +818,7 @@ function renderWeekSheet(){
       for(const seg of d.segments||[])if(seg.projectName)projects.add(seg.projectName.trim());
     }
     totalMinutes+=minutes;if(validDistance){totalDistance+=km;hasDistance=true;}
-    const blank=!entries.length,partial=!!entries.length&&finishedCount!==entries.length;
+    const blank=!entries.length,partial=!!entries.length&&(finishedCount!==entries.length||entries.some(d=>d.status!=="confirmed"));if(partial)hasDraft=true;
     const dateLabel=`${String(date.getDate()).padStart(2,"0")}-${String(date.getMonth()+1).padStart(2,"0")}`;
     const startLabel=first!==null?weekClock(first):"—",endLabel=last!==null?weekClock(last):"—";
     const pauseLabel=finishedCount?`${Math.floor(breaks/60)}:${String(breaks%60).padStart(2,"0")}`:"—";
