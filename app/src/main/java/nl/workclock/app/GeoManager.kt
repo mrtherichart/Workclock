@@ -32,10 +32,25 @@ object GeoManager {
     fun canRegister(context: Context) = hasPrecisePermission(context) && hasBackgroundPermission(context)
 
     private const val STATUS = "geofence_status"
+    private const val REGISTERED_AT = "geofence_registered_at"
+    private const val MAX_REGISTRATION_AGE_MS = 12L * 60L * 60L * 1000L
     fun registrationStatus(context: Context): String = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         .getString(STATUS, "not-configured") ?: "not-configured"
-    private fun status(context: Context, value: String) = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
-        .edit().putString(STATUS, value).apply()
+    private fun status(context: Context, value: String) {
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+            .putString(STATUS, value).apply()
+    }
+
+    /** Android retains geofences across normal app resumes, but not reboots.
+     * Recheck after 12 hours to recover lost registrations without constant churn. */
+    fun ensureRegistered(context: Context, onComplete: () -> Unit = {}) {
+        val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val active = prefs.getString(STATUS, "") == "active"
+        val last = prefs.getLong(REGISTERED_AT, 0L)
+        val fresh = last > 0L && System.currentTimeMillis() - last in 0 until MAX_REGISTRATION_AGE_MS
+        if (active && fresh && canRegister(context)) onComplete()
+        else registerSaved(context, onComplete)
+    }
 
     private var registering = false
     private var registerAgain = false
@@ -144,7 +159,11 @@ object GeoManager {
                             .setInitialTrigger(0)
                             .addGeofences(geofences)
                             .build(), intent).addOnCompleteListener { task ->
-                            if (task.isSuccessful) status(context, "active")
+                            if (task.isSuccessful) {
+                                status(context, "active")
+                                context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+                                    .putLong(REGISTERED_AT, System.currentTimeMillis()).apply()
+                            }
                             else {
                                 val reason = task.exception?.message ?: "unknown Android location error"
                                 Log.e("WorkClock", "Geofences not registered", task.exception)
