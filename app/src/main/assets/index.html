@@ -36,6 +36,11 @@
         <div class="hidden" id="gpsStatus">Location not enabled</div>
         <div class="hidden" id="notificationStatus">Notifications unknown</div>
       </div>
+      <div id="rhythmGuide" class="rhythmGuide hidden" role="status" aria-live="polite">
+        <span id="rhythmGuideMessage" class="rhythmGuideMessage"></span>
+        <button type="button" id="rhythmGuideAction" class="rhythmGuideAction hidden"></button>
+        <button type="button" id="rhythmGuideDismiss" class="rhythmGuideDismiss" aria-label="Hide getting-started tips" title="Hide tips">×</button>
+      </div>
 
       <div class="section">
         <div class="sectionHead"><h2>Today</h2><span class="hint">Review before confirming</span></div>
@@ -140,6 +145,7 @@
         </div>
       </section>
 
+      <div id="rhythmPlacesHint" class="rhythmPlacesHint hidden">Save a place while you're there. You can add others later.</div>
       <div class="placeConfidence" id="placeConfidence">Checking Android background detection…</div>
       <section class="card flush"><div id="locationList"></div></section>
 
@@ -196,6 +202,7 @@
           <div class="notice" id="settingsMessage">Settings loaded.</div>
         </div>
       </section>
+      <button type="button" id="rhythmGuideReplay" class="rhythmReplay">Show getting-started tips</button>
 
       <details class="testDetails">
         <summary>Test tools · simulation</summary>

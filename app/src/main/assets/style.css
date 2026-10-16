@@ -76,6 +76,14 @@ button{cursor:pointer}
 .signalDot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(143,180,201,.07),0 0 18px rgba(143,180,201,.22)}
 .view{display:none}.view.active{display:block;animation:viewIn .16s cubic-bezier(.2,.8,.2,1) both}
 @keyframes viewIn{from{opacity:.88;transform:translateY(3px)}to{opacity:1;transform:none}}
+/* A single contextual first-run hint; never an overlay or required tutorial. */
+.rhythmGuide{display:flex;align-items:center;flex-wrap:wrap;gap:7px 10px;margin:11px 5px -5px;padding:9px 10px 9px 12px;border-left:2px solid var(--accent);border-radius:0 11px 11px 0;background:rgba(37,62,78,.24);color:var(--text-soft)}
+.rhythmGuideMessage{flex:1 1 180px;min-width:0;font:450 11.5px/1.45 var(--font-sans)}
+.rhythmGuideAction{padding:5px 0;border:0;background:none;color:var(--accent-strong);font:700 11px var(--font-sans);white-space:nowrap;cursor:pointer}
+.rhythmGuideDismiss{display:grid;place-items:center;flex:0 0 30px;min-height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:20px;cursor:pointer}
+.rhythmGuideAction:focus-visible,.rhythmGuideDismiss:focus-visible,.rhythmReplay:focus-visible{outline:2px solid var(--accent)}
+.rhythmPlacesHint{margin:9px 0 0;color:var(--muted);font:450 11px/1.45 var(--font-sans)}
+.rhythmReplay{display:block;margin:2px 7px 17px;padding:6px 0;border:0;background:none;color:var(--muted);font:600 11px var(--font-sans);text-decoration:underline;text-decoration-color:var(--line-strong);text-underline-offset:3px;cursor:pointer}
 .viewTitle{margin:5px 4px 18px}
 .viewTitle h1{font-family:var(--font-display);font-size:31px;font-weight:560;letter-spacing:-.04em;margin:0;color:#f5f8fa}
 .viewTitle p{font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.5;max-width:570px}

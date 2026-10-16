@@ -4,6 +4,24 @@
 const $=s=>document.querySelector(s);
 const STORAGE_KEY="workclock-v4";
 const PREVIOUS_KEYS=["workclock-v3","workclock-prototype-v1"];
+const RHYTHM_KEY="workclock-first-run-hints-v1";
+const RHYTHM_STARTED_KEY="workclock-first-run-started-v1";
+// Existing installations stay unchanged. Only a fresh installation receives tips.
+let rhythmMode=(()=>{
+  try{
+    const saved=localStorage.getItem(RHYTHM_KEY);
+    if(["active","dismissed","completed"].includes(saved)){
+      if(saved==="active"&&!localStorage.getItem(RHYTHM_STARTED_KEY))
+        localStorage.setItem(RHYTHM_STARTED_KEY,String(Date.now()));
+      return saved;
+    }
+    const returning=!!localStorage.getItem(STORAGE_KEY)||PREVIOUS_KEYS.some(k=>!!localStorage.getItem(k));
+    const mode=returning?"completed":"active";
+    localStorage.setItem(RHYTHM_KEY,mode);
+    if(mode==="active")localStorage.setItem(RHYTHM_STARTED_KEY,String(Date.now()));
+    return mode;
+  }catch(e){return "completed"}
+})();
 const HOLD_MS=1200;
 const HOLD_MOVE_PX=10;
 const OSRM_ENDPOINT="https://router.project-osrm.org/route/v1/driving/";
@@ -148,7 +166,7 @@ async function syncAndroidEvents(){
 }
 window.__WorkClockNativeSync=syncAndroidEvents;
 window.__WorkClockBackupResult=message=>setNotice("backupMessage",message);
-window.__WorkClockReceiveImport=function(raw){try{const parsed=JSON.parse(raw);if(!parsed||typeof parsed!=="object"||!Array.isArray(parsed.locations)||!Array.isArray(parsed.history))throw new Error("Not a valid WorkClock backup");if(!confirm("Replace existing WorkClock data with this backup? A safety copy of your current data will be stored on this device."))return;saveSafetySnapshot("Before importing data");state=validateState(parsed);persist();resetLocationEditor();resetManualEditor();renderAll();renderSettings();refreshAndroidStatus();setNotice("backupMessage","Backup imported. Workdays and places restored.","good")}catch(e){setNotice("backupMessage","Import failed: "+(e.message||e),"bad")}};
+window.__WorkClockReceiveImport=function(raw){try{const parsed=JSON.parse(raw);if(!parsed||typeof parsed!=="object"||!Array.isArray(parsed.locations)||!Array.isArray(parsed.history))throw new Error("Not a valid WorkClock backup");if(!confirm("Replace existing WorkClock data with this backup? A safety copy of your current data will be stored on this device."))return;saveSafetySnapshot("Before importing data");state=validateState(parsed);setRhythmMode("completed");persist();resetLocationEditor();resetManualEditor();renderAll();renderSettings();refreshAndroidStatus();setNotice("backupMessage","Backup imported. Workdays and places restored.","good")}catch(e){setNotice("backupMessage","Import failed: "+(e.message||e),"bad")}};
 function showFolderBackupStatus(){
   const enabled=!!WorkClockAndroid.backupFolderEnabled();
   $("#backupFolderStatus").textContent=enabled?
@@ -426,7 +444,49 @@ function addCurrentLocation(type){if(!currentPosition){setNotice("locationEditor
 
 function renderStatus(found=null,source=null){const auto=isAutomationDay();$("#dayAutomationStatus").textContent=auto?"Auto ON":"Auto OFF";$("#dayAutomationStatus").className=`pill ${auto?"good":""}`;if(currentPosition){$("#gpsStatus").textContent=`${source==="simulation"?"SIM":"Location"} ${currentPosition.lat.toFixed(5)}, ${currentPosition.lon.toFixed(5)}`;$("#gpsStatus").className="pill good"}const loc=found||locationById(state.presence.currentId);$("#placeStatus").textContent=loc?`At ${loc.name}`:"No saved place";$("#notificationStatus").textContent="Android reminders"}
 function projectLines(day){if(!day.segments?.length)return '<div class="meta">No completed project sections yet.</div>';return `<div class="projectList">${day.segments.map(s=>`<div class="projectLine"><span class="name">${esc(s.projectName)}</span><span class="time">${fmtTime(s.start)}–${fmtTime(s.stop)} · ${fmtDuration(new Date(s.stop)-new Date(s.start))}</span></div>`).join("")}</div>`}
-function renderToday(){const d=getToday(),running=!!(d.start&&!d.stop),stopped=!!(d.start&&d.stop),main=$("#mainHold");document.body.classList.toggle("work-running",running);document.body.classList.toggle("work-review",stopped);const openStart=openSegmentStart(d);const stateEl=$("#workState"),sectionEl=$("#currentSection");if(stateEl){stateEl.textContent=running?"WORKING":stopped?"READY TO REVIEW":"OFF THE CLOCK";stateEl.className=`workState ${running?"active":stopped?"review":""}`}if(sectionEl){sectionEl.innerHTML=running?`<span>Current section</span><strong>Started ${fmtTime(openStart)}</strong>`:stopped?`<span>Workday</span><strong>${d.segments.length} project${d.segments.length===1?"":"s"}</strong>`:`<span>Current section</span><strong>Starts when you clock in</strong>`};main.disabled=stopped;main.classList.toggle("finish",running);main.querySelector("span").textContent=running?"HOLD TO FINISH WORK":stopped?"WORKDAY STOPPED — REVIEW BELOW":"HOLD TO START WORK";$("#endProject").disabled=!running;$("#endProject").classList.toggle("hidden",!running);$("#projectQuickHelp").textContent=running?`Current section started ${fmtTime(openSegmentStart(d))}. Tap End Project / Switch to place an exact marker without stopping work.`:"Start work first. A project marker does not stop the work timer.";$("#timerLabel").textContent=running?`Working since ${fmtTime(d.start)}`:stopped?`Draft finished at ${fmtTime(d.stop)}`:"Not working";$("#editStart").disabled=!d.start;$("#editStop").disabled=!d.stop;$("#clearDraft").disabled=!d.start&&!d.stop&&!d.commuteOut&&!d.commuteBack;const gross=d.start&&d.stop?new Date(d.stop)-new Date(d.start):null,net=gross===null?null:Math.max(0,gross-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),coverage=d.stop?coverageError(d):null;$("#todayReview").innerHTML=`<div class="summaryGrid"><div class="summaryStat"><span>Start</span><strong>${fmtTime(d.start)}</strong></div><div class="summaryStat"><span>Finish</span><strong>${fmtTime(d.stop)}</strong></div><div class="summaryStat"><span>Worked</span><strong>${net===null?"—":fmtDuration(net)}</strong></div><div class="summaryStat"><span>Road</span><strong>${km?km.toFixed(1)+" km":"—"}</strong></div></div>${d.commuteOut?`<div class="meta">Out · ${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)} · ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">Back · ${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)} · ${d.commuteBack.km.toFixed(1)} km</div>`:(d.start&&d.stop&&d.workplaceId&&!d.manuallyAdded?`<div class="notice">Return route pending · open WorkClock when you reach a saved home.</div>`:"")}${projectLines(d)}${coverage?`<div class="notice bad">${esc(coverage)}</div>`:""}`;$("#breakChips").innerHTML="";for(const n of [0,15,30,45,60,75,90]){const b=document.createElement("button");b.type="button";b.className=`chip ${d.breakMin===n?"selected":""}`;b.textContent=n?`${n} min`:"No break";b.addEventListener("click",()=>{d.breakMin=n;persist();renderToday()});$("#breakChips").appendChild(b)}$("#confirmDayHold").disabled=!(d.start&&d.stop&&!coverage);updateTimer()}
+// Quiet, opt-out guidance follows actual workday progress, never a mandatory tour.
+function rhythmStep(){
+  if(rhythmMode!=="active")return null;
+  // Tips quietly expire if someone prefers to learn at their own pace.
+  const started=Number(localStorage.getItem(RHYTHM_STARTED_KEY));
+  if(started>0&&Date.now()-started>14*86400000){
+    setRhythmMode("completed");return null;
+  }
+  const day=state.currentDay;
+  if(state.history.length)return "saved";
+  if(day?.start&&day.stop)return "review";
+  if(day?.start)return "working";
+  if(!state.locations.length)return "place";
+  return "start";
+}
+const RHYTHM_HINTS={
+  place:{text:"For automatic arrival reminders, save a home or workplace.",action:"Places →"},
+  start:{text:"When work begins, hold Start. You can correct the time later."},
+  working:{text:"Your start time is saved. You can close the app while working."},
+  review:{text:"Check your hours below, then hold Confirm to save your day."},
+  saved:{text:"First day saved. Find your hours together in Weekstaat.",action:"Weekstaat →"}
+};
+function renderRhythmGuide(){
+  const step=rhythmStep(),hint=step?RHYTHM_HINTS[step]:null;
+  const strip=$("#rhythmGuide"),placesHint=$("#rhythmPlacesHint");
+  if(!strip||!placesHint)return;
+  strip.classList.toggle("hidden",!hint);
+  placesHint.classList.toggle("hidden",step!=="place");
+  if(!hint)return;
+  const message=$("#rhythmGuideMessage"),button=$("#rhythmGuideAction");
+  if(message.textContent!==hint.text)message.textContent=hint.text;
+  button.classList.toggle("hidden",!hint.action);
+  if(hint.action)button.textContent=hint.action;
+}
+function setRhythmMode(mode){
+  rhythmMode=mode;
+  try{
+    localStorage.setItem(RHYTHM_KEY,mode);
+    if(mode==="active")localStorage.setItem(RHYTHM_STARTED_KEY,String(Date.now()));
+  }catch(e){console.warn("Could not save guidance preference",e)}
+  renderRhythmGuide();
+}
+function renderToday(){const d=getToday(),running=!!(d.start&&!d.stop),stopped=!!(d.start&&d.stop),main=$("#mainHold");document.body.classList.toggle("work-running",running);document.body.classList.toggle("work-review",stopped);const openStart=openSegmentStart(d);const stateEl=$("#workState"),sectionEl=$("#currentSection");if(stateEl){stateEl.textContent=running?"WORKING":stopped?"READY TO REVIEW":"OFF THE CLOCK";stateEl.className=`workState ${running?"active":stopped?"review":""}`}if(sectionEl){sectionEl.innerHTML=running?`<span>Current section</span><strong>Started ${fmtTime(openStart)}</strong>`:stopped?`<span>Workday</span><strong>${d.segments.length} project${d.segments.length===1?"":"s"}</strong>`:`<span>Current section</span><strong>Starts when you clock in</strong>`};main.disabled=stopped;main.classList.toggle("finish",running);main.querySelector("span").textContent=running?"HOLD TO FINISH WORK":stopped?"WORKDAY STOPPED — REVIEW BELOW":"HOLD TO START WORK";$("#endProject").disabled=!running;$("#endProject").classList.toggle("hidden",!running);$("#projectQuickHelp").textContent=running?`Current section started ${fmtTime(openSegmentStart(d))}. Tap End Project / Switch to place an exact marker without stopping work.`:"Start work first. A project marker does not stop the work timer.";$("#timerLabel").textContent=running?`Working since ${fmtTime(d.start)}`:stopped?`Draft finished at ${fmtTime(d.stop)}`:"Not working";$("#editStart").disabled=!d.start;$("#editStop").disabled=!d.stop;$("#clearDraft").disabled=!d.start&&!d.stop&&!d.commuteOut&&!d.commuteBack;const gross=d.start&&d.stop?new Date(d.stop)-new Date(d.start):null,net=gross===null?null:Math.max(0,gross-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),coverage=d.stop?coverageError(d):null;$("#todayReview").innerHTML=`<div class="summaryGrid"><div class="summaryStat"><span>Start</span><strong>${fmtTime(d.start)}</strong></div><div class="summaryStat"><span>Finish</span><strong>${fmtTime(d.stop)}</strong></div><div class="summaryStat"><span>Worked</span><strong>${net===null?"—":fmtDuration(net)}</strong></div><div class="summaryStat"><span>Road</span><strong>${km?km.toFixed(1)+" km":"—"}</strong></div></div>${d.commuteOut?`<div class="meta">Out · ${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)} · ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">Back · ${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)} · ${d.commuteBack.km.toFixed(1)} km</div>`:(d.start&&d.stop&&d.workplaceId&&!d.manuallyAdded?`<div class="notice">Return route pending · open WorkClock when you reach a saved home.</div>`:"")}${projectLines(d)}${coverage?`<div class="notice bad">${esc(coverage)}</div>`:""}`;$("#breakChips").innerHTML="";for(const n of [0,15,30,45,60,75,90]){const b=document.createElement("button");b.type="button";b.className=`chip ${d.breakMin===n?"selected":""}`;b.textContent=n?`${n} min`:"No break";b.addEventListener("click",()=>{d.breakMin=n;persist();renderToday()});$("#breakChips").appendChild(b)}$("#confirmDayHold").disabled=!(d.start&&d.stop&&!coverage);updateTimer();renderRhythmGuide()}
 function renderLocations(){
   const list=$("#locationList");
   list.innerHTML="";
@@ -555,7 +615,10 @@ function showHistoryMode(mode){
   $("#historyShowWeek").classList.toggle("active",weekSheetMode==="week");
   $("#historyShowDays").setAttribute("aria-pressed",String(weekSheetMode==="days"));
   $("#historyShowWeek").setAttribute("aria-pressed",String(weekSheetMode==="week"));
-  if(weekSheetMode==="week")renderWeekSheet();
+  if(weekSheetMode==="week"){
+    renderWeekSheet();
+    if(rhythmMode==="active"&&state.history.length)setRhythmMode("completed");
+  }
 }
 function attentionDays(){
   const issues=[];
@@ -739,6 +802,19 @@ if(!lastUpdateCheck||Date.now()-lastUpdateCheck>24*3600000){
   setTimeout(()=>{WorkClockAndroid.checkForUpdates();localStorage.setItem("workclock-update-checked-at",String(Date.now()))},1500);
 }
 
+$("#rhythmGuideDismiss").addEventListener("click",()=>setRhythmMode("dismissed"));
+$("#rhythmGuideAction").addEventListener("click",()=>{
+  const step=rhythmStep();
+  if(step==="place")window.__activateWorkClockView?.("places");
+  else if(step==="saved"){
+    window.__activateWorkClockView?.("history");
+    showHistoryMode("week");
+  }
+});
+$("#rhythmGuideReplay").addEventListener("click",()=>{
+  setRhythmMode("active");
+  window.__activateWorkClockView?.("today");
+});
 $("#restoreSnapshot").addEventListener("click",restoreSafetySnapshot);
 $("#chooseBackupFolder").addEventListener("click",()=>WorkClockAndroid.selectBackupFolder());
 $("#exportBackup").addEventListener("click",exportWorkClockBackup);

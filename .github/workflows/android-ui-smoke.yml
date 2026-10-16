@@ -20,4 +20,6 @@ jobs:
         run: |
           command -v google-chrome || command -v google-chrome-stable || command -v chromium
       - name: Test the Android-only HTML in headless Chromium
-        run: node tests/linux-ui-smoke.cjs
+        run: |
+          node tests/linux-ui-smoke.cjs
+          node tests/linux-ui-smoke.cjs --first-run
