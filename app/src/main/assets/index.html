@@ -371,12 +371,11 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
         <div class="settingGroup">
           <h3>Data and backups</h3><p>Keep a copy of your workdays before changing phones or reinstalling.</p>
           <div class="buttonRow"><button class="btn" id="exportBackup">Export backup</button><button class="btn" id="importBackup">Import backup</button></div>
-          <input type="file" id="backupFile" accept=".json,application/json" class="hidden">
           <div class="notice" id="backupMessage">Backups contain your saved locations, projects, hours and settings.</div>
         </div>
         <div class="settingGroup" id="updatesSetting">
           <h3>App updates</h3>
-          <p id="updateVersion">Browser version</p>
+          <p id="updateVersion">Installed WorkClock</p>
           <div class="buttonRow">
             <button class="btn" id="checkUpdates" type="button">Check for updates</button>
             <button class="btn primary hidden" id="installUpdate" type="button">Download &amp; install</button>
@@ -434,7 +433,7 @@ const HOLD_MOVE_PX=10;
 const OSRM_ENDPOINT="https://router.project-osrm.org/route/v1/driving/";
 const DEFAULT_SETTINGS={automationDays:[1,2,3,4,5],startFrom:"05:00",startUntil:"11:30",finishFrom:"13:00",finishUntil:"21:00",defaultRadius:150,routingProvider:"osrm",orsKey:""};
 let state=loadState();
-let currentPosition=null,geoWatchId=null,editingLocationId=null,timerInterval=null;
+let currentPosition=null,editingLocationId=null,timerInterval=null;
 let pendingProjectAction=null;
 let manualEditDayId=null;
 let manualSegmentDraft=[];
@@ -465,10 +464,9 @@ function migrateOld(old){const n=newState();if(!old||typeof old!=="object")retur
 function rebuildProjectCatalog(target=state){const map=new Map();for(const p of Array.isArray(target.projects)?target.projects:[]){const name=String(p.name||"").trim();if(name)map.set(name.toLowerCase(),{id:p.id||uid("proj"),name,lastUsedAt:p.lastUsedAt||null,useCount:Number(p.useCount)||0})}for(const day of [...(target.history||[]),target.currentDay].filter(Boolean))for(const seg of day.segments||[]){const name=String(seg.projectName||"").trim();if(!name)continue;const k=name.toLowerCase();if(!map.has(k))map.set(k,{id:seg.projectId||uid("proj"),name,lastUsedAt:seg.stop||day.stop||null,useCount:1});const p=map.get(k);seg.projectId=p.id;seg.projectName=p.name}target.projects=[...map.values()].sort((a,b)=>a.name.localeCompare(b.name))}
 function validateState(s){const n=newState();if(!s||typeof s!=="object")return n;n.locations=Array.isArray(s.locations)?s.locations.filter(validLocation).map(x=>({...x,lat:Number(x.lat),lon:Number(x.lon),radius:Number(x.radius)||150})):[];n.routeCache=s.routeCache&&typeof s.routeCache==="object"?s.routeCache:{};n.history=Array.isArray(s.history)?s.history.map(normalizeDay).filter(Boolean):[];n.currentDay=s.currentDay?normalizeDay(s.currentDay):null;n.presence={...n.presence,...(s.presence||{})};n.settings={...n.settings,...(s.settings||{})};n.settings.defaultRadius=Number(n.settings.defaultRadius)||150;n.projects=Array.isArray(s.projects)?s.projects:[];rebuildProjectCatalog(n);return n}
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)return validateState(JSON.parse(raw));for(const key of PREVIOUS_KEYS){const legacy=localStorage.getItem(key);if(legacy){const migrated=migrateOld(JSON.parse(legacy));localStorage.setItem(STORAGE_KEY,JSON.stringify(migrated));return migrated}}}catch(e){console.error("State load failed",e)}return newState()}
-function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));syncAndroidPlaces()}catch(e){console.error("Persist failed",e);setNotice("mainMessage","Could not save data in this browser.","bad")}}
-function syncAndroidPlaces(){if(!window.WorkClockAndroid)return;try{WorkClockAndroid.syncPlaces(JSON.stringify(state.locations.map(({id,name,type,lat,lon,radius})=>({id,name,type,lat,lon,radius}))))}catch(e){console.warn("Android place sync failed",e)}}
+function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));syncAndroidPlaces()}catch(e){console.error("Persist failed",e);setNotice("mainMessage","Could not save WorkClock data on this device.","bad")}}
+function syncAndroidPlaces(){try{WorkClockAndroid.syncPlaces(JSON.stringify(state.locations.map(({id,name,type,lat,lon,radius})=>({id,name,type,lat,lon,radius}))))}catch(e){console.warn("Android place sync failed",e)}}
 function refreshAndroidStatus(){
-  if(!window.WorkClockAndroid)return;
   try{
     const p=JSON.parse(WorkClockAndroid.permissionStatus());
     $("#nativeTrackingBox").classList.remove("hidden");
@@ -507,12 +505,12 @@ window.__WorkClockNativeLocationError=function(error){
   $("#gpsStatus").className="pill bad";
   refreshAndroidStatus();
 };
-async function syncAndroidEvents(){if(!window.WorkClockAndroid)return;syncAndroidPlaces();refreshAndroidStatus();let events=[];try{events=JSON.parse(WorkClockAndroid.getEvents()||"[]")}catch(e){console.warn("Cannot read Android events",e);return}for(const event of events){const loc=locationById(event.placeId);try{if(loc){if(event.transition==="ENTER"){await processPosition({lat:loc.lat,lon:loc.lon,accuracy:Math.max(100,loc.radius||150)},{source:"android"})}else if(event.transition==="EXIT"&&loc.type==="work"){state.presence.currentId=null;state.presence.currentType=null;state.presence.currentName=null;state.presence.changedAt=new Date(event.at).toISOString();state.presence.source="android";state.presence.lastWorkId=loc.id;persist();renderStatus(null,"android");const d=getToday();if(d.start&&!d.stop&&isAutomationDay(new Date(event.at)))showTimeChoice("stop",`Android detected leaving ${loc.name} at ${fmtTime(event.at)}. When did you finish?`)}}WorkClockAndroid.acknowledgeEvent(event.id)}catch(e){console.error("Failed to process Android location event",e);break}}}
+async function syncAndroidEvents(){syncAndroidPlaces();refreshAndroidStatus();let events=[];try{events=JSON.parse(WorkClockAndroid.getEvents()||"[]")}catch(e){console.warn("Cannot read Android events",e);return}for(const event of events){const loc=locationById(event.placeId);try{if(loc){if(event.transition==="ENTER"){await processPosition({lat:loc.lat,lon:loc.lon,accuracy:Math.max(100,loc.radius||150)},{source:"android"})}else if(event.transition==="EXIT"&&loc.type==="work"){state.presence.currentId=null;state.presence.currentType=null;state.presence.currentName=null;state.presence.changedAt=new Date(event.at).toISOString();state.presence.source="android";state.presence.lastWorkId=loc.id;persist();renderStatus(null,"android");const d=getToday();if(d.start&&!d.stop&&isAutomationDay(new Date(event.at)))showTimeChoice("stop",`Android detected leaving ${loc.name} at ${fmtTime(event.at)}. When did you finish?`)}}WorkClockAndroid.acknowledgeEvent(event.id)}catch(e){console.error("Failed to process Android location event",e);break}}}
 window.__WorkClockNativeSync=syncAndroidEvents;
 window.__WorkClockBackupResult=message=>setNotice("backupMessage",message);
 window.__WorkClockReceiveImport=function(raw){try{const parsed=JSON.parse(raw);if(!parsed||typeof parsed!=="object"||!Array.isArray(parsed.locations)||!Array.isArray(parsed.history))throw new Error("Not a valid WorkClock backup");if(!confirm("Replace existing WorkClock data with this backup? A safety copy of your current data will be stored on this device."))return;localStorage.setItem("workclock-before-import-"+Date.now(),JSON.stringify(state));state=validateState(parsed);persist();resetLocationEditor();resetManualEditor();renderAll();refreshAndroidStatus();setNotice("backupMessage","Backup imported. Workdays and places restored.","good")}catch(e){setNotice("backupMessage","Import failed: "+(e.message||e),"bad")}};
-function exportWorkClockBackup(){const json=JSON.stringify(state,null,2);if(window.WorkClockAndroid){WorkClockAndroid.exportBackup(json);return}const blob=new Blob([json],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`workclock-${localDateKey()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);setNotice("backupMessage","Backup download started.","good")}
-function importWorkClockBackup(){if(window.WorkClockAndroid)WorkClockAndroid.importBackup();else $("#backupFile").click()}
+function exportWorkClockBackup(){WorkClockAndroid.exportBackup(JSON.stringify(state,null,2))}
+function importWorkClockBackup(){WorkClockAndroid.importBackup()}
 const noticeTimers=new Map();function setNotice(id,text,kind=""){const el=$("#"+id);if(!el)return;el.textContent=text;if(id==="mainMessage"){el.className="toast show"+(kind?` ${kind}`:"");if(noticeTimers.has(id))clearTimeout(noticeTimers.get(id));noticeTimers.set(id,setTimeout(()=>el.classList.remove("show"),4200));return}el.className="notice"+(kind?` ${kind}`:"")}
 function ensureProject(name){name=String(name||"").trim();if(!name)return null;let p=state.projects.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:uid("proj"),name,lastUsedAt:nowISO(),useCount:0};state.projects.push(p)}p.lastUsedAt=nowISO();p.useCount=(Number(p.useCount)||0)+1;renderProjectSuggestions();return p}
 function renderProjectSuggestions(){const dl=$("#projectSuggestions");if(!dl)return;dl.innerHTML=state.projects.slice().sort((a,b)=>(new Date(b.lastUsedAt||0))-(new Date(a.lastUsedAt||0))||a.name.localeCompare(b.name)).map(p=>`<option value="${esc(p.name)}"></option>`).join("")}
@@ -668,84 +666,27 @@ async function processPosition(pos,{source="gps",force=false,forcePreviousId=nul
   persist();
   renderAll();
 }
-let notificationRegistration=null;
-async function ensureNotificationWorker(){
-  if(!("serviceWorker" in navigator))throw new Error("Service workers are not supported by this browser.");
-  if(!window.isSecureContext)throw new Error("Notifications require HTTPS or localhost.");
-  if(notificationRegistration?.active)return notificationRegistration;
-  await navigator.serviceWorker.register("./workclock-sw.js",{scope:"./"});
-  notificationRegistration=await navigator.serviceWorker.ready;
-  return notificationRegistration;
-}
+
+/* Android-only runtime: browser permissions, service workers and web GPS are not bundled. */
 async function notifyUser(title,body,{tag="workclock-reminder"}={}){
-  if(window.WorkClockAndroid){try{WorkClockAndroid.showNotification(title,body,tag);return true}catch(e){console.warn(e);return false}}
-  if(!("Notification" in window)||Notification.permission!=="granted")return false;
-  try{
-    if("serviceWorker" in navigator){
-      const reg=await ensureNotificationWorker();
-      await reg.showNotification(title,{
-        body,
-        tag,
-        renotify:true,
-        requireInteraction:false,
-        data:{url:location.href}
-      });
-      return true;
-    }
-    new Notification(title,{body,tag});
-    return true;
-  }catch(e){
-    console.error("Notification failed",e);
-    if($("#notificationHelp"))setNotice("notificationHelp",`Notification failed: ${e.message||e}`,"bad");
-    return false;
-  }
+  try{WorkClockAndroid.showNotification(title,body,tag);return true}
+  catch(e){console.warn("Android notification failed",e);return false}
 }
-async function enableNotifications(){
-  if(window.WorkClockAndroid){WorkClockAndroid.requestNotifications();setNotice("notificationHelp","Android notification permission requested. Check the system prompt or app settings.");refreshAndroidStatus();return}
-  if(!("Notification" in window)){
-    setNotice("notificationHelp","Notifications are not supported in this browser.","bad");
-    return;
-  }
-  if(!window.isSecureContext){
-    setNotice("notificationHelp","Notifications require HTTPS or localhost.","bad");
-    return;
-  }
-  try{
-    const permission=await Notification.requestPermission();
-    renderStatus();
-    if(permission!=="granted"){
-      setNotice("notificationHelp",`Notification permission is ${permission}. Allow notifications in Android/site settings.`,"bad");
-      return;
-    }
-    await ensureNotificationWorker();
-    setNotice("notificationHelp","Permission granted and Android notification service is ready.","good");
-    await notifyUser("WorkClock","Notifications are working on this device.",{tag:"workclock-test"});
-  }catch(e){
-    console.error(e);
-    setNotice("notificationHelp",`Could not enable notifications: ${e.message||e}`,"bad");
-  }
+function enableNotifications(){
+  WorkClockAndroid.requestNotifications();
+  setNotice("notificationHelp","Android notification permission requested. Check the system prompt or app settings.");
+  refreshAndroidStatus();
 }
-async function testNotification(){
-  if(window.WorkClockAndroid){WorkClockAndroid.testNotification();setNotice("notificationHelp","Android test notification requested.","good");return}
-  if(!("Notification" in window)||Notification.permission!=="granted"){
-    setNotice("notificationHelp","Enable notifications first.","bad");
-    return;
-  }
-  const ok=await notifyUser("WorkClock","Test notification — Android notification delivery is working.",{tag:"workclock-test"});
-  if(ok)setNotice("notificationHelp","Test notification sent to Android.","good");
+function testNotification(){
+  WorkClockAndroid.testNotification();
+  setNotice("notificationHelp","Android test notification requested.","good");
 }
-function geoErrorMessage(e){if(e?.code===1)return "Location permission denied. Allow Location in this page's site permissions, then try again.";if(e?.code===2)return "The phone could not determine a location.";if(e?.code===3)return "Location request timed out.";return e?.message||"Unknown location error."}
-function beginGeoWatch(){if(window.WorkClockAndroid)return;if(geoWatchId!==null||!navigator.geolocation)return;geoWatchId=navigator.geolocation.watchPosition(p=>{processPosition({lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy},{source:"gps"});$("#locationHelp").textContent=`Location active. Browser accuracy: about ${Math.round(p.coords.accuracy||0)} m.`},e=>{$("#locationHelp").textContent=geoErrorMessage(e);$("#gpsStatus").textContent="Location unavailable";$("#gpsStatus").className="pill bad"},{enableHighAccuracy:false,maximumAge:30000,timeout:20000})}
-function requestLocation(){if(window.WorkClockAndroid){
+function requestLocation(){
   $("#locationHelp").textContent="Finding your position…";
   WorkClockAndroid.requestForegroundTracking();
   refreshAndroidStatus();
-  return;
-}if(!navigator.geolocation){$("#locationHelp").textContent="This browser does not expose geolocation.";return}$("#locationHelp").textContent="Requesting location permission…";navigator.geolocation.getCurrentPosition(p=>{currentPosition={lat:p.coords.latitude,lon:p.coords.longitude,accuracy:p.coords.accuracy};$("#locationHelp").textContent=`Location enabled. Browser accuracy: about ${Math.round(p.coords.accuracy||0)} m.`;processPosition(currentPosition,{source:"gps"});beginGeoWatch()},e=>{$("#locationHelp").textContent=geoErrorMessage(e)},{enableHighAccuracy:false,maximumAge:0,timeout:20000})}
-async function refreshPermissionUI(){
-  if(window.WorkClockAndroid){refreshAndroidStatus();return;}
-  $("#locationModeHint").textContent="Browser location";
-  if(!navigator.geolocation){$("#enableLocation").disabled=true;$("#locationHelp").textContent="Geolocation is unavailable in this browser.";return}if(!window.isSecureContext)$("#locationHelp").textContent=`This page is running as ${location.protocol}. Mobile browsers may block real geolocation outside HTTPS or localhost.`;try{if(navigator.permissions?.query){const p=await navigator.permissions.query({name:"geolocation"});if(p.state==="granted")beginGeoWatch();p.onchange=refreshPermissionUI}}catch{}}
+}
+function refreshPermissionUI(){refreshAndroidStatus();}
 
 function addLocation(type,name,lat,lon,radius){const loc={id:uid("loc"),type,name:name.trim()||`${type==="home"?"Home":"Workplace"} ${locationsOf(type).length+1}`,lat:Number(lat),lon:Number(lon),radius:Number(radius)||state.settings.defaultRadius,createdAt:nowISO(),lastVisitedAt:null};if(!validLocation(loc)||loc.lat<-90||loc.lat>90||loc.lon<-180||loc.lon>180)throw new Error("Invalid coordinates");state.locations.push(loc);state.routeCache={};persist();return loc}
 function resetLocationEditor(){editingLocationId=null;$("#locationEditorTitle").textContent="Add location";$("#saveLocation").textContent="Add location";$("#locType").value="home";$("#locName").value="";$("#locLat").value="";$("#locLon").value="";$("#locRadius").value=state.settings.defaultRadius;setNotice("locationEditorMessage","You can add any number of homes and workplaces.")}
@@ -754,7 +695,7 @@ function saveLocationEditor(){const type=$("#locType").value,name=$("#locName").
 function deleteLocation(id){const l=locationById(id);if(!l)return;if(!confirm(`Delete saved location “${l.name}”? Historical records keep their stored names and kilometres.`))return;state.locations=state.locations.filter(x=>x.id!==id);state.routeCache={};for(const key of ["currentId","lastHomeId","lastWorkId"])if(state.presence[key]===id)state.presence[key]=null;persist();renderAll();setNotice("locationEditorMessage",`Deleted ${l.name}.`,"good")}
 function addCurrentLocation(type){if(!currentPosition){setNotice("locationEditorMessage","No current GPS position is available. Enable location first or add coordinates manually.","bad");return}const l=addLocation(type,"",currentPosition.lat,currentPosition.lon,state.settings.defaultRadius);renderAll();setNotice("locationEditorMessage",`Added ${l.name} from current GPS position.`,"good")}
 
-function renderStatus(found=null,source=null){const auto=isAutomationDay();$("#dayAutomationStatus").textContent=auto?"Auto ON":"Auto OFF";$("#dayAutomationStatus").className=`pill ${auto?"good":""}`;if(currentPosition){$("#gpsStatus").textContent=`${source==="simulation"?"SIM":"Location"} ${currentPosition.lat.toFixed(5)}, ${currentPosition.lon.toFixed(5)}`;$("#gpsStatus").className="pill good"}const loc=found||locationById(state.presence.currentId);$("#placeStatus").textContent=loc?`At ${loc.name}`:"No saved place";if("Notification" in window){$("#notificationStatus").textContent=`Notifications ${Notification.permission}`;$("#notificationStatus").className=`pill ${Notification.permission==="granted"?"good":""}`}else $("#notificationStatus").textContent="Notifications unsupported"}
+function renderStatus(found=null,source=null){const auto=isAutomationDay();$("#dayAutomationStatus").textContent=auto?"Auto ON":"Auto OFF";$("#dayAutomationStatus").className=`pill ${auto?"good":""}`;if(currentPosition){$("#gpsStatus").textContent=`${source==="simulation"?"SIM":"Location"} ${currentPosition.lat.toFixed(5)}, ${currentPosition.lon.toFixed(5)}`;$("#gpsStatus").className="pill good"}const loc=found||locationById(state.presence.currentId);$("#placeStatus").textContent=loc?`At ${loc.name}`:"No saved place";$("#notificationStatus").textContent="Android reminders"}
 function projectLines(day){if(!day.segments?.length)return '<div class="meta">No completed project sections yet.</div>';return `<div class="projectList">${day.segments.map(s=>`<div class="projectLine"><span class="name">${esc(s.projectName)}</span><span class="time">${fmtTime(s.start)}–${fmtTime(s.stop)} · ${fmtDuration(new Date(s.stop)-new Date(s.start))}</span></div>`).join("")}</div>`}
 function renderToday(){const d=getToday(),running=!!(d.start&&!d.stop),stopped=!!(d.start&&d.stop),main=$("#mainHold");document.body.classList.toggle("work-running",running);document.body.classList.toggle("work-review",stopped);const openStart=openSegmentStart(d);const stateEl=$("#workState"),sectionEl=$("#currentSection");if(stateEl){stateEl.textContent=running?"WORKING":stopped?"READY TO REVIEW":"OFF THE CLOCK";stateEl.className=`workState ${running?"active":stopped?"review":""}`}if(sectionEl){sectionEl.innerHTML=running?`<span>Current section</span><strong>Started ${fmtTime(openStart)}</strong>`:stopped?`<span>Workday</span><strong>${d.segments.length} project${d.segments.length===1?"":"s"}</strong>`:`<span>Current section</span><strong>Starts when you clock in</strong>`};main.disabled=stopped;main.classList.toggle("finish",running);main.querySelector("span").textContent=running?"HOLD TO FINISH WORK":stopped?"WORKDAY STOPPED — REVIEW BELOW":"HOLD TO START WORK";$("#endProject").disabled=!running;$("#endProject").classList.toggle("hidden",!running);$("#projectQuickHelp").textContent=running?`Current section started ${fmtTime(openSegmentStart(d))}. Tap End Project / Switch to place an exact marker without stopping work.`:"Start work first. A project marker does not stop the work timer.";$("#timerLabel").textContent=running?`Working since ${fmtTime(d.start)}`:stopped?`Draft finished at ${fmtTime(d.stop)}`:"Not working";$("#editStart").disabled=!d.start;$("#editStop").disabled=!d.stop;$("#clearDraft").disabled=!d.start&&!d.stop&&!d.commuteOut&&!d.commuteBack;const gross=d.start&&d.stop?new Date(d.stop)-new Date(d.start):null,net=gross===null?null:Math.max(0,gross-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),coverage=d.stop?coverageError(d):null;$("#todayReview").innerHTML=`<div class="summaryGrid"><div class="summaryStat"><span>Start</span><strong>${fmtTime(d.start)}</strong></div><div class="summaryStat"><span>Finish</span><strong>${fmtTime(d.stop)}</strong></div><div class="summaryStat"><span>Worked</span><strong>${net===null?"—":fmtDuration(net)}</strong></div><div class="summaryStat"><span>Road</span><strong>${km?km.toFixed(1)+" km":"—"}</strong></div></div>${d.commuteOut?`<div class="meta">Out · ${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)} · ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">Back · ${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)} · ${d.commuteBack.km.toFixed(1)} km</div>`:(d.start&&d.stop&&d.workplaceId&&!d.manuallyAdded?`<div class="notice">Return route pending · open WorkClock when you reach a saved home.</div>`:"")}${projectLines(d)}${coverage?`<div class="notice bad">${esc(coverage)}</div>`:""}`;$("#breakChips").innerHTML="";for(const n of [0,15,30,45,60,75,90]){const b=document.createElement("button");b.type="button";b.className=`chip ${d.breakMin===n?"selected":""}`;b.textContent=n?`${n} min`:"No break";b.addEventListener("click",()=>{d.breakMin=n;persist();renderToday()});$("#breakChips").appendChild(b)}$("#confirmDayHold").disabled=!(d.start&&d.stop&&!coverage);updateTimer()}
 function renderLocations(){const list=$("#locationList");list.innerHTML="";if(!state.locations.length)list.innerHTML='<div class="meta">No saved locations yet.</div>';for(const l of state.locations){const el=document.createElement("div");el.className="location";el.innerHTML=`<div class="locationHead"><div><div class="locationName">${esc(l.name)} <span class="meta">(${l.type==="home"?"home":"work"})</span></div><div class="meta">${l.lat.toFixed(6)}, ${l.lon.toFixed(6)} · radius ${l.radius} m</div></div><div class="actions"><button class="btn small edit">Edit</button><button class="btn small del">Delete</button></div></div>`;el.querySelector(".edit").addEventListener("click",()=>editLocation(l.id));el.querySelector(".del").addEventListener("click",()=>deleteLocation(l.id));list.appendChild(el)}fillLocationSelects()}
@@ -879,7 +820,7 @@ $("#enableNativeBackground").addEventListener("click",()=>{WorkClockAndroid.requ
 // Native-only updater; leaves the existing web UI and saved data untouched.
 const updateBox=$("#updatesSetting"),updateButton=$("#checkUpdates"),installButton=$("#installUpdate");
 window.__WorkClockUpdateStatus=function(info){
-  if(!window.WorkClockAndroid||!info)return;
+  if(!info)return;
   const message=String(info.message||"");
   const stateName=String(info.state||"");
   setNotice("updateMessage",message,stateName==="error"||stateName==="migration"?"bad":stateName==="current"?"good":undefined);
@@ -887,29 +828,19 @@ window.__WorkClockUpdateStatus=function(info){
   installButton.classList.toggle("hidden",stateName!=="available");
   installButton.disabled=stateName!=="available";
 };
-if(window.WorkClockAndroid){
-  $("#updateVersion").textContent=`Installed: WorkClock ${WorkClockAndroid.appVersion()}`;
-  updateButton.addEventListener("click",()=>WorkClockAndroid.checkForUpdates());
-  installButton.addEventListener("click",()=>WorkClockAndroid.installUpdate());
-  // One low-frequency check on launch, with visible results in Settings.
-  setTimeout(()=>WorkClockAndroid.checkForUpdates(),1500);
-}else{
-  updateBox.classList.add("hidden");
-}
+$("#updateVersion").textContent=`Installed: WorkClock ${WorkClockAndroid.appVersion()}`;
+updateButton.addEventListener("click",()=>WorkClockAndroid.checkForUpdates());
+installButton.addEventListener("click",()=>WorkClockAndroid.installUpdate());
+// Check once on launch; the updater performs HTTP/network work off the UI thread.
+setTimeout(()=>WorkClockAndroid.checkForUpdates(),1500);
+
 $("#exportBackup").addEventListener("click",exportWorkClockBackup);
 $("#importBackup").addEventListener("click",importWorkClockBackup);
-$("#backupFile").addEventListener("change",async e=>{const f=e.target.files?.[0];if(!f)return;if(f.size>10*1024*1024){setNotice("backupMessage","Backup file is too large.","bad");return}window.__WorkClockReceiveImport(await f.text());e.target.value=""});
 $("#simAtHome").addEventListener("click",simAtHome);$("#simArriveWork").addEventListener("click",simArrive);$("#simLeaveWork").addEventListener("click",simLeave);$("#simReturnHome").addEventListener("click",simReturn);$("#manualDistanceMode").addEventListener("change",updateManualModeUI);$("#manualCalculate").addEventListener("click",manualDistancePreview);$("#addManualSegment").addEventListener("click",addManualSegmentSplit);$("#cancelManualEdit").addEventListener("click",resetManualEditor);$("#manualStart").addEventListener("change",renderManualSegments);$("#manualFinish").addEventListener("change",renderManualSegments);
 
-resetLocationEditor();resetManualEditor();renderAll();refreshPermissionUI();
-if(window.WorkClockAndroid){syncAndroidEvents()}
-if(!window.WorkClockAndroid&&"Notification" in window&&Notification.permission==="granted"){
-  ensureNotificationWorker()
-    .then(()=>setNotice("notificationHelp","Notification permission granted; Android notification service is ready.","good"))
-    .catch(e=>setNotice("notificationHelp",`Notification service unavailable: ${e.message||e}`,"bad"));
-}
+resetLocationEditor();resetManualEditor();renderAll();refreshPermissionUI();syncAndroidEvents();
 timerInterval=setInterval(updateTimer,1000);
-window.__WorkClockTest={getState:()=>deepCopy(state),reset:()=>{localStorage.removeItem(STORAGE_KEY);state=newState();persist();resetManualEditor();renderAll()},processPosition,routeBetween,locationById,coverageError,endProjectNow,pendingReturnDay,recoverPendingReturn,weekData:()=>daysInWeek(weekSheetAnchor||new Date()),isoWeekData,mondayOfWeek,renderWeekSheet,showHistoryMode,activeHoldCount:()=>activeHoldCancels.size};
+
 })();
 </script>
 <script>
