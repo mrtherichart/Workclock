@@ -127,10 +127,13 @@ async function syncAndroidEvents(){
               {source:"android",eventAt:at});
           }else if(event.transition==="EXIT"&&loc.type==="work"){
             // Persist the original geofence timestamp, not the time the app opened.
-            state.presence.currentId=null;state.presence.currentType=null;state.presence.currentName=null;
-            state.presence.changedAt=new Date(at).toISOString();
-            state.presence.source="android";state.presence.lastWorkId=loc.id;
-            persist();renderStatus(null,"android");
+            const previousAt=new Date(state.presence.changedAt||0).getTime();
+            if(!Number.isFinite(previousAt)||at>=previousAt){
+              state.presence.currentId=null;state.presence.currentType=null;state.presence.currentName=null;
+              state.presence.changedAt=new Date(at).toISOString();
+              state.presence.source="android";state.presence.lastWorkId=loc.id;
+              persist();renderStatus(null,"android");
+            }
             const d=getToday();
             if(age>=-60000&&age<2*3600000&&d.start&&!d.stop&&isAutomationDay(new Date(at))){
               showTimeChoice("stop",`Android detected leaving ${loc.name} at ${fmtTime(at)}. When did you finish?`);
@@ -298,6 +301,13 @@ function updatePresence(found,source,at=nowISO()){
 async function processPosition(pos,{source="gps",force=false,forcePreviousId=null,eventAt=null}={}){
   currentPosition={lat:Number(pos.lat),lon:Number(pos.lon),accuracy:Number(pos.accuracy)||null};
   const found=nearestSavedLocation(currentPosition);
+  const staleAndroidEvent=source==="android"&&eventAt&&Date.now()-Number(eventAt)>2*3600000;
+  if(staleAndroidEvent){
+    // Old events cannot move the live GPS position backward in time.
+    // An old home arrival can still restore a missing journey on a confirmed day.
+    if(found?.type==="home")await recoverPendingReturn(found,{source});
+    return;
+  }
   let prev={...state.presence};
 
   if(forcePreviousId){
@@ -316,9 +326,6 @@ async function processPosition(pos,{source="gps",force=false,forcePreviousId=nul
     await recoverPendingReturn(found,{source});
   }
 
-  // Old native geofence transitions can arrive after several hours offline.
-  // They may complete a pending return journey, but must never open a stale work prompt.
-  if(source==="android"&&eventAt&&Date.now()-Number(eventAt)>2*3600000)return;
   if(unchanged&&!force)return;
   if(!force&&!isAutomationDay(eventAt?new Date(eventAt):new Date()))return;
 
@@ -561,7 +568,7 @@ function jumpToAttention(){
   el?.scrollIntoView({behavior:"smooth",block:"center"});
 }
 let historyLimit=60;
-function renderHistory(){const box=$("#historyList");$("#clearHistory").closest(".section").classList.toggle("hidden",!state.history.length);if(!state.history.length){box.innerHTML='<div class="meta">No confirmed workdays yet.</div>';return}box.innerHTML="";for(const d of state.history.slice().sort((a,b)=>new Date(b.start)-new Date(a.start)).slice(0,historyLimit)){const ms=Math.max(0,new Date(d.stop)-new Date(d.start)-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),el=document.createElement("div");el.className="historyItem";el.dataset.dayId=d.id;el.innerHTML=`<div class="historyTop"><strong>${fmtDate(d.start)}</strong><strong>${fmtDuration(ms)}</strong></div><div class="meta">${fmtTime(d.start)}–${fmtTime(d.stop)} · break ${d.breakMin} min · ${km.toFixed(1)} km${d.manuallyAdded?" · manual entry":""}</div>${projectLines(d)}${d.commuteOut?`<div class="meta" style="margin-top:7px">${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)}: ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)}: ${d.commuteBack.km.toFixed(1)} km</div>`:(!d.manuallyAdded&&d.workplaceId?`<div class="notice">Return route pending · open WorkClock at a saved home.</div>`:"")}<div class="buttonRow" style="margin-top:10px"><button class="hold mini editDay"><div class="fill"></div><span>HOLD TO EDIT</span></button><button class="hold mini danger deleteDay"><div class="fill"></div><span>HOLD TO DELETE</span></button></div>`;wireHold(el.querySelector(".editDay"),()=>beginEditDay(d.id));wireHold(el.querySelector(".deleteDay"),()=>deletePastDay(d.id));box.appendChild(el)}
+function renderHistory(){const box=$("#historyList");$("#clearHistory").closest(".section").classList.toggle("hidden",!state.history.length);if(!state.history.length){box.innerHTML='<div class="meta">No confirmed workdays yet.</div>';$("#historyShowOlder").classList.add("hidden");return}box.innerHTML="";for(const d of state.history.slice().sort((a,b)=>new Date(b.start)-new Date(a.start)).slice(0,historyLimit)){const ms=Math.max(0,new Date(d.stop)-new Date(d.start)-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),el=document.createElement("div");el.className="historyItem";el.dataset.dayId=d.id;el.innerHTML=`<div class="historyTop"><strong>${fmtDate(d.start)}</strong><strong>${fmtDuration(ms)}</strong></div><div class="meta">${fmtTime(d.start)}–${fmtTime(d.stop)} · break ${d.breakMin} min · ${km.toFixed(1)} km${d.manuallyAdded?" · manual entry":""}</div>${projectLines(d)}${d.commuteOut?`<div class="meta" style="margin-top:7px">${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)}: ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)}: ${d.commuteBack.km.toFixed(1)} km</div>`:(!d.manuallyAdded&&d.workplaceId?`<div class="notice">Return route pending · open WorkClock at a saved home.</div>`:"")}<div class="buttonRow" style="margin-top:10px"><button class="hold mini editDay"><div class="fill"></div><span>HOLD TO EDIT</span></button><button class="hold mini danger deleteDay"><div class="fill"></div><span>HOLD TO DELETE</span></button></div>`;wireHold(el.querySelector(".editDay"),()=>beginEditDay(d.id));wireHold(el.querySelector(".deleteDay"),()=>deletePastDay(d.id));box.appendChild(el)}
 const older=$("#historyShowOlder"),remaining=Math.max(0,state.history.length-historyLimit);
 older.classList.toggle("hidden",remaining===0);older.textContent=remaining?`Show older workdays (${remaining} remaining)`:"";}
 let renderInitialized=false;
