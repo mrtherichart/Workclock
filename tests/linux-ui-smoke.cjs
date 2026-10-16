@@ -31,6 +31,11 @@ const server=http.createServer((req,res)=>{
 });
 server.listen(0,"127.0.0.1",()=>{
  const {port}=server.address();
+ if(process.argv.includes("--preview")){
+   console.log(`Linux preview ready at http://127.0.0.1:${port}/assets/index.html`);
+   console.log("This preview uses mocked Android services; nothing is added to the APK.");
+   return;
+ }
  const args=["--headless=new","--disable-gpu","--no-sandbox","--disable-dev-shm-usage","--disable-background-networking","--no-first-run","--no-default-browser-check","--virtual-time-budget=2500","--dump-dom", "http://127.0.0.1:"+port+"/assets/index.html"];
  // Use asynchronous spawn: the Node HTTP server must remain responsive while Chrome loads it.
  const child=cp.spawn(chromium,args,{stdio:["ignore","pipe","pipe"]});
