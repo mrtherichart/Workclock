@@ -12,19 +12,19 @@ To update an existing installation, open **Settings → App updates → Check fo
 
 ## Using WorkClock
 
-The [user guide](docs/README.md) covers the usual jobs:
+The [Wiki](https://github.com/mrtherichart/Workclock/wiki) covers the usual jobs:
 
-- [Get started](docs/getting-started.md)
-- [Save home and work locations](docs/places.md)
-- [Record a workday](docs/workday.md)
-- [Fill in a weekly work slip](docs/weeks.md)
-- [Back up your records](docs/backups.md)
+- [Get started](https://github.com/mrtherichart/Workclock/wiki/Getting-started)
+- [Save home and work locations](https://github.com/mrtherichart/Workclock/wiki/Places)
+- [Record a workday](https://github.com/mrtherichart/Workclock/wiki/Workday)
+- [Fill in a weekly work slip](https://github.com/mrtherichart/Workclock/wiki/Weeks)
+- [Back up your records](https://github.com/mrtherichart/Workclock/wiki/Backups)
 
 ## Building
 
 WorkClock uses Kotlin for Android location services, notifications, backups and updates. The interface is HTML, CSS and JavaScript loaded from the APK. No account or server is needed to store work records.
 
-See [Building and testing](docs/development.md) for the source layout, Linux UI tests and release notes.
+See [Building and testing](https://github.com/mrtherichart/Workclock/wiki/Development) for the source layout, Linux UI tests and release notes.
 
 Background location uses Android geofences, not continuous GPS tracking. Arrival notifications may be delayed by Android's location and battery settings. Route distances need an internet connection when first calculated.
 

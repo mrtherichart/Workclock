@@ -7,7 +7,7 @@ const cp=require("node:child_process");
 const path=require("node:path");
 const root=path.resolve(__dirname,"..");
 const assetDir=path.join(root,"app/src/main/assets");
-const screenshotDir=path.join(root,"docs/screenshots");
+const screenshotDir=path.join(root,"wiki-images");
 fs.mkdirSync(screenshotDir,{recursive:true});
 const chromium=process.env.CHROME_BIN||["chromium","google-chrome","google-chrome-stable"].find(cmd=>cp.spawnSync("which",[cmd]).status===0);
 if(!chromium)throw Error("Chromium is required to capture screenshots.");
@@ -96,7 +96,7 @@ server.listen(0,"127.0.0.1",async()=>{
    const port=server.address().port;
    for(const screen of ["today","places","history","weekstaat","settings"])
      await capture(screen,"http://127.0.0.1:"+port+"/assets/index.html");
-   console.log("Documentation screenshots written to docs/screenshots/");
+   console.log("Wiki screenshots written to wiki-images/");
  }catch(e){console.error(e);process.exitCode=1}
  finally{server.close()}
 });
