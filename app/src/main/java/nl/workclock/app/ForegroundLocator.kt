@@ -86,11 +86,12 @@ class ForegroundLocator(
         if (!recent) {
             try {
                 client.lastLocation.addOnSuccessListener { location ->
+                    if (!listening) return@addOnSuccessListener
                     val usable = location != null && System.currentTimeMillis() - location.time in 0L..90_000L &&
                         location.hasAccuracy() && location.accuracy <= 200f
                     if (usable) report(location!!)
                     else refresh()
-                }.addOnFailureListener { refresh() }
+                }.addOnFailureListener { if (listening) refresh() }
             } catch (_: Exception) { refresh() }
         }
     }
