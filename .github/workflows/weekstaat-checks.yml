@@ -1,0 +1,19 @@
+name: Weekstaat checks
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  weekstaat:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify Weekstaat logic and inline JavaScript
+        run: node tests/weekstaat.test.cjs
