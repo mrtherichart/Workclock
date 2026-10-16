@@ -71,6 +71,7 @@
         assert(document.getElementById("weekTableBody").querySelectorAll("tr").length===7,"Weekstaat must have seven days");
         assert(document.getElementById("weekTotalHours").textContent==="8u30","Work hours were not calculated correctly");
         assert(document.getElementById("weekTotalKm").textContent==="20","Kilometre total was incorrect");
+        assert(document.getElementById("weekProjects").textContent.includes("Linux test project"),"Project not shown");
         const heading=document.getElementById("weekHeading");
         assert(!document.getElementById("weekJumpGo"),"Extra week/year selectors must be removed");
         heading.click();
@@ -87,7 +88,7 @@
         input.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}));
         assert(edit.classList.contains("hidden"),"Escape should cancel inline week editing");
         assert(document.getElementById("weekProjectSelect"),"Project filter is missing");
-        assert(document.getElementById("weekProjects").textContent.includes("Linux test project"),"Project not shown");
+
         const before=document.getElementById("weekHeading").textContent;
         document.getElementById("weekPrevious").click();
         assert(document.getElementById("weekHeading").textContent!==before,"Previous-week control failed");
