@@ -6,6 +6,7 @@ const STORAGE_KEY="workclock-v4";
 const PREVIOUS_KEYS=["workclock-v3","workclock-prototype-v1"];
 const RHYTHM_KEY="workclock-first-run-hints-v1";
 const RHYTHM_STARTED_KEY="workclock-first-run-started-v1";
+const RHYTHM_SKIP_PLACE_KEY="workclock-first-run-skip-place-v1";
 // Existing installations stay unchanged. Only a fresh installation receives tips.
 let rhythmMode=(()=>{
   try{
@@ -447,24 +448,42 @@ function projectLines(day){if(!day.segments?.length)return '<div class="meta">No
 // Quiet, opt-out guidance follows actual workday progress, never a mandatory tour.
 function rhythmStep(){
   if(rhythmMode!=="active")return null;
-  // Tips quietly expire if someone prefers to learn at their own pace.
   const started=Number(localStorage.getItem(RHYTHM_STARTED_KEY));
   if(started>0&&Date.now()-started>14*86400000){
-    setRhythmMode("completed");return null;
+    setRhythmMode("completed");
+    return null;
   }
   const day=state.currentDay;
+  // The first-day hint must follow actual records even if the user never enables GPS.
   if(state.history.length)return "saved";
   if(day?.start&&day.stop)return "review";
   if(day?.start)return "working";
-  if(!state.locations.length)return "place";
+  if(!state.locations.length&&localStorage.getItem(RHYTHM_SKIP_PLACE_KEY)!=="yes")return "place";
   return "start";
 }
 const RHYTHM_HINTS={
-  place:{text:"For automatic arrival reminders, save a home or workplace.",action:"Places →"},
-  start:{text:"When work begins, hold Start. You can correct the time later."},
-  working:{text:"Your start time is saved. You can close the app while working."},
-  review:{text:"Check your hours below, then hold Confirm to save your day."},
-  saved:{text:"First day saved. Find your hours together in Weekstaat.",action:"Weekstaat →"}
+  place:{
+    label:"GETTING STARTED · OPTIONAL SETUP",
+    text:"Save a place for automatic reminders, or start tracking manually.",
+    action:"Add a place →",skip:"Not now"
+  },
+  start:{
+    label:"YOUR FIRST DAY",
+    text:"Hold the Start button below when you begin working."
+  },
+  working:{
+    label:"WHILE YOU WORK",
+    text:"Your start time is saved. You can close WorkClock until you're finished."
+  },
+  review:{
+    label:"FINISH YOUR DAY",
+    text:"Check your hours below, then hold Confirm to save the day."
+  },
+  saved:{
+    label:"FIRST DAY SAVED",
+    text:"Your first workday is saved. Find your weekly hours in Weekstaat.",
+    action:"Open Weekstaat →"
+  }
 };
 function renderRhythmGuide(){
   const step=rhythmStep(),hint=step?RHYTHM_HINTS[step]:null;
@@ -473,10 +492,14 @@ function renderRhythmGuide(){
   strip.classList.toggle("hidden",!hint);
   placesHint.classList.toggle("hidden",step!=="place");
   if(!hint)return;
-  const message=$("#rhythmGuideMessage"),button=$("#rhythmGuideAction");
+  $("#rhythmGuideStep").textContent=hint.label;
+  const message=$("#rhythmGuideMessage"),button=$("#rhythmGuideAction"),skip=$("#rhythmGuideSkip");
   if(message.textContent!==hint.text)message.textContent=hint.text;
   button.classList.toggle("hidden",!hint.action);
+  skip.classList.toggle("hidden",!hint.skip);
+  $("#rhythmGuideButtons").classList.toggle("hidden",!hint.action&&!hint.skip);
   if(hint.action)button.textContent=hint.action;
+  if(hint.skip)skip.textContent=hint.skip;
 }
 function setRhythmMode(mode){
   rhythmMode=mode;
@@ -803,6 +826,11 @@ if(!lastUpdateCheck||Date.now()-lastUpdateCheck>24*3600000){
 }
 
 $("#rhythmGuideDismiss").addEventListener("click",()=>setRhythmMode("dismissed"));
+$("#rhythmGuideSkip").addEventListener("click",()=>{
+  if(rhythmStep()!=="place")return;
+  try{localStorage.setItem(RHYTHM_SKIP_PLACE_KEY,"yes")}catch(e){console.warn("Could not store skipped setup",e)}
+  renderRhythmGuide();
+});
 $("#rhythmGuideAction").addEventListener("click",()=>{
   const step=rhythmStep();
   if(step==="place")window.__activateWorkClockView?.("places");
@@ -812,6 +840,8 @@ $("#rhythmGuideAction").addEventListener("click",()=>{
   }
 });
 $("#rhythmGuideReplay").addEventListener("click",()=>{
+  // Replay always starts with a fresh optional setup choice, without deleting user data.
+  try{localStorage.removeItem(RHYTHM_SKIP_PLACE_KEY)}catch(e){}
   setRhythmMode("active");
   window.__activateWorkClockView?.("today");
 });
