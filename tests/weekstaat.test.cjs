@@ -23,6 +23,7 @@ const context=vm.createContext({
   state, Date,Intl,Map,Set,Math,Number,String,Array,
   localStorage:{getItem:()=>null,setItem:()=>{}},
   window:{},
+  esc:value=>String(value).replace(/[&<>"\x27]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;", "\x27":"&#039;"}[c])),
   localDateKey:d=>[d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-"),
   fmtTime:iso=>new Date(iso).toISOString().slice(11,16),
   $:selector=>element(selector.slice(1))
