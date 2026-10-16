@@ -78,3 +78,33 @@ WorkClock now uses a cohesive slate-blue color palette inspired by `#253e4e`. Th
 Typography uses only two font stacks: system UI sans-serif for body/control/timer text and a serif display stack for headings. No external font downloading is needed.
 
 The Android launcher now uses the approved briefcase/clock/location icon, with a legacy fallback and adaptive icon foreground on a `#253e4e` background.
+
+## Android-only application and Linux testing (0.3.2)
+
+The **APK contains only the Android runtime UI**. The browser-specific GPS,
+web notification/Service Worker, browser file picker, and browser-geolocation
+permission paths have been removed. The native Android bridge handles those
+features instead. The embedded WebView, HTML/CSS/JavaScript, and its local
+DOM storage remain: they power the actual app, not a separate web edition.
+
+For Linux tests, **the HTML inside the APK is tested directly**. The separate
+`tests/linux-android-mock.js` emulates only the native `WorkClockAndroid`
+bridge and is injected by the test runner. It is never stored under
+`app/src/main/assets` or bundled in the APK.
+
+With Node.js 22 and Chromium or Google Chrome installed:
+
+```sh
+node tests/weekstaat.test.cjs
+node tests/linux-ui-smoke.cjs
+node tests/linux-ui-smoke.cjs --preview
+```
+
+The last command hosts an interactive preview at the printed localhost URL;
+open it in your Linux browser. All sample records and fake Android permissions
+live in the Linux-only test environment, not on the user's device. Browser-side
+fallbacks are intentionally not part of the production app.
+
+The `Android HTML Linux smoke` GitHub workflow checks the actual embedded
+production HTML, including History/Weekstaat UI, calculations and Android bridge
+calls, before merging changes.
