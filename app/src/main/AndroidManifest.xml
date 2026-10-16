@@ -31,6 +31,7 @@
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/update_file_paths" />
         </provider>
+        <receiver android:name=".ReminderActionReceiver" android:exported="false" />
         <receiver
             android:name=".GeoReceiver"
             android:exported="false" />

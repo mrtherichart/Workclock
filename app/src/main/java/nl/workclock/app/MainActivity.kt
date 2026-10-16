@@ -9,6 +9,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.provider.DocumentsContract
+import java.util.concurrent.Executors
 import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -20,6 +22,7 @@ import org.json.JSONObject
 class MainActivity : Activity() {
     private lateinit var webView: WebView
     private var pendingBackup: String? = null
+    private val backupExecutor = Executors.newSingleThreadExecutor()
     private var pageReady = false
     private var screenVisible = false
     private var lastNativeFix: JSONObject? = null
@@ -33,6 +36,7 @@ class MainActivity : Activity() {
         private const val NOTIFICATION_PERMISSION = 102
         private const val EXPORT_BACKUP = 200
         private const val IMPORT_BACKUP = 201
+        private const val BACKUP_FOLDER = 202
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,6 +86,12 @@ class MainActivity : Activity() {
         webView.loadUrl("$LOCAL_ORIGIN/assets/index.html")
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (::webView.isInitialized && pageReady) deliverEvents()
+    }
+
     override fun onResume() {
         super.onResume()
         screenVisible = true
@@ -90,7 +100,7 @@ class MainActivity : Activity() {
         if (::webView.isInitialized && pageReady) {
             webView.evaluateJavascript("window.__WorkClockAppResume?.();", null)
         }
-        GeoManager.registerSaved(this) { runOnUiThread { deliverEvents() } }
+        GeoManager.ensureRegistered(this) { runOnUiThread { deliverEvents() } }
         if (::updater.isInitialized) updater.onResume()
         if (::foregroundLocator.isInitialized && GeoManager.hasForegroundPermission(this)) {
             foregroundLocator.start()
@@ -184,6 +194,13 @@ class MainActivity : Activity() {
                     pendingBackup = null
                     webView.evaluateJavascript("window.__WorkClockBackupResult?.('Backup saved');", null)
                 }
+                BACKUP_FOLDER -> {
+                    contentResolver.takePersistableUriPermission(uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    getSharedPreferences("workclock_native", MODE_PRIVATE).edit()
+                        .putString("backup_tree", uri.toString()).apply()
+                    webView.evaluateJavascript("window.__WorkClockBackupFolderStatus?.(true);", null)
+                }
                 IMPORT_BACKUP -> {
                     val contents = contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use {
                         it.readText()
@@ -237,6 +254,25 @@ class MainActivity : Activity() {
             runOnUiThread { if (!screenVisible) GeoReceiver.show(this@MainActivity, title, body, tag) }
         }
 
+        @JavascriptInterface fun openPlaceOnMap(id: String) {
+            val place = try { GeoManager.place(applicationContext, id) } catch (_: Exception) { null } ?: return
+            val lat = place.optDouble("lat", Double.NaN)
+            val lon = place.optDouble("lon", Double.NaN)
+            if (!lat.isFinite() || !lon.isFinite() || lat !in -90.0..90.0 || lon !in -180.0..180.0) return
+            val name = place.optString("name", "Saved place")
+            val coordinate = "$lat,$lon"
+            val geo = Uri.parse("geo:$coordinate?q=$coordinate(${Uri.encode(name)})")
+            runOnUiThread {
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, geo))
+                } catch (_: android.content.ActivityNotFoundException) {
+                    val fallback = Uri.parse("https://www.google.com/maps/search/?api=1&query=$coordinate")
+                    try { startActivity(Intent(Intent.ACTION_VIEW, fallback)) }
+                    catch (_: Exception) {}
+                }
+            }
+        }
+
         @JavascriptInterface fun refreshLocation() {
             runOnUiThread { foregroundLocator.start() }
         }
@@ -250,6 +286,58 @@ class MainActivity : Activity() {
             .put("notification", Build.VERSION.SDK_INT < 33 ||
                 checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED)
             .toString()
+
+        @JavascriptInterface fun backupFolderEnabled(): Boolean =
+            !getSharedPreferences("workclock_native", MODE_PRIVATE)
+                .getString("backup_tree", null).isNullOrBlank()
+
+        @JavascriptInterface fun selectBackupFolder() {
+            runOnUiThread {
+                startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                    .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                        Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION), BACKUP_FOLDER)
+            }
+        }
+
+        @JavascriptInterface fun saveFolderBackup(json: String) {
+            val tree = getSharedPreferences("workclock_native", MODE_PRIVATE)
+                .getString("backup_tree", null) ?: return
+            if (json.length > 5_000_000) return
+            backupExecutor.execute {
+                try {
+                    val treeUri = Uri.parse(tree)
+                    val rootId = DocumentsContract.getTreeDocumentId(treeUri)
+                    val rootUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, rootId)
+                    val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+                        .format(java.util.Date())
+                    val filename = "workclock-$date.json"
+                    val children = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, rootId)
+                    var found: Uri? = null
+                    contentResolver.query(children, arrayOf(
+                        DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                        DocumentsContract.Document.COLUMN_DISPLAY_NAME), null, null, null)?.use { cursor ->
+                        while (cursor.moveToNext()) {
+                            if (cursor.getString(1) == filename) {
+                                found = DocumentsContract.buildDocumentUriUsingTree(treeUri, cursor.getString(0))
+                                break
+                            }
+                        }
+                    }
+                    val target = found ?: DocumentsContract.createDocument(
+                        contentResolver, rootUri, "application/json", filename)
+                        ?: throw IllegalStateException("Could not create backup")
+                    contentResolver.openOutputStream(target, "wt")?.bufferedWriter(Charsets.UTF_8)?.use {
+                        it.write(json)
+                    } ?: throw IllegalStateException("Backup folder is not writable")
+                } catch (e: Exception) {
+                    runOnUiThread {
+                        if (pageReady) webView.evaluateJavascript(
+                            "window.__WorkClockBackupResult?.(${JSONObject.quote("Automatic folder backup failed: ${e.message ?: "folder unavailable"}")});", null)
+                    }
+                }
+            }
+        }
 
         @JavascriptInterface fun exportBackup(json: String) {
             runOnUiThread {
@@ -292,6 +380,7 @@ class MainActivity : Activity() {
     override fun onDestroy() {
         webView.removeJavascriptInterface("WorkClockAndroid")
         webView.destroy()
+        backupExecutor.shutdown()
         super.onDestroy()
     }
 }

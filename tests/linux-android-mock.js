@@ -9,6 +9,7 @@
   const stop = new Date(d.getFullYear(),d.getMonth(),d.getDate(),16).toISOString();
   localStorage.setItem("workclock-v4",JSON.stringify({
     version:4,
+    locations:[{id:"linux-work",type:"work",name:"Test Workshop",lat:52.0907,lon:5.1214,radius:150}],
     history:[{id:"linux-smoke-day",date:key,start,stop,breakMin:30,status:"confirmed",
       manuallyAdded:true,commuteOut:{km:10},commuteBack:{km:10},
       segments:[{id:"linux-smoke-seg",start,stop,projectName:"Linux test project"}]}]
@@ -29,7 +30,11 @@
     checkForUpdates:()=>calls.push(["updates"]),
     installUpdate:()=>calls.push(["install"]),
     exportBackup:json=>calls.push(["exportBackup",json]),
-    importBackup:()=>calls.push(["importBackup"])
+    importBackup:()=>calls.push(["importBackup"]),
+    backupFolderEnabled:()=>false,
+    selectBackupFolder:()=>calls.push(["selectBackupFolder"]),
+    saveFolderBackup:json=>calls.push(["saveFolderBackup",json]),
+    openPlaceOnMap:id=>calls.push(["openPlaceOnMap",id])
   };
   const errors=[];
   window.addEventListener("error",e=>errors.push(e.message||"JavaScript error"));
@@ -41,6 +46,15 @@
         assert(!errors.length,errors.join("; "));
         assert(document.querySelector("#timer"),"Today view failed to initialize");
         assert(document.querySelector("#viewHistory"),"History view is missing");
+        const places=document.querySelector('.navBtn[data-target="places"]');
+        places.click();
+        const mapLink=document.querySelector(".placeNameButton");
+        assert(mapLink&&mapLink.textContent.includes("Test Workshop"),"Saved place map link missing");
+        mapLink.click();
+        assert(calls.some(c=>c[0]==="openPlaceOnMap"&&c[1]==="linux-work"),"Map bridge was not invoked");
+        const settings=document.querySelector('.navBtn[data-target="settings"]');
+        settings.click();
+        assert(document.getElementById("restoreSnapshot"),"Safety snapshot restore is missing");
         const history=document.querySelector('.navBtn[data-target="history"]');
         assert(history,"History navigation is missing");
         history.click();
@@ -49,6 +63,9 @@
         assert(document.getElementById("weekTableBody").querySelectorAll("tr").length===7,"Weekstaat must have seven days");
         assert(document.getElementById("weekTotalHours").textContent==="8u30","Work hours were not calculated correctly");
         assert(document.getElementById("weekTotalKm").textContent==="20","Kilometre total was incorrect");
+        const jump=document.getElementById("weekJumpGo");
+        assert(jump,"Week number jump is missing");
+        assert(document.getElementById("weekProjectSelect"),"Project filter is missing");
         assert(document.getElementById("weekProjects").textContent.includes("Linux test project"),"Project not shown");
         const before=document.getElementById("weekHeading").textContent;
         document.getElementById("weekPrevious").click();

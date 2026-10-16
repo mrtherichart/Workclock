@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.net.Uri
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -26,7 +27,10 @@ class GeoReceiver : BroadcastReceiver() {
         event.triggeringGeofences?.forEach { geofence ->
             val placeId = geofence.requestId
             val place = GeoManager.place(context, placeId) ?: return@forEach
-            EventStore.append(context, placeId, transition)
+            val triggerTime = event.triggeringLocation?.time ?: 0L
+            val now = System.currentTimeMillis()
+            val eventTime = if (triggerTime in 1L..(now + 60_000L)) triggerTime else now
+            EventStore.append(context, placeId, transition, eventTime)
             val label = place.optString("name", "this place")
             val type = place.optString("type")
             if (type == "work" && transition == "ENTER") {
@@ -55,15 +59,41 @@ class GeoReceiver : BroadcastReceiver() {
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             ), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val notification = NotificationCompat.Builder(context, "workclock")
+        val builder = NotificationCompat.Builder(context, "workclock")
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setContentTitle(title)
             .setContentText(body)
             .setContentIntent(open)
             .setAutoCancel(true)
             .setTimeoutAfter(2 * 60 * 60 * 1000L)
-            .build()
-        manager.notify(tag, 1, notification)
+        val arrive = tag.startsWith("arrive-")
+        val leave = tag.startsWith("leave-")
+        val placeId = when {
+            arrive -> tag.removePrefix("arrive-")
+            leave -> tag.removePrefix("leave-")
+            else -> ""
+        }
+        if (arrive || leave) {
+            val actions = if (arrive) listOf(
+                "START_NOW" to "Start now", "START_EARLIER" to "Earlier…",
+                "NOT_WORKING" to "Not working"
+            ) else listOf(
+                "FINISH_NOW" to "Finish now", "FINISH_EARLIER" to "Earlier…",
+                "STILL_WORKING" to "Still working"
+            )
+            for ((decision, label) in actions) {
+                val actionIntent = Intent(context, ReminderActionReceiver::class.java).apply {
+                    data = Uri.parse("workclock://reminder/$decision/${Uri.encode(tag)}")
+                    putExtra("decision", decision)
+                    putExtra("placeId", placeId)
+                    putExtra("notificationTag", tag)
+                }
+                val action = PendingIntent.getBroadcast(context, 0, actionIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                builder.addAction(android.R.drawable.ic_menu_edit, label, action)
+            }
+        }
+        manager.notify(tag, 1, builder.build())
     }
 
         fun test(context: Context) {

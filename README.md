@@ -108,3 +108,16 @@ fallbacks are intentionally not part of the production app.
 The `Android HTML Linux smoke` GitHub workflow checks the actual embedded
 production HTML, including History/Weekstaat UI, calculations and Android bridge
 calls, before merging changes.
+
+## WorkClock 0.4.0 — usability and background reliability
+
+- **Weekstaat:** tap a single-day row to edit; jump directly to ISO week number/year; remember last week and mode; filter by project. Project-specific breaks are allocated in proportion to that project's recorded minutes. Kilometres are only attributed to a filtered project if the entire day belongs to it; shared journeys are not double counted.
+- **History:** shows at most 60 days initially for smooth navigation, with a Show older button. A review indicator points to unconfirmed days, unfinished clocks and missing returns.
+- **Manual entry:** copy the previous recorded workday's schedule, projects and journey selections. You must still review and save.
+- **Saved locations:** tap the name to open coordinates in Android's default Maps app (or a Google Maps web fallback); see last detected date and whether Android background tracking is configured.
+- **Android notifications:** arrival/departure reminders offer Start now, Earlier or Not working / Finish now, Earlier or Still working. Decisions are timestamped when you tap, queued natively and processed on opening WorkClock.
+- **Data safety:** retain up to three bounded safety snapshots in local app storage, including a daily recovery copy and before destructive operations. Restore from Settings. You may optionally select a document folder for daily off-app JSON backups via Android's Storage Access Framework. This folder selection is device-local; the folder provider determines whether these copies are also cloud-synced. Keep regular exported backups in any case.
+- **Background efficiency:** retain existing geofences over normal app resumes, with re-registration on changes, reboot and periodic verification; prefer recent GPS fixes; preserve original geofence times and avoid applying old events to current presence; only sync changed place lists; pause timer DOM ticks while hidden; cap route cache growth.
+- **Code:** split Android HTML into local stylesheet, JavaScript core and navigation files. No online framework, extra font or browser-only version. Linux smoke tests use the production assets with test-only Android bridge mocks.
+
+**Important:** Background location and notification-action behavior must also be checked on an actual Android device. The Linux/CI tests do not reproduce real-world geofencing. R8 shrink/minification remains disabled until real-device regression tests can prove it safe for the WebView/native bridge.

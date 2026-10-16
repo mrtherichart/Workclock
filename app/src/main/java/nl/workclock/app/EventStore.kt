@@ -10,15 +10,26 @@ object EventStore {
     private const val PREF = "workclock_native"
     private const val KEY = "events"
 
-    @Synchronized fun append(context: Context, placeId: String, transition: String) {
+    @Synchronized fun append(context: Context, placeId: String, transition: String, at: Long = System.currentTimeMillis()) {
         val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         val all = JSONArray(prefs.getString(KEY, "[]"))
         val record = JSONObject()
             .put("id", UUID.randomUUID().toString())
             .put("placeId", placeId)
             .put("transition", transition)
-            .put("at", System.currentTimeMillis())
+            .put("at", at)
         all.put(record)
+        val limited = JSONArray()
+        for (i in maxOf(0, all.length() - 100) until all.length()) limited.put(all.get(i))
+        prefs.edit().putString(KEY, limited.toString()).apply()
+    }
+
+    @Synchronized fun appendAction(context: Context, placeId: String, action: String, at: Long) {
+        val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
+        val all = JSONArray(prefs.getString(KEY, "[]"))
+        all.put(JSONObject().put("id", UUID.randomUUID().toString())
+            .put("placeId", placeId).put("transition", "ACTION")
+            .put("action", action).put("at", at))
         val limited = JSONArray()
         for (i in maxOf(0, all.length() - 100) until all.length()) limited.put(all.get(i))
         prefs.edit().putString(KEY, limited.toString()).apply()
