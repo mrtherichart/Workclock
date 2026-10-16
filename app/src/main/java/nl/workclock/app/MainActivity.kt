@@ -90,7 +90,7 @@ class MainActivity : Activity() {
         if (::webView.isInitialized && pageReady) {
             webView.evaluateJavascript("window.__WorkClockAppResume?.();", null)
         }
-        GeoManager.registerSaved(this) { runOnUiThread { deliverEvents() } }
+        GeoManager.ensureRegistered(this) { runOnUiThread { deliverEvents() } }
         if (::updater.isInitialized) updater.onResume()
         if (::foregroundLocator.isInitialized && GeoManager.hasForegroundPermission(this)) {
             foregroundLocator.start()
@@ -235,6 +235,25 @@ class MainActivity : Activity() {
 
         @JavascriptInterface fun showNotification(title: String, body: String, tag: String) {
             runOnUiThread { if (!screenVisible) GeoReceiver.show(this@MainActivity, title, body, tag) }
+        }
+
+        @JavascriptInterface fun openPlaceOnMap(id: String) {
+            val place = try { GeoManager.place(applicationContext, id) } catch (_: Exception) { null } ?: return
+            val lat = place.optDouble("lat", Double.NaN)
+            val lon = place.optDouble("lon", Double.NaN)
+            if (!lat.isFinite() || !lon.isFinite() || lat !in -90.0..90.0 || lon !in -180.0..180.0) return
+            val name = place.optString("name", "Saved place")
+            val coordinate = "$lat,$lon"
+            val geo = Uri.parse("geo:$coordinate?q=$coordinate(${Uri.encode(name)})")
+            runOnUiThread {
+                try {
+                    startActivity(Intent(Intent.ACTION_VIEW, geo))
+                } catch (_: android.content.ActivityNotFoundException) {
+                    val fallback = Uri.parse("https://www.google.com/maps/search/?api=1&query=$coordinate")
+                    try { startActivity(Intent(Intent.ACTION_VIEW, fallback)) }
+                    catch (_: Exception) {}
+                }
+            }
         }
 
         @JavascriptInterface fun refreshLocation() {
