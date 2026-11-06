@@ -35,14 +35,30 @@ class GeoReceiver : BroadcastReceiver() {
             val type = place.optString("type")
             if (type == "work" && transition == "ENTER") {
                 prefs.edit().putString("pending_work", placeId).apply()
-                show(context, "Arrived at $label", "Check whether you started work.", "arrive-$placeId")
+                val tag = "arrive-$placeId"
+                prefs.edit().putLong("recent_enter:$placeId", eventTime).apply()
+                if (!alreadyHandledToday(prefs, "session_running") && !alreadyHandledToday(prefs, "session_finished")) {
+                    show(context, "Arrived at $label", "Check whether you started work.", tag)
+                    WorkReminderScheduler.start(context, tag, "Arrived at $label", "Check whether you started work.")
+                }
             } else if (type == "work" && transition == "EXIT") {
-                show(context, "Left $label", "Check whether you finished work.", "leave-$placeId")
+                val tag = "leave-$placeId"
+                prefs.edit().putLong("recent_exit:$placeId", eventTime).apply()
+                if (!alreadyHandledToday(prefs, "session_finished")) {
+                    show(context, "Left $label", "Check whether you finished work.", tag)
+                    WorkReminderScheduler.start(context, tag, "Left $label", "Check whether you finished work.")
+                }
             } else if (type == "home" && transition == "ENTER" && prefs.contains("pending_work")) {
                 prefs.edit().remove("pending_work").apply()
                 show(context, "Arrived home", "Open WorkClock to complete your return trip.", "home-$placeId")
             }
         }
+    }
+
+    private fun alreadyHandledToday(prefs: android.content.SharedPreferences, key: String): Boolean {
+        val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+            .format(java.util.Date())
+        return prefs.getString("session_day", null) == date && prefs.getBoolean(key, false)
     }
 
     companion object {
@@ -54,12 +70,24 @@ class GeoReceiver : BroadcastReceiver() {
         manager.createNotificationChannel(
             NotificationChannel("workclock", "Work and travel", NotificationManager.IMPORTANCE_DEFAULT)
         )
+        val strong = WorkReminderScheduler.enabled(context) &&
+            (tag.startsWith("arrive-") || tag.startsWith("leave-") || tag == "strong-test")
+        if (strong) {
+            // Channel attributes are immutable after creation, so use a separate ID.
+            val channel = NotificationChannel("workclock_strong_v1", "Persistent work alerts",
+                NotificationManager.IMPORTANCE_HIGH)
+            channel.description = "Workplace arrival and departure; vibration only, no sound"
+            channel.setSound(null, null)
+            channel.setVibrationPattern(longArrayOf(0L) + LongArray(19) { 500L })
+            manager.createNotificationChannel(channel)
+        }
         val open = PendingIntent.getActivity(
             context, 0, Intent(context, MainActivity::class.java).addFlags(
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             ), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        val builder = NotificationCompat.Builder(context, "workclock")
+        val builder = NotificationCompat.Builder(context, if (strong) "workclock_strong_v1" else "workclock")
+            .setPriority(if (strong) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .setContentTitle(title)
             .setContentText(body)
@@ -107,6 +135,10 @@ class GeoReceiver : BroadcastReceiver() {
             if (Build.VERSION.SDK_INT >= 33 &&
                 context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
             ) return
+            if (WorkReminderScheduler.enabled(context)) {
+                show(context, "WorkClock vibration test", "Ten pulses; no repeat is scheduled.", "strong-test")
+                return
+            }
             manager.notify("test", 1, NotificationCompat.Builder(context, "workclock")
                 .setSmallIcon(android.R.drawable.ic_menu_mylocation)
                 .setContentTitle("WorkClock")

@@ -247,3 +247,17 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
 .clockFace .timer{max-width:100%;white-space:nowrap}
 .clockFace + .currentSection{margin-top:16px}
 @media(max-width:560px){.clockFace{width:280px;height:126px;margin-top:12px}}
+
+/* Quiet by default; optional Android strong vibration is configured in Settings. */
+.reminderToggle{display:flex;align-items:flex-start;gap:12px;margin:14px 0 4px;padding:13px;border:1px solid var(--line-strong);border-radius:13px;background:rgba(27,44,55,.46);cursor:pointer}
+.reminderToggle input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent)}
+.reminderToggle span{display:grid;gap:4px}.reminderToggle strong{font-size:12px;color:var(--text-soft)}.reminderToggle small{font-size:10.5px;line-height:1.5;color:var(--muted)}
+.weekControls #weekNow:disabled{opacity:.44;cursor:default;color:var(--muted2);background:rgba(8,15,20,.52);border-color:rgba(190,212,225,.055);box-shadow:none}
+.weekTable tbody tr.weekToday td{background:rgba(143,180,201,.11);border-top:1px solid rgba(143,180,201,.30);border-bottom:1px solid rgba(143,180,201,.30)}
+.weekTable tbody tr.weekToday td:first-child{color:var(--accent-strong);font-weight:850}
+.offsets .customTimeChoice{grid-column:auto}.offsets .timeChoiceSkip{border-color:rgba(190,212,225,.10);color:var(--muted)}
+/* A predictable in-page list: never the keyboard-controlled Android datalist popup. */
+.projectPickerList{display:flex;flex-direction:column;max-height:min(210px,32vh);min-height:0;overflow-y:auto;overscroll-behavior:contain;margin-top:6px;padding:4px;border:1px solid var(--line-strong);border-radius:12px;background:#13222d;box-shadow:0 8px 28px rgba(0,0,0,.26)}
+.projectPickerOption{display:block;flex:none;width:100%;min-height:43px;padding:10px 13px;border:0;border-radius:8px;text-align:left;color:var(--text-soft);background:transparent;font-size:12px;white-space:normal;overflow-wrap:anywhere}
+.projectPickerOption:active,.projectPickerOption:focus-visible{background:var(--accent-deep);color:var(--accent-strong)}
+.projectPickerEmpty{padding:12px;color:var(--muted);font-size:11px}

@@ -11,7 +11,7 @@
   }
   window.__activateWorkClockView=activate;
   function refreshDate(){const d=new Date();document.getElementById('appDateLine').textContent=d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});}
-  window.__WorkClockAppResume=function(){refreshDate();window.__WorkClockTimerResume?.();window.__WorkClockNativeSync?.();};
+  window.__WorkClockAppResume=function(){refreshDate();window.__WorkClockTimerResume?.();window.__WorkClockNativeSync?.();window.__WorkClockWeekResume?.();};
   window.__WorkClockHandleBack=function(){
     if(document.getElementById('timeModal').classList.contains('show')){document.getElementById('closeTimeModal').click();return true;}
     if(document.getElementById('projectModal').classList.contains('show')){document.getElementById('cancelProjectModal').click();return true;}

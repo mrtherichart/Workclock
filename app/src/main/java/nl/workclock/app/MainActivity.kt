@@ -234,6 +234,22 @@ class MainActivity : Activity() {
         @JavascriptInterface fun acknowledgeEvent(id: String) =
             EventStore.acknowledge(applicationContext, id)
 
+        @JavascriptInterface fun setStrongReminders(enabled: Boolean) =
+            WorkReminderScheduler.setEnabled(applicationContext, enabled)
+
+        @JavascriptInterface fun setWorkSessionStatus(day: String, running: Boolean, finished: Boolean) {
+            if (!Regex("\\d{4}-\\d{2}-\\d{2}").matches(day)) return
+            getSharedPreferences("workclock_native", MODE_PRIVATE).edit()
+                .putString("session_day", day)
+                .putBoolean("session_running", running)
+                .putBoolean("session_finished", finished).apply()
+        }
+
+        @JavascriptInterface fun resolveWorkReminders(scope: String) {
+            if (scope == "arrive" || scope == "leave")
+                WorkReminderScheduler.resolve(applicationContext, scope)
+        }
+
         @JavascriptInterface fun requestBackgroundTracking() {
             runOnUiThread { requestBackgroundLocation() }
         }

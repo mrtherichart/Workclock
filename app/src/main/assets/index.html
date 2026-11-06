@@ -172,6 +172,7 @@
           <h3>Permissions</h3><p>Arrival, departure and forgotten-time reminders.</p>
           <div class="permissionRow"><button class="btn" id="enableNotifications">Enable notifications</button><button class="btn" id="testNotification">Test notification</button><button class="btn" id="goPlacesForLocation">Location settings</button></div>
           <div class="notice" id="notificationHelp">Checking notification access…</div>
+          <label class="reminderToggle"><input type="checkbox" id="strongReminders"><span><strong>Persistent work alerts</strong><small>Ten short vibration pulses at arrival / departure. Repeat after 10, 20 and 30 minutes until handled; no sound. Android may delay repeats.</small></span></label>
           <div id="nativeTrackingBox" class="hidden" style="margin-top:15px">
             <button class="btn primary" id="enableNativeBackground">Enable background location</button>
             <div class="notice" id="nativeTrackingHelp" style="margin-top:9px">Android location setup</div>
@@ -230,9 +231,9 @@
   <button class="navBtn" data-target="settings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.5 1a8 8 0 0 0-1.7-1L14.3 3h-4.6L9.3 6a8 8 0 0 0-1.7 1L5 6 3 9.4 5.1 11a7 7 0 0 0 0 2L3 14.6 5 18l2.6-1a8 8 0 0 0 1.7 1l.4 3h4.6l.4-3a8 8 0 0 0 1.7-1l2.6 1 2-3.4-2.1-1.6a7 7 0 0 0 .1-1Z"/></svg><span>Settings</span></button>
 </nav>
 
-<datalist id="projectSuggestions"></datalist>
+
 <div class="modalBack" id="timeModal"><div class="modal"><h3 id="timeModalTitle">When?</h3><p id="timeModalText"></p><div class="offsets" id="timeChoices"></div><div class="customTimeEditor hidden" id="customTimeEditor"><label for="customTimeInput">Exact date and time</label><input id="customTimeInput" type="datetime-local" step="60"><button class="btn primary" id="confirmCustomTime" type="button">Use this time</button><div class="notice bad hidden" id="customTimeError" role="alert"></div></div><div style="height:10px"></div><button class="btn" style="width:100%" id="closeTimeModal">Cancel</button></div></div>
-<div class="modalBack" id="projectModal"><div class="modal"><h3 id="projectModalTitle">Name project</h3><p id="projectModalText"></p><label>Project</label><input id="projectModalInput" list="projectSuggestions" autocomplete="off" placeholder="Type or choose a previous project"><div class="modalButtons"><button class="btn" id="cancelProjectModal">Cancel</button><button class="btn primary" id="saveProjectModal">Save project</button></div><div class="notice" id="projectModalMessage">The timestamp is already held while this dialog is open.</div></div></div>
+<div class="modalBack" id="projectModal"><div class="modal"><h3 id="projectModalTitle">Name project</h3><p id="projectModalText"></p><label>Project</label><input id="projectModalInput" autocomplete="off" placeholder="Type or choose a previous project"><div id="projectPickerList" class="projectPickerList hidden" role="listbox"></div><div class="modalButtons"><button class="btn" id="cancelProjectModal">Cancel</button><button class="btn primary" id="saveProjectModal">Save project</button></div><div class="notice" id="projectModalMessage">The timestamp is already held while this dialog is open.</div></div></div>
 <script src="./app.js"></script>
 <script src="./navigation.js"></script>
 </body>

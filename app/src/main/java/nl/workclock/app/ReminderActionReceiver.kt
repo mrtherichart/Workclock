@@ -14,7 +14,12 @@ class ReminderActionReceiver : BroadcastReceiver() {
                 "FINISH_NOW","FINISH_EARLIER","STILL_WORKING")) return
         val placeId = intent.getStringExtra("placeId") ?: ""
         if (placeId.length > 150) return
-        EventStore.appendAction(context, placeId, decision, System.currentTimeMillis())
+        val gpsType = if (decision.startsWith("START")) "enter" else if (decision.startsWith("FINISH")) "exit" else ""
+        val gpsAt = if (gpsType.isNotEmpty()) context.getSharedPreferences("workclock_native", Context.MODE_PRIVATE)
+            .getLong("recent_$gpsType:$placeId", 0L) else 0L
+        EventStore.appendAction(context, placeId, decision, System.currentTimeMillis(), gpsAt)
+        if (decision.startsWith("START") || decision == "NOT_WORKING") WorkReminderScheduler.resolve(context, "arrive")
+        if (decision.startsWith("FINISH") || decision == "STILL_WORKING") WorkReminderScheduler.resolve(context, "leave")
         val tag = intent.getStringExtra("notificationTag")
         if (tag != null) context.getSystemService(NotificationManager::class.java)?.cancel(tag, 1)
         try {

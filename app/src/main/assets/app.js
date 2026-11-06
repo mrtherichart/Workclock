@@ -26,7 +26,7 @@ let rhythmMode=(()=>{
 const HOLD_MS=1200;
 const HOLD_MOVE_PX=10;
 const OSRM_ENDPOINT="https://router.project-osrm.org/route/v1/driving/";
-const DEFAULT_SETTINGS={automationDays:[1,2,3,4,5],startFrom:"05:00",startUntil:"11:30",finishFrom:"13:00",finishUntil:"21:00",defaultRadius:150,routingProvider:"osrm",orsKey:""};
+const DEFAULT_SETTINGS={automationDays:[1,2,3,4,5],startFrom:"05:00",startUntil:"11:30",finishFrom:"13:00",finishUntil:"21:00",defaultRadius:150,routingProvider:"osrm",orsKey:"",strongReminders:false};
 let state=loadState();
 let currentPosition=null,editingLocationId=null,timerInterval=null;
 let pendingProjectAction=null;
@@ -51,16 +51,25 @@ function fmtDuration(ms){ms=Math.max(0,Number(ms)||0);const h=Math.floor(ms/3600
 function fmtTimer(ms){ms=Math.max(0,Number(ms)||0);const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`}
 function esc(x){return String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
 
-function newState(){return {version:4,locations:[],projects:[],routeCache:{},currentDay:null,history:[],presence:{currentId:null,currentType:null,currentName:null,changedAt:null,source:null,lastHomeId:null,lastWorkId:null},settings:deepCopy(DEFAULT_SETTINGS)}}
+function newState(){return {version:4,locations:[],projects:[],routeCache:{},currentDay:null,history:[],presence:{currentId:null,currentType:null,currentName:null,changedAt:null,source:null,lastHomeId:null,lastWorkId:null},settings:deepCopy(DEFAULT_SETTINGS),lastWorkGeofence:null,workGeofences:{arrive:null,leave:null}}}
 function validLocation(x){return x&&["home","work"].includes(x.type)&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lon))}
 function normalizeSegment(s,fallbackStart=null,fallbackStop=null,legacyName="Unspecified project (legacy)"){if(!s&&!(fallbackStart&&fallbackStop))return null;const start=s?.start||fallbackStart,stop=s?.stop||fallbackStop;if(!start||!stop)return null;return {id:s?.id||uid("seg"),start,stop,projectId:s?.projectId||null,projectName:String(s?.projectName||s?.name||legacyName).trim()||legacyName,createdAt:s?.createdAt||nowISO()}}
 function normalizeDay(d){if(!d||typeof d!=="object")return null;const day={id:d.id||uid("day"),date:d.date||localDateKey(d.start?new Date(d.start):new Date()),start:d.start||null,stop:d.stop||null,breakMin:Number(d.breakMin)||0,startSource:d.startSource||null,stopSource:d.stopSource||null,status:d.status||"draft",commuteOut:d.commuteOut||null,commuteBack:d.commuteBack||null,workplaceId:d.workplaceId||null,startHomeId:d.startHomeId||null,endHomeId:d.endHomeId||null,manuallyAdded:!!d.manuallyAdded,createdAt:d.createdAt||d.addedAt||nowISO(),segments:[]};if(Array.isArray(d.segments)&&d.segments.length)day.segments=d.segments.map(x=>normalizeSegment(x)).filter(Boolean);else if(day.start&&day.stop)day.segments=[normalizeSegment(null,day.start,day.stop)];return day}
-function migrateOld(old){const n=newState();if(!old||typeof old!=="object")return n;if(Array.isArray(old.locations))n.locations=old.locations.filter(validLocation).map(x=>({...x,lat:Number(x.lat),lon:Number(x.lon),radius:Number(x.radius)||150}));else{const homes=Array.isArray(old.homes)?old.homes:(old.home?[old.home]:[]),works=Array.isArray(old.workplaces)?old.workplaces:[];for(const h of homes)if(validLocation({...h,type:"home"}))n.locations.push({id:h.id||uid("loc"),type:"home",name:h.name||"Home",lat:Number(h.lat),lon:Number(h.lon),radius:Number(h.radius)||150,createdAt:h.created||nowISO(),lastVisitedAt:h.lastVisited||null});for(const w of works)if(validLocation({...w,type:"work"}))n.locations.push({id:w.id||uid("loc"),type:"work",name:w.name||"Workplace",lat:Number(w.lat),lon:Number(w.lon),radius:Number(w.radius)||150,createdAt:w.created||nowISO(),lastVisitedAt:w.lastVisited||null})}n.routeCache=old.routeCache&&typeof old.routeCache==="object"?old.routeCache:{};n.history=Array.isArray(old.history)?old.history.map(normalizeDay).filter(Boolean):[];n.currentDay=old.currentDay?normalizeDay(old.currentDay):null;n.presence={...n.presence,...(old.presence||{})};const s=old.settings||{};n.settings={...n.settings,...s,startFrom:s.startFrom||s.morningStart||n.settings.startFrom,startUntil:s.startUntil||s.morningEnd||n.settings.startUntil,finishFrom:s.finishFrom||s.finishStart||n.settings.finishFrom,finishUntil:s.finishUntil||s.finishEnd||n.settings.finishUntil,defaultRadius:Number(s.defaultRadius)||150};if(Array.isArray(old.projects))n.projects=old.projects;rebuildProjectCatalog(n);return n}
+function migrateOld(old){const n=newState();if(!old||typeof old!=="object")return n;if(Array.isArray(old.locations))n.locations=old.locations.filter(validLocation).map(x=>({...x,lat:Number(x.lat),lon:Number(x.lon),radius:Number(x.radius)||150}));else{const homes=Array.isArray(old.homes)?old.homes:(old.home?[old.home]:[]),works=Array.isArray(old.workplaces)?old.workplaces:[];for(const h of homes)if(validLocation({...h,type:"home"}))n.locations.push({id:h.id||uid("loc"),type:"home",name:h.name||"Home",lat:Number(h.lat),lon:Number(h.lon),radius:Number(h.radius)||150,createdAt:h.created||nowISO(),lastVisitedAt:h.lastVisited||null});for(const w of works)if(validLocation({...w,type:"work"}))n.locations.push({id:w.id||uid("loc"),type:"work",name:w.name||"Workplace",lat:Number(w.lat),lon:Number(w.lon),radius:Number(w.radius)||150,createdAt:w.created||nowISO(),lastVisitedAt:w.lastVisited||null})}n.routeCache=old.routeCache&&typeof old.routeCache==="object"?old.routeCache:{};n.history=Array.isArray(old.history)?old.history.map(normalizeDay).filter(Boolean):[];n.currentDay=old.currentDay?normalizeDay(old.currentDay):null;n.presence={...n.presence,...(old.presence||{})};n.lastWorkGeofence=old.lastWorkGeofence||null;n.workGeofences=old.workGeofences||n.workGeofences;const s=old.settings||{};n.settings={...n.settings,...s,startFrom:s.startFrom||s.morningStart||n.settings.startFrom,startUntil:s.startUntil||s.morningEnd||n.settings.startUntil,finishFrom:s.finishFrom||s.finishStart||n.settings.finishFrom,finishUntil:s.finishUntil||s.finishEnd||n.settings.finishUntil,defaultRadius:Number(s.defaultRadius)||150};if(Array.isArray(old.projects))n.projects=old.projects;rebuildProjectCatalog(n);return n}
 function rebuildProjectCatalog(target=state){const map=new Map();for(const p of Array.isArray(target.projects)?target.projects:[]){const name=String(p.name||"").trim();if(name)map.set(name.toLowerCase(),{id:p.id||uid("proj"),name,lastUsedAt:p.lastUsedAt||null,useCount:Number(p.useCount)||0})}for(const day of [...(target.history||[]),target.currentDay].filter(Boolean))for(const seg of day.segments||[]){const name=String(seg.projectName||"").trim();if(!name)continue;const k=name.toLowerCase();if(!map.has(k))map.set(k,{id:seg.projectId||uid("proj"),name,lastUsedAt:seg.stop||day.stop||null,useCount:1});const p=map.get(k);seg.projectId=p.id;seg.projectName=p.name}target.projects=[...map.values()].sort((a,b)=>a.name.localeCompare(b.name))}
-function validateState(s){const n=newState();if(!s||typeof s!=="object")return n;n.locations=Array.isArray(s.locations)?s.locations.filter(validLocation).map(x=>({...x,lat:Number(x.lat),lon:Number(x.lon),radius:Number(x.radius)||150})):[];n.routeCache=s.routeCache&&typeof s.routeCache==="object"?s.routeCache:{};n.history=Array.isArray(s.history)?s.history.map(normalizeDay).filter(Boolean):[];n.currentDay=s.currentDay?normalizeDay(s.currentDay):null;n.presence={...n.presence,...(s.presence||{})};n.settings={...n.settings,...(s.settings||{})};n.settings.defaultRadius=Number(n.settings.defaultRadius)||150;n.projects=Array.isArray(s.projects)?s.projects:[];rebuildProjectCatalog(n);return n}
+function validateState(s){const n=newState();if(!s||typeof s!=="object")return n;n.locations=Array.isArray(s.locations)?s.locations.filter(validLocation).map(x=>({...x,lat:Number(x.lat),lon:Number(x.lon),radius:Number(x.radius)||150})):[];n.routeCache=s.routeCache&&typeof s.routeCache==="object"?s.routeCache:{};n.history=Array.isArray(s.history)?s.history.map(normalizeDay).filter(Boolean):[];n.currentDay=s.currentDay?normalizeDay(s.currentDay):null;n.presence={...n.presence,...(s.presence||{})};n.lastWorkGeofence=s.lastWorkGeofence||null;n.workGeofences=s.workGeofences||n.workGeofences;n.settings={...n.settings,...(s.settings||{})};n.settings.defaultRadius=Number(n.settings.defaultRadius)||150;n.projects=Array.isArray(s.projects)?s.projects:[];rebuildProjectCatalog(n);return n}
 function loadState(){try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)return validateState(JSON.parse(raw));for(const key of PREVIOUS_KEYS){const legacy=localStorage.getItem(key);if(legacy){const migrated=migrateOld(JSON.parse(legacy));localStorage.setItem(STORAGE_KEY,JSON.stringify(migrated));return migrated}}}catch(e){console.error("State load failed",e)}return newState()}
 let syncedPlacesJSON=null;
-function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));syncAndroidPlaces()}catch(e){console.error("Persist failed",e);setNotice("mainMessage","Could not save WorkClock data on this device.","bad")}}
+function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));syncAndroidPlaces();syncStrongReminders();syncNativeWorkStatus()}catch(e){console.error("Persist failed",e);setNotice("mainMessage","Could not save WorkClock data on this device.","bad")}}
+function syncStrongReminders(){try{WorkClockAndroid.setStrongReminders(!!state.settings.strongReminders)}catch(e){console.warn("Android reminder setting sync failed",e)}}
+function syncNativeWorkStatus(){
+  try{
+    const key=localDateKey(),today=state.currentDay;
+    const running=!!(today?.date===key&&today.start&&!today.stop);
+    const finished=!!(today?.date===key&&today.stop)||state.history.some(d=>d.date===key&&d.stop);
+    WorkClockAndroid.setWorkSessionStatus(key,running,finished);
+  }catch(e){console.warn("Native work status sync failed",e)}
+}
 function syncAndroidPlaces(){try{const json=JSON.stringify(state.locations.map(({id,name,type,lat,lon,radius})=>({id,name,type,lat,lon,radius})));if(json===syncedPlacesJSON)return;WorkClockAndroid.syncPlaces(json);syncedPlacesJSON=json}catch(e){console.warn("Android place sync failed",e)}}
 function refreshAndroidStatus(){
   try{
@@ -102,11 +111,19 @@ window.__WorkClockNativeLocationError=function(error){
   refreshAndroidStatus();
 };
 let syncingAndroidEvents=false;
+function recentWorkTime(kind, actionAt=Date.now(), gpsAt=null){
+  const event=state.workGeofences?.[kind==="start"?"arrive":"leave"];
+  const stamp=Number(gpsAt)||Number(event?.at);
+  const matching=Number(gpsAt)>0||!!event;
+  const elapsed=actionAt-stamp;
+  return matching&&stamp>0&&elapsed>=0&&elapsed<=5*60000?new Date(stamp).toISOString():null;
+}
+function closeWorkReminder(kind){try{WorkClockAndroid.resolveWorkReminders(kind==="start"?"arrive":"leave")}catch(e){console.warn("Cannot resolve Android reminder",e)}}
 async function applyNotificationDecision(event){
   const action=String(event.action||""),stamp=Number(event.at)||Date.now(),date=new Date(stamp);
   const d=getToday();
   if(action==="START_NOW"){
-    if(!d.start)applyStart(date.toISOString(),"android-notification");
+    if(!d.start){const gpsTime=recentWorkTime("start",stamp,event.gpsAt);if(gpsTime)applyStart(gpsTime,"android-geofence");else{window.__activateWorkClockView?.("today");showTimeChoice("start","More than five minutes since arrival. When did work start?")}}
     else setNotice("mainMessage","Work was already started.");
   } else if(action==="START_EARLIER"){
     window.__activateWorkClockView?.("today");
@@ -114,7 +131,7 @@ async function applyNotificationDecision(event){
   } else if(action==="NOT_WORKING"){
     setNotice("mainMessage","No workday started.");
   } else if(action==="FINISH_NOW"){
-    if(d.start&&!d.stop)requestStop(date.toISOString(),"android-notification");
+    if(d.start&&!d.stop){const gpsTime=recentWorkTime("stop",stamp,event.gpsAt);if(gpsTime)requestStop(gpsTime,"android-geofence");else{window.__activateWorkClockView?.("today");showTimeChoice("stop","More than five minutes since departure. When did you finish?")}}
     else setNotice("mainMessage","No running workday to finish.");
   } else if(action==="FINISH_EARLIER"){
     if(d.start&&!d.stop){window.__activateWorkClockView?.("today");showTimeChoice("stop","When did you actually finish?")}
@@ -140,9 +157,11 @@ async function syncAndroidEvents(){
           const at=Number(event.at)||Date.now();
           const age=Date.now()-at;
           if(event.transition==="ENTER"){
-            await processPosition({lat:loc.lat,lon:loc.lon,accuracy:Math.max(100,loc.radius||150)},
+             if(loc.type==="work"){state.lastWorkGeofence={placeId:loc.id,transition:"ENTER",at};state.workGeofences.arrive={placeId:loc.id,at}};
+             await processPosition({lat:loc.lat,lon:loc.lon,accuracy:Math.max(100,loc.radius||150)},
               {source:"android",eventAt:at});
           }else if(event.transition==="EXIT"&&loc.type==="work"){
+             state.lastWorkGeofence={placeId:loc.id,transition:"EXIT",at};state.workGeofences.leave={placeId:loc.id,at};
             // Persist the original geofence timestamp, not the time the app opened.
             const previousAt=new Date(state.presence.changedAt||0).getTime();
             if(!Number.isFinite(previousAt)||at>=previousAt){
@@ -153,10 +172,11 @@ async function syncAndroidEvents(){
             }
             const d=getToday();
             if(age>=-60000&&age<2*3600000&&d.start&&!d.stop&&isAutomationDay(new Date(at))){
-              showTimeChoice("stop",`Android detected leaving ${loc.name} at ${fmtTime(at)}. When did you finish?`);
+              setNotice("mainMessage",`Left ${loc.name} at ${fmtTime(at)}. Hold Finish to confirm.`);
             }
           }
         }
+        if(loc?.type==="work"&&event.transition!=="ACTION")persist();
         WorkClockAndroid.acknowledgeEvent(event.id);
       }catch(e){console.error("Failed to process Android location event",e);break}
     }
@@ -227,7 +247,37 @@ function exportWorkClockBackup(){WorkClockAndroid.exportBackup(JSON.stringify(st
 function importWorkClockBackup(){WorkClockAndroid.importBackup()}
 const noticeTimers=new Map();function setNotice(id,text,kind=""){const el=$("#"+id);if(!el)return;el.textContent=text;if(id==="mainMessage"){el.className="toast show"+(kind?` ${kind}`:"");if(noticeTimers.has(id))clearTimeout(noticeTimers.get(id));noticeTimers.set(id,setTimeout(()=>el.classList.remove("show"),4200));return}el.className="notice"+(kind?` ${kind}`:"")}
 function ensureProject(name){name=String(name||"").trim();if(!name)return null;let p=state.projects.find(x=>x.name.toLowerCase()===name.toLowerCase());if(!p){p={id:uid("proj"),name,lastUsedAt:nowISO(),useCount:0};state.projects.push(p)}p.lastUsedAt=nowISO();p.useCount=(Number(p.useCount)||0)+1;renderProjectSuggestions();return p}
-function renderProjectSuggestions(){const dl=$("#projectSuggestions");if(!dl)return;dl.innerHTML=state.projects.slice().sort((a,b)=>(new Date(b.lastUsedAt||0))-(new Date(a.lastUsedAt||0))||a.name.localeCompare(b.name)).map(p=>`<option value="${esc(p.name)}"></option>`).join("")}
+function projectNames(){return state.projects.slice().sort((a,b)=>(new Date(b.lastUsedAt||0))-(new Date(a.lastUsedAt||0))||a.name.localeCompare(b.name)).map(p=>p.name)}
+const projectPickers=new Set();
+function renderProjectMatches(picker){
+  if(!picker.active)return;
+  const q=picker.typed?picker.input.value.trim().toLocaleLowerCase():"";
+  const names=projectNames().filter(name=>!q||name.toLocaleLowerCase().includes(q));
+  picker.list.innerHTML="";
+  for(const name of names){
+    const button=document.createElement("button");button.type="button";button.className="projectPickerOption";
+    button.textContent=name;
+    button.addEventListener("pointerdown",e=>e.preventDefault());
+    button.addEventListener("click",()=>{
+      picker.input.value=name;picker.typed=false;picker.onSelect(name);
+      picker.active=false;picker.list.classList.add("hidden");picker.input.blur();
+    });
+    picker.list.appendChild(button);
+  }
+  if(!names.length){const empty=document.createElement("div");empty.className="projectPickerEmpty";empty.textContent="No match. Save to create a new project.";picker.list.appendChild(empty)}
+  picker.list.classList.remove("hidden");
+}
+function wireProjectPicker(input,list,onSelect=()=>{}){
+  input.removeAttribute("list");
+  const picker={input,list,onSelect,active:false,typed:false};
+  projectPickers.add(picker);
+  input.addEventListener("focus",()=>{picker.active=true;picker.typed=false;renderProjectMatches(picker)});
+  input.addEventListener("input",()=>{picker.active=true;picker.typed=true;renderProjectMatches(picker)});
+  input.addEventListener("blur",()=>{setTimeout(()=>{if(document.activeElement!==input){picker.active=false;list.classList.add("hidden")}},150)});
+  return picker;
+}
+function renderProjectSuggestions(){for(const picker of projectPickers)if(picker.active)renderProjectMatches(picker)}
+
 function isAutomationDay(date=new Date()){return state.settings.automationDays.includes(date.getDay())}
 function blankDay(date=localDateKey()){return {id:uid("day"),date,start:null,stop:null,breakMin:30,startSource:null,stopSource:null,status:"draft",commuteOut:null,commuteBack:null,workplaceId:null,startHomeId:null,endHomeId:null,manuallyAdded:false,createdAt:nowISO(),segments:[]}}
 function dayHasData(day){return !!(day&&(day.start||day.stop||day.commuteOut||day.commuteBack||(Array.isArray(day.segments)&&day.segments.length)))}
@@ -263,12 +313,28 @@ function wireHold(el,callback){if(!el)return;const fill=el.querySelector(".fill"
 
 let customTimeKind="start";
 function localDateTimeValue(date){const n=number=>String(number).padStart(2,"0");return `${date.getFullYear()}-${n(date.getMonth()+1)}-${n(date.getDate())}T${n(date.getHours())}:${n(date.getMinutes())}`}
-function showTimeChoice(kind,reason){const isStart=kind==="start";customTimeKind=kind;$("#timeModalTitle").textContent=isStart?"When did you start?":"When did you finish?";$("#timeModalText").textContent=reason||"Choose the closest option.";const box=$("#timeChoices");box.innerHTML="";$("#customTimeEditor").classList.add("hidden");$("#customTimeError").classList.add("hidden");const options=[["Now",0],["15 min ago",15],["30 min ago",30],["45 min ago",45],["60 min ago",60],[isStart?"Not working":"Still working",null]];for(const [label,minutes] of options){const b=document.createElement("button");b.type="button";b.textContent=label;b.addEventListener("click",()=>{hideTimeChoice();if(minutes===null)return;const ts=new Date(Date.now()-minutes*60000).toISOString();if(isStart)applyStart(ts,"assisted");else requestStop(ts,"assisted")});box.appendChild(b)}const custom=document.createElement("button");custom.type="button";custom.className="customTimeChoice";custom.textContent="Custom · enter exact time";custom.addEventListener("click",()=>{const editor=$("#customTimeEditor");editor.classList.remove("hidden");$("#customTimeError").classList.add("hidden");const day=getToday();const existing=isStart?day.start:day.stop;$("#customTimeInput").value=localDateTimeValue(existing?new Date(existing):new Date());$("#customTimeInput").focus()});box.appendChild(custom);$("#timeModal").classList.add("show")}
+function showTimeChoice(kind,reason){
+  const isStart=kind==="start";customTimeKind=kind;
+  $("#timeModalTitle").textContent=isStart?"When did you start?":"When did you finish?";
+  $("#timeModalText").textContent=reason||"Choose the closest option.";
+  const box=$("#timeChoices");box.innerHTML="";
+  $("#customTimeEditor").classList.add("hidden");$("#customTimeError").classList.add("hidden");
+  const choices=[["Now",0],["5 min",5],["10 min",10],["15 min",15],["30 min",30],["1 hour",60],["2 hours",120],["3 hours",180]];
+  for(const [label,minutes] of choices){
+    const b=document.createElement("button");b.type="button";b.textContent=label;
+    b.addEventListener("click",()=>{hideTimeChoice();const time=new Date(Date.now()-minutes*60000).toISOString();if(isStart)applyStart(time,"assisted");else requestStop(time,"assisted")});box.appendChild(b);
+  }
+  const custom=document.createElement("button");custom.type="button";custom.className="customTimeChoice";custom.textContent="Custom time";
+  custom.addEventListener("click",()=>{const editor=$("#customTimeEditor");editor.classList.remove("hidden");$("#customTimeError").classList.add("hidden");const d=getToday(),current=isStart?d.start:d.stop;$("#customTimeInput").value=localDateTimeValue(current?new Date(current):new Date());$("#customTimeInput").focus()});box.appendChild(custom);
+  const skip=document.createElement("button");skip.type="button";skip.className="timeChoiceSkip";skip.textContent=isStart?"Not working":"Still working";
+  skip.addEventListener("click",()=>{hideTimeChoice();closeWorkReminder(kind)});box.appendChild(skip);
+  $("#timeModal").classList.add("show");
+}
 function confirmCustomTime(){const input=$("#customTimeInput"),message=$("#customTimeError"),date=new Date(input.value),day=getToday(),isStart=customTimeKind==="start";let error="";if(!input.value||!Number.isFinite(date.getTime()))error="Enter a valid date and time.";else if(date.getTime()>Date.now()+59999)error="The time cannot be in the future.";else if(!isStart&&!day.start)error="Set a start time first.";else if(!isStart&&date.getTime()<=new Date(day.start).getTime())error="Finish must be after start.";else if(!isStart&&day.segments.length&&date.getTime()<=new Date(day.segments.at(-1).start).getTime())error="Finish must be after the last project started.";else if(isStart&&day.segments.length&&date.getTime()>=new Date(day.segments[0].stop).getTime())error="Start must be before the first project finished.";if(error){message.textContent=error;message.classList.remove("hidden");return}hideTimeChoice();if(isStart)applyStart(date.toISOString(),"custom");else requestStop(date.toISOString(),"custom")}
 
 function hideTimeChoice(){$("#timeModal").classList.remove("show")}
-function applyStart(iso,source){const d=getToday(),t=new Date(iso);if(d.segments.length&&!(new Date(d.segments[0].stop)>t)){setNotice("mainMessage","The new start would be after the first project section ends.","bad");return}d.start=t.toISOString();d.startSource=source;if(d.segments.length)d.segments[0].start=d.start;if(d.stop&&new Date(d.stop)<=t){d.stop=null;d.segments=[]}d.status="draft";persist();renderAll();setNotice("mainMessage",`Start set to ${fmtTime(d.start)}.`,"good")}
-function requestStop(iso,source){const d=getToday(),t=new Date(iso);if(!d.start)return setNotice("mainMessage","Set a start time first.","bad");if(!(t>new Date(d.start)))return setNotice("mainMessage","Finish must be after start.","bad");if(d.stop&&d.segments.length){const last=d.segments.at(-1);if(!(t>new Date(last.start)))return setNotice("mainMessage","The finish would be before the final project section starts.","bad");d.stop=t.toISOString();d.stopSource=source;last.stop=d.stop;persist();renderAll();setNotice("mainMessage",`Finish changed to ${fmtTime(d.stop)}.`,"good");return}openProjectNaming({mode:"finish",marker:t.toISOString(),source})}
+function applyStart(iso,source){const d=getToday(),t=new Date(iso);if(d.segments.length&&!(new Date(d.segments[0].stop)>t)){setNotice("mainMessage","The new start would be after the first project section ends.","bad");return}d.start=t.toISOString();d.startSource=source;if(d.segments.length)d.segments[0].start=d.start;if(d.stop&&new Date(d.stop)<=t){d.stop=null;d.segments=[]}d.status="draft";closeWorkReminder("start");persist();renderAll();setNotice("mainMessage",`Start set to ${fmtTime(d.start)}.`,"good")}
+function requestStop(iso,source){const d=getToday(),t=new Date(iso);if(!d.start)return setNotice("mainMessage","Set a start time first.","bad");if(!(t>new Date(d.start)))return setNotice("mainMessage","Finish must be after start.","bad");if(d.stop&&d.segments.length){const last=d.segments.at(-1);if(!(t>new Date(last.start)))return setNotice("mainMessage","The finish would be before the final project section starts.","bad");d.stop=t.toISOString();d.stopSource=source;last.stop=d.stop;closeWorkReminder("stop");persist();renderAll();setNotice("mainMessage",`Finish changed to ${fmtTime(d.stop)}.`,"good");return}closeWorkReminder("stop");openProjectNaming({mode:"finish",marker:t.toISOString(),source})}
 function openProjectNaming(action){const d=getToday(),start=openSegmentStart(d);if(!start)return setNotice("mainMessage","Start work first.","bad");if(!(new Date(action.marker)>new Date(start)))return setNotice("mainMessage","Project marker must be after the current section started.","bad");pendingProjectAction={...action,dayId:d.id,segmentStart:start};$("#projectModalTitle").textContent=action.mode==="split"?"Name the project you just finished":"What was the last project?";$("#projectModalText").textContent=action.mode==="split"?`Marker saved at ${fmtTime(action.marker)}. Work continues after this marker.`:`Work finish is ${fmtTime(action.marker)}. Name the final project section before the day is stopped.`;$("#projectModalInput").value="";setNotice("projectModalMessage","Type a project name or choose a previous one.");$("#projectModal").classList.add("show");setTimeout(()=>$("#projectModalInput").focus(),50)}
 function saveProjectNaming(){if(!pendingProjectAction)return;const name=$("#projectModalInput").value.trim();if(!name)return setNotice("projectModalMessage","Project name is required.","bad");const day=findDay(pendingProjectAction.dayId);if(!day)return cancelProjectNaming();try{appendProjectSegment(day,pendingProjectAction.segmentStart,pendingProjectAction.marker,name);if(pendingProjectAction.mode==="finish"){day.stop=pendingProjectAction.marker;day.stopSource=pendingProjectAction.source||"manual";day.status="draft";setNotice("mainMessage",`Finish set to ${fmtTime(day.stop)}. Review the day and confirm it.`,"good")}else setNotice("mainMessage",`Project section saved. Work continues from ${fmtTime(pendingProjectAction.marker)}.`,"good");pendingProjectAction=null;$("#projectModal").classList.remove("show");persist();renderAll()}catch(e){setNotice("projectModalMessage",e.message||String(e),"bad")}}
 function cancelProjectNaming(){pendingProjectAction=null;$("#projectModal").classList.remove("show");setNotice("mainMessage","Project marker cancelled. Work continues unchanged.")}
@@ -383,13 +449,13 @@ async function processPosition(pos,{source="gps",force=false,forcePreviousId=nul
     }
 
     if(!day.start&&startOK){
-      showTimeChoice("start",`${force?"Simulation: ":""}Detected at ${found.name}. How long ago did you start?`);
+      if(force)showTimeChoice("start",`Simulation: Detected at ${found.name}. How long ago did you start?`);
       notifyUser("WorkClock",`You are at ${found.name}, but work is not started.`,{tag:"workclock-start-missing"});
     }
   }
 
   if(prev.currentType==="work"&&!found&&day.start&&!day.stop&&finishOK){
-    showTimeChoice("stop",`${force?"Simulation: ":""}Detected leaving ${prev.currentName}. When did you finish?`);
+    if(force)showTimeChoice("stop",`Simulation: Detected leaving ${prev.currentName}. When did you finish?`);
     notifyUser("WorkClock","You appear to have left work while the timer is running.",{tag:"workclock-finish-missing"});
   }
 
@@ -404,7 +470,7 @@ async function processPosition(pos,{source="gps",force=false,forcePreviousId=nul
     }
 
     if(day.start&&!day.stop&&finishOK&&work?.type==="work"){
-      showTimeChoice("stop",`${force?"Simulation: ":""}You arrived at ${found.name}. When did you finish work?`);
+      if(force)showTimeChoice("stop",`Simulation: You arrived at ${found.name}. When did you finish work?`);
       notifyUser("WorkClock",`You are at ${found.name}, but today's finish time is missing.`,{tag:"workclock-home-finish-missing"});
     }
   }
@@ -526,12 +592,18 @@ function renderLocations(){
 }
 function fillSelect(el,items,placeholder,preferred=null){const old=preferred??el.value;el.innerHTML=`<option value="">${esc(placeholder)}</option>`+items.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");if(items.some(x=>x.id===old))el.value=old;else if(items.length===1)el.value=items[0].id}
 function fillLocationSelects(){const homes=locationsOf("home"),works=locationsOf("work");fillSelect($("#simHome"),homes,"Choose home");fillSelect($("#simWork"),works,"Choose workplace");fillSelect($("#manualStartHome"),homes,"Choose start home");fillSelect($("#manualEndHome"),homes,"Choose return home");fillSelect($("#manualWork"),works,"Choose workplace");updateManualModeUI()}
-function renderSettings(){const s=state.settings;$("#startFrom").value=s.startFrom;$("#startUntil").value=s.startUntil;$("#finishFrom").value=s.finishFrom;$("#finishUntil").value=s.finishUntil;$("#defaultRadius").value=s.defaultRadius;$("#routingProvider").value=s.routingProvider;$("#orsKey").value=s.orsKey}
+function renderSettings(){const s=state.settings;$("#startFrom").value=s.startFrom;$("#startUntil").value=s.startUntil;$("#finishFrom").value=s.finishFrom;$("#finishUntil").value=s.finishUntil;$("#defaultRadius").value=s.defaultRadius;$("#routingProvider").value=s.routingProvider;$("#orsKey").value=s.orsKey;$("#strongReminders").checked=!!s.strongReminders}
 
 // Weekstaat reads from the saved workdays.
 let weekSheetMode=localStorage.getItem("workclock-history-mode")==="week"?"week":"days";
+const WEEK_LAST_VISIT_KEY="workclock-week-last-visit";
 let weekSheetAnchor=(()=>{const val=localStorage.getItem("workclock-week-anchor");if(!val||!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(val))return null;const date=new Date(val+"T12:00:00");return Number.isFinite(date.getTime())?date:null})();
 let weekProjectFilter="";
+function markWeekViewed(){
+  const last=Number(localStorage.getItem(WEEK_LAST_VISIT_KEY)||0);
+  if(!last||last>Date.now()||Date.now()-last>=24*3600000)weekSheetAnchor=mondayOfWeek(new Date());
+  localStorage.setItem(WEEK_LAST_VISIT_KEY,String(Date.now()));
+}
 function mondayOfWeek(date){
   const d=new Date(date.getFullYear(),date.getMonth(),date.getDate(),12);
   d.setDate(d.getDate()-((d.getDay()+6)%7));return d;
@@ -572,7 +644,9 @@ function renderWeekSheet(){
   selector.value=weekProjectFilter;
   $("#weekRange").textContent=`${label(monday)} – ${label(sunday)} ${year}`;
   $("#weekNow").disabled=localDateKey(monday)===localDateKey(mondayOfWeek(new Date()));
+  $("#weekNow").setAttribute("aria-current",$("#weekNow").disabled?"date":"false");
   const weekdays=["ma","di","wo","do","vr","za","zo"];
+  const todayKey=localDateKey(new Date());
   const projects=new Set();
   let totalMinutes=0,totalDistance=0,hasDistance=false,hasDraft=false;
   $("#weekTableBody").innerHTML=daysInWeek(monday).map(({date,entries},i)=>{
@@ -618,7 +692,7 @@ function renderWeekSheet(){
     const pauseLabel=finishedCount?`${Math.floor(breaks/60)}:${String(breaks%60).padStart(2,"0")}`:"—";
     const hoursLabel=finishedCount?weekDuration(minutes):"—";
     const distLabel=validDistance?weekKm(km):"—";
-    return `<tr data-date="${localDateKey(date)}" class="${blank?"weekBlank":""} ${partial?"weekDraft":""} ${entries.length?"weekAction":""}"><td>${weekdays[i]}${partial?"*":""}</td><td>${dateLabel}</td><td>${startLabel}</td><td>${endLabel}</td><td>${pauseLabel}</td><td>${hoursLabel}</td><td>${distLabel}</td></tr>`;
+    return `<tr data-date="${localDateKey(date)}" class="${blank?"weekBlank":""} ${partial?"weekDraft":""} ${entries.length?"weekAction":""} ${localDateKey(date)===todayKey?"weekToday":""}"><td>${weekdays[i]}${partial?"*":""}</td><td>${dateLabel}</td><td>${startLabel}</td><td>${endLabel}</td><td>${pauseLabel}</td><td>${hoursLabel}</td><td>${distLabel}</td></tr>`;
   }).join("");
   $("#weekTotalHours").textContent=totalMinutes?weekDuration(totalMinutes):"—";
   $("#weekTotalKm").textContent=hasDistance?weekKm(totalDistance):"—";
@@ -626,6 +700,11 @@ function renderWeekSheet(){
   $("#weekFilterInfo").textContent=weekProjectFilter?"Project hours: breaks divided proportionally. Journeys are shown only when the whole workday belongs to this project. Tap a row to edit.":"Tap a day to edit it. Hours exclude breaks; kilometres use registered journeys.";
   $("#weekDraftNote").classList.toggle("hidden",!hasDraft);
 }
+window.__WorkClockWeekResume=()=>{
+  if(document.querySelector(".view.active")?.dataset.view==="history"&&weekSheetMode==="week"){
+    markWeekViewed();renderWeekSheet();
+  }
+};
 window.__WorkClockRestoreHistoryMode=()=>showHistoryMode(weekSheetMode);
 function showHistoryMode(mode){
   weekSheetMode=mode==="week"?"week":"days";
@@ -637,6 +716,7 @@ function showHistoryMode(mode){
   $("#historyShowDays").setAttribute("aria-pressed",String(weekSheetMode==="days"));
   $("#historyShowWeek").setAttribute("aria-pressed",String(weekSheetMode==="week"));
   if(weekSheetMode==="week"){
+    if(document.querySelector(".view.active")?.dataset.view==="history")markWeekViewed();
     renderWeekSheet();
     if(rhythmMode==="active"&&state.history.length)setRhythmMode("completed");
   }
@@ -689,7 +769,7 @@ function renderAll(){
   else if(active==="history"){renderHistory();if(weekSheetMode==="week")renderWeekSheet()}
 }
 window.__WorkClockRefreshView=function(name){
-  if(name==="history"){renderHistory();renderAttention();if(weekSheetMode==="week")renderWeekSheet()}
+  if(name==="history"){renderHistory();renderAttention();if(weekSheetMode==="week"){markWeekViewed();renderWeekSheet()}}
   else if(name==="places"){renderLocations();refreshAndroidStatus()}
   else if(name==="settings")renderSettings();
 };
@@ -725,11 +805,11 @@ function repeatPreviousWorkday(){
 function resetManualEditor(){manualEditDayId=null;manualOriginalTimestamps=null;const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);$("#manualTitle").textContent="Add a past workday manually";$("#manualSubtitle").textContent="For missed detection, forgotten registration, or work from before the app existed.";$("#manualDate").value=localDateKey(yesterday);$("#manualStart").value="07:00";$("#manualFinish").value="16:00";$("#manualBreak").value="30";$("#manualDistanceMode").value="auto";$("#manualKm").value="";$("#manualSaveHold span").textContent="HOLD TO ADD PAST WORKDAY";$("#cancelManualEdit").disabled=true;manualSegmentDraft=[{id:uid("draftseg"),projectName:"",endTime:null,endISO:null}];renderManualSegments();updateManualModeUI();setNotice("manualMessage","Choose the details for the historical workday.")}
 function beginEditDay(id){const d=findDay(id);if(!d||d===state.currentDay)return;manualEditDayId=id;manualOriginalTimestamps={date:d.date||localDateKey(new Date(d.start)),startISO:d.start,stopISO:d.stop,startTime:timeValue(d.start),finishTime:timeValue(d.stop)};$("#manualTitle").textContent="Edit past workday";$("#manualSubtitle").textContent=`Editing ${fmtDate(d.start)}. Saving replaces this historical record.`;$("#manualDate").value=manualOriginalTimestamps.date;$("#manualStart").value=manualOriginalTimestamps.startTime;$("#manualFinish").value=manualOriginalTimestamps.finishTime;$("#manualBreak").value=String(d.breakMin);fillLocationSelects();$("#manualWork").value=d.workplaceId||"";$("#manualStartHome").value=d.startHomeId||"";$("#manualEndHome").value=d.endHomeId||"";$("#manualDistanceMode").value="keep";$("#manualKm").value=((d.commuteOut?.km||0)+(d.commuteBack?.km||0)).toFixed(1);manualSegmentDraft=(d.segments||[]).map((s,i,a)=>({id:s.id||uid("draftseg"),projectName:s.projectName||"",endTime:i<a.length-1?timeValue(s.stop):null,endISO:i<a.length-1?s.stop:null}));if(!manualSegmentDraft.length)manualSegmentDraft=[{id:uid("draftseg"),projectName:"",endTime:null,endISO:null}];$("#manualSaveHold span").textContent="HOLD TO SAVE CHANGES";$("#cancelManualEdit").disabled=false;renderManualSegments();updateManualModeUI();setNotice("manualMessage","Edit the day, then hold Save Changes.","good");$("#manualCard").classList.remove("collapsed");window.__activateWorkClockView?.("history");setTimeout(()=>$("#manualCard").scrollIntoView({behavior:"smooth",block:"start"}),40)}
 function deletePastDay(id){const d=state.history.find(x=>x.id===id);if(!d)return;saveSafetySnapshot("Before deleting workday");state.history=state.history.filter(x=>x.id!==id);if(manualEditDayId===id)resetManualEditor();persist();renderHistory();renderAttention();setNotice("mainMessage",`Deleted ${fmtDate(d.start)} from history.`,"good")}
-function renderManualSegments(){const box=$("#manualSegments");box.innerHTML="";manualSegmentDraft.forEach((seg,i)=>{const last=i===manualSegmentDraft.length-1,el=document.createElement("div");el.className=`manualSegment ${last?"last":""}`;el.dataset.segmentId=seg.id;el.innerHTML=`<div><label>Project ${i+1}</label><input class="segProject" list="projectSuggestions" autocomplete="off" placeholder="Type or choose project" value="${esc(seg.projectName)}"></div>${last?'<div><label>Ends</label><div class="until">At workday finish</div></div>':`<div><label>Ends at</label><input class="segEnd" type="time" value="${esc(seg.endTime||"")}"></div><button class="btn small removeSeg" title="Remove split">×</button>`}`;el.querySelector(".segProject").addEventListener("input",e=>seg.projectName=e.target.value);if(!last){el.querySelector(".segEnd").addEventListener("input",e=>{seg.endTime=e.target.value;seg.endISO=null});el.querySelector(".removeSeg").addEventListener("click",()=>{manualSegmentDraft.splice(i,1);renderManualSegments()})}box.appendChild(el)})}
+function renderManualSegments(){const box=$("#manualSegments");for(const picker of [...projectPickers])if(picker.input.classList.contains("segProject"))projectPickers.delete(picker);box.innerHTML="";manualSegmentDraft.forEach((seg,i)=>{const last=i===manualSegmentDraft.length-1,el=document.createElement("div");el.className=`manualSegment ${last?"last":""}`;el.dataset.segmentId=seg.id;el.innerHTML=`<div><label>Project ${i+1}</label><input class="segProject" autocomplete="off" placeholder="Type or choose project" value="${esc(seg.projectName)}"><div class="projectPickerList hidden" role="listbox"></div></div>${last?'<div><label>Ends</label><div class="until">At workday finish</div></div>':`<div><label>Ends at</label><input class="segEnd" type="time" value="${esc(seg.endTime||"")}"></div><button class="btn small removeSeg" title="Remove split">×</button>`}`;el.querySelector(".segProject").addEventListener("input",e=>seg.projectName=e.target.value);wireProjectPicker(el.querySelector(".segProject"),el.querySelector(".projectPickerList"),name=>{seg.projectName=name});if(!last){el.querySelector(".segEnd").addEventListener("input",e=>{seg.endTime=e.target.value;seg.endISO=null});el.querySelector(".removeSeg").addEventListener("click",()=>{manualSegmentDraft.splice(i,1);renderManualSegments()})}box.appendChild(el)})}
 function addManualSegmentSplit(){const start=$("#manualStart").value,finish=$("#manualFinish").value;if(!start||!finish)return setNotice("manualMessage","Set start and finish first.","bad");let prev=start;if(manualSegmentDraft.length>1)prev=manualSegmentDraft[manualSegmentDraft.length-2].endTime||start;const a=parseTime(prev),b=parseTime(finish)+(parseTime(finish)<=a?1440:0);if(b-a<10)return setNotice("manualMessage","There is not enough time left for another project section.","bad");const mid=(a+Math.round((b-a)/2/5)*5)%1440,p=n=>String(n).padStart(2,"0"),midStr=`${p(Math.floor(mid/60))}:${p(mid%60)}`;manualSegmentDraft.splice(manualSegmentDraft.length-1,0,{id:uid("draftseg"),projectName:"",endTime:midStr,endISO:null});renderManualSegments()}
 function buildManualSegments(start,finish){if(!manualSegmentDraft.length)return {error:"At least one project section is required."};const out=[];let cursor=new Date(start);for(let i=0;i<manualSegmentDraft.length;i++){const draft=manualSegmentDraft[i],name=String(draft.projectName||"").trim();if(!name)return {error:`Project ${i+1} needs a name.`};let end;if(i===manualSegmentDraft.length-1)end=new Date(finish);else{if(!draft.endTime)return {error:`Project ${i+1} needs an end time.`};end=draft.endISO?new Date(draft.endISO):localDateTime($("#manualDate").value,draft.endTime);while(end<=cursor&&!draft.endISO)end.setDate(end.getDate()+1);if(!(end>cursor))return {error:`Project ${i+1} must end after it starts.`};if(end>=finish)return {error:`Project ${i+1} must end before the workday finish.`}}const p=ensureProject(name);out.push({id:draft.id?.startsWith("seg-")?draft.id:uid("seg"),start:cursor.toISOString(),stop:end.toISOString(),projectId:p.id,projectName:p.name,createdAt:nowISO()});cursor=new Date(end)}return {segments:out}}
 async function saveManualDay(){const date=$("#manualDate").value,startTime=$("#manualStart").value,finishTime=$("#manualFinish").value,breakMin=Number($("#manualBreak").value)||0,mode=$("#manualDistanceMode").value;if(!date||!startTime||!finishTime){setNotice("manualMessage","Date, start and finish are required.","bad");return}let start=(manualEditDayId&&manualOriginalTimestamps&&date===manualOriginalTimestamps.date&&startTime===manualOriginalTimestamps.startTime)?new Date(manualOriginalTimestamps.startISO):localDateTime(date,startTime),finish=(manualEditDayId&&manualOriginalTimestamps&&date===manualOriginalTimestamps.date&&finishTime===manualOriginalTimestamps.finishTime)?new Date(manualOriginalTimestamps.stopISO):localDateTime(date,finishTime);if(!start||!finish){setNotice("manualMessage","Invalid date or time.","bad");return}if(finish<=start)finish.setDate(finish.getDate()+1);if(finish-start>24*3600000){setNotice("manualMessage","Workday cannot exceed 24 hours.","bad");return}const built=buildManualSegments(start,finish);if(built.error){setNotice("manualMessage",built.error,"bad");return}const existing=manualEditDayId?state.history.find(x=>x.id===manualEditDayId):null,day=existing?deepCopy(existing):blankDay(date);day.date=date;day.start=start.toISOString();day.stop=finish.toISOString();day.breakMin=breakMin;day.startSource=existing?.startSource||"manual-history";day.stopSource=existing?.stopSource||"manual-history";day.status="confirmed";day.manuallyAdded=existing?.manuallyAdded??true;day.segments=built.segments;const work=locationById($("#manualWork").value);day.workplaceId=work?.type==="work"?work.id:null;if(mode==="auto"){const calc=await manualDistancePreview();if(!calc)return;day.startHomeId=calc.h1.id;day.endHomeId=calc.h2.id;day.workplaceId=calc.w.id;day.commuteOut={fromId:calc.h1.id,toId:calc.w.id,from:calc.h1.name,to:calc.w.name,km:calc.out.km,source:calc.out.source,at:day.start};day.commuteBack={fromId:calc.w.id,toId:calc.h2.id,from:calc.w.name,to:calc.h2.name,km:calc.back.km,source:calc.back.source,at:day.stop}}else if(mode==="manual"){const km=Number($("#manualKm").value);if(!Number.isFinite(km)||km<0){setNotice("manualMessage","Enter valid total kilometres.","bad");return}day.startHomeId=null;day.endHomeId=null;day.commuteOut={fromId:null,toId:work?.id||null,from:"Manual total",to:work?.name||"Work",km,source:"manual kilometres",at:day.start};day.commuteBack=null}else if(mode==="none"){day.startHomeId=null;day.endHomeId=null;day.commuteOut=null;day.commuteBack=null}else if(mode==="keep"&&!existing){setNotice("manualMessage","There are no existing kilometres to keep.","bad");return}const err=coverageError(day);if(err){setNotice("manualMessage",err,"bad");return}if(existing){saveSafetySnapshot("Before editing workday");const ix=state.history.findIndex(x=>x.id===existing.id);state.history[ix]=day}else state.history.push(day);state.history.sort((a,b)=>new Date(a.start)-new Date(b.start));persist();writeBackupToFolder(true);renderAll();const msg=existing?`Saved changes to ${fmtDate(day.start)}.`:`Added ${fmtDate(day.start)}, ${fmtTime(day.start)}–${fmtTime(day.stop)}.`;resetManualEditor();setNotice("manualMessage",msg,"good")}
-function saveSettings(){const r=Number($("#defaultRadius").value);if(!Number.isFinite(r)||r<30){setNotice("settingsMessage","Default radius must be at least 30 m.","bad");return}state.settings.startFrom=$("#startFrom").value;state.settings.startUntil=$("#startUntil").value;state.settings.finishFrom=$("#finishFrom").value;state.settings.finishUntil=$("#finishUntil").value;state.settings.defaultRadius=r;state.settings.routingProvider=$("#routingProvider").value;state.settings.orsKey=$("#orsKey").value.trim();state.routeCache={};persist();renderAll();setNotice("settingsMessage","Settings saved. Route cache cleared.","good")}
+function saveSettings(){const r=Number($("#defaultRadius").value);if(!Number.isFinite(r)||r<30){setNotice("settingsMessage","Default radius must be at least 30 m.","bad");return}state.settings.startFrom=$("#startFrom").value;state.settings.startUntil=$("#startUntil").value;state.settings.finishFrom=$("#finishFrom").value;state.settings.finishUntil=$("#finishUntil").value;state.settings.defaultRadius=r;state.settings.routingProvider=$("#routingProvider").value;state.settings.orsKey=$("#orsKey").value.trim();state.settings.strongReminders=$("#strongReminders").checked;state.routeCache={};persist();renderAll();setNotice("settingsMessage","Settings saved. Route cache cleared.","good")}
 
 function simulationSelection(){return {h:locationById($("#simHome").value),w:locationById($("#simWork").value)}}
 function simAtHome(){const {h}=simulationSelection();if(h?.type!=="home")return setNotice("simMessage","Choose a home first.","bad");currentPosition={lat:h.lat,lon:h.lon};updatePresence(h,"simulation");renderStatus(h,"simulation");setNotice("simMessage",`Simulated position set to ${h.name}.`,"good")}
@@ -796,7 +876,20 @@ $("#weekTableBody").addEventListener("click",e=>{
   else if(state.currentDay?.date===tr.dataset.date){window.__activateWorkClockView?.("today")}
 });
 
-wireHold($("#mainHold"),()=>{const d=getToday();if(!d.start)applyStart(nowISO(),"manual-hold");else if(!d.stop)showTimeChoice("stop","Manual finish. When did you actually finish?")});
+wireHold($("#mainHold"),()=>{
+  const d=getToday(),arrival=state.workGeofences?.arrive,departure=state.workGeofences?.leave;
+  const recentToday=event=>event?.at>0&&localDateKey(new Date(event.at))===localDateKey();
+  if(!d.start){
+    if(recentToday(arrival)&&locationById(arrival.placeId)?.type==="work"){
+      const gps=recentWorkTime("start");if(gps)applyStart(gps,"android-geofence");
+      else showTimeChoice("start","Arrival was over five minutes ago. When did you start?");
+    }else applyStart(nowISO(),"manual-hold");
+  }else if(!d.stop){
+    const gps=recentToday(departure)?recentWorkTime("stop"):null;
+    if(gps&&new Date(gps)>new Date(d.start))requestStop(gps,"android-geofence");
+    else showTimeChoice("stop","When did you actually finish?");
+  }
+});
 wireHold($("#confirmDayHold"),confirmToday);wireHold($("#saveCurrentHome"),()=>addCurrentLocation("home"));wireHold($("#saveCurrentWork"),()=>addCurrentLocation("work"));wireHold($("#manualSaveHold"),saveManualDay);wireHold($("#clearHistory"),()=>{saveSafetySnapshot("Before clearing history");state.history=[];if(manualEditDayId)resetManualEditor();persist();renderHistory();renderAttention();setNotice("mainMessage","All confirmed history cleared.","good")});
 $("#endProject").addEventListener("click",endProjectNow);$("#saveProjectModal").addEventListener("click",saveProjectNaming);$("#cancelProjectModal").addEventListener("click",cancelProjectNaming);$("#projectModalInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();saveProjectNaming()}});
 $("#editStart").addEventListener("click",()=>showTimeChoice("start","Change today's start time."));$("#editStop").addEventListener("click",()=>showTimeChoice("stop","Change today's finish time."));$("#clearDraft").addEventListener("click",clearToday);$("#enableLocation").addEventListener("click",requestLocation);$("#enableNotifications").addEventListener("click",enableNotifications);$("#testNotification").addEventListener("click",testNotification);$("#closeTimeModal").addEventListener("click",hideTimeChoice);$("#confirmCustomTime").addEventListener("click",confirmCustomTime);$("#timeModal").addEventListener("click",e=>{if(e.target===$("#timeModal"))hideTimeChoice()});
@@ -849,7 +942,8 @@ $("#exportBackup").addEventListener("click",exportWorkClockBackup);
 $("#importBackup").addEventListener("click",importWorkClockBackup);
 $("#simAtHome").addEventListener("click",simAtHome);$("#simArriveWork").addEventListener("click",simArrive);$("#simLeaveWork").addEventListener("click",simLeave);$("#simReturnHome").addEventListener("click",simReturn);$("#manualDistanceMode").addEventListener("change",updateManualModeUI);$("#manualCalculate").addEventListener("click",manualDistancePreview);$("#addManualSegment").addEventListener("click",addManualSegmentSplit);$("#cancelManualEdit").addEventListener("click",resetManualEditor);$("#manualStart").addEventListener("change",renderManualSegments);$("#manualFinish").addEventListener("change",renderManualSegments);
 
-resetLocationEditor();resetManualEditor();maybeDailySnapshot();renderAll();showFolderBackupStatus();refreshPermissionUI();syncAndroidEvents();
+wireProjectPicker($("#projectModalInput"),$("#projectPickerList"));
+resetLocationEditor();resetManualEditor();syncStrongReminders();syncNativeWorkStatus();maybeDailySnapshot();renderAll();showFolderBackupStatus();refreshPermissionUI();syncAndroidEvents();
 function manageVisibleTimer(){
   if(document.hidden){if(timerInterval!==null){clearInterval(timerInterval);timerInterval=null}return}
   updateTimer();
