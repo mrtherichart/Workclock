@@ -76,11 +76,13 @@
         check(message.textContent.includes("Hold the Start"),"Next tip should describe the start action");
         check(go.classList.contains("hidden"),"No redundant next button should appear");
         // Native notification choices should move guidance through the real workday states.
-        nativeEvents.push({id:"test-start",transition:"ACTION",action:"START_NOW",at:Date.now()});
+        const simulatedStartTap=Date.now();
+        nativeEvents.push({id:"test-start",transition:"ACTION",action:"START_NOW",at:simulatedStartTap,gpsAt:simulatedStartTap-30_000});
         await window.__WorkClockNativeSync();
         check(document.getElementById("rhythmGuideStep").textContent==="WHILE YOU WORK",
           "Starting work should advance to the working hint");
-        nativeEvents.push({id:"test-finish",transition:"ACTION",action:"FINISH_NOW",at:Date.now()+15000});
+        const simulatedFinishTap=simulatedStartTap+15_000;
+        nativeEvents.push({id:"test-finish",transition:"ACTION",action:"FINISH_NOW",at:simulatedFinishTap,gpsAt:simulatedFinishTap-15_000});
         await window.__WorkClockNativeSync();
         check(document.getElementById("projectModal").classList.contains("show"),
           "Finishing a first day should ask for the project");
