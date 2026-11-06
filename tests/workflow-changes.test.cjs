@@ -58,3 +58,18 @@ assert(js.includes('window.__WorkClockWeekResume'));
 assert(geo.includes('"workclock_strong_v1"')&&geo.includes('channel.setSound(null, null)'));
 assert(!scheduler.includes('"home-"'),'Strong reminder must be restricted to work');
 console.log('Workflow changes: 5-minute GPS, 24-hour week, project selection, intervals, and work-only native alerts passed.');
+
+// v0.4.5: work alerts must not be presented as permissions or use the global uppercase label style.
+const permissionSection=html.split('<h3>Permissions</h3>')[1].split('</div>\n        <div class="settingGroup">')[0];
+const detectionSection=html.split('<h3>Automatic work detection</h3>')[1].split('<h3>Data and backups</h3>')[0];
+assert(!permissionSection.includes('id="strongReminders"'));
+assert(detectionSection.includes('id="strongReminders"') && detectionSection.includes('id="testStrongReminders"'));
+assert(css.includes('.workAlertControl{') && css.includes('text-transform:none'));
+assert(js.includes('WorkClockAndroid.testStrongReminder()'));
+assert(js.includes('$("#strongReminders").addEventListener("change"'));
+assert(geo.includes('tag == "strong-test" || (WorkReminderScheduler.enabled(context)'));
+assert(geo.includes('fun testStrong(context: Context)'));
+assert(!geo.includes('if (WorkReminderScheduler.enabled(context)) {\n                show(context, "WorkClock vibration test"'));
+const activity=fs.readFileSync(root+'java/nl/workclock/app/MainActivity.kt','utf8');
+assert(activity.includes('fun testStrongReminder()'));
+console.log('Work alert UI: correct settings section, compact typography, immediate save, and one-shot native test wired.');

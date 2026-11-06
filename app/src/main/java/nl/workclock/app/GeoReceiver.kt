@@ -70,14 +70,15 @@ class GeoReceiver : BroadcastReceiver() {
         manager.createNotificationChannel(
             NotificationChannel("workclock", "Work and travel", NotificationManager.IMPORTANCE_DEFAULT)
         )
-        val strong = WorkReminderScheduler.enabled(context) &&
-            (tag.startsWith("arrive-") || tag.startsWith("leave-") || tag == "strong-test")
+        val strong = tag == "strong-test" || (WorkReminderScheduler.enabled(context) &&
+            (tag.startsWith("arrive-") || tag.startsWith("leave-")))
         if (strong) {
             // Channel attributes are immutable after creation, so use a separate ID.
             val channel = NotificationChannel("workclock_strong_v1", "Persistent work alerts",
                 NotificationManager.IMPORTANCE_HIGH)
             channel.description = "Workplace arrival and departure; vibration only, no sound"
             channel.setSound(null, null)
+            channel.enableVibration(true)
             channel.setVibrationPattern(longArrayOf(0L) + LongArray(19) { 500L })
             manager.createNotificationChannel(channel)
         }
@@ -124,6 +125,12 @@ class GeoReceiver : BroadcastReceiver() {
         manager.notify(tag, 1, builder.build())
     }
 
+        fun testStrong(context: Context) {
+            // Uses the same Android vibration channel as real work alerts.
+            // A test is never registered with WorkReminderScheduler.
+            show(context, "WorkClock vibration test", "Ten pulses, no repeat reminders.", "strong-test")
+        }
+
         fun test(context: Context) {
             val intent = Intent(context, MainActivity::class.java)
             val pending = PendingIntent.getActivity(context, 0, intent,
@@ -135,10 +142,6 @@ class GeoReceiver : BroadcastReceiver() {
             if (Build.VERSION.SDK_INT >= 33 &&
                 context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
             ) return
-            if (WorkReminderScheduler.enabled(context)) {
-                show(context, "WorkClock vibration test", "Ten pulses; no repeat is scheduled.", "strong-test")
-                return
-            }
             manager.notify("test", 1, NotificationCompat.Builder(context, "workclock")
                 .setSmallIcon(android.R.drawable.ic_menu_mylocation)
                 .setContentTitle("WorkClock")

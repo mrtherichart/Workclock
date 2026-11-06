@@ -19,6 +19,7 @@
     setWorkSessionStatus:(day,running,finished)=>calls.push(["setWorkSessionStatus",day,running,finished]),
     setStrongReminders:enabled=>calls.push(["setStrongReminders",enabled]),
     resolveWorkReminders:scope=>calls.push(["resolveWorkReminders",scope]),
+    testStrongReminder:()=>{},
     testNotification:()=>{},
     showNotification:()=>{},
     refreshLocation:()=>{},

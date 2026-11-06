@@ -493,6 +493,14 @@ function testNotification(){
   WorkClockAndroid.testNotification();
   setNotice("notificationHelp","Android test notification requested.","good");
 }
+function testStrongReminders(){
+  // Test the native notification channel directly, whether or not the preference is on.
+  // Unlike a real geofence event, this must never start a repeat-alarm sequence.
+  WorkClockAndroid.testStrongReminder();
+  const status=$("#workAlertTestStatus");
+  status.textContent="One test alert sent. If it doesn't vibrate, check Android's notification settings.";
+  status.classList.remove("hidden");
+}
 function requestLocation(){
   $("#locationHelp").textContent="Finding your position…";
   WorkClockAndroid.requestForegroundTracking();
@@ -892,6 +900,14 @@ wireHold($("#mainHold"),()=>{
 });
 wireHold($("#confirmDayHold"),confirmToday);wireHold($("#saveCurrentHome"),()=>addCurrentLocation("home"));wireHold($("#saveCurrentWork"),()=>addCurrentLocation("work"));wireHold($("#manualSaveHold"),saveManualDay);wireHold($("#clearHistory"),()=>{saveSafetySnapshot("Before clearing history");state.history=[];if(manualEditDayId)resetManualEditor();persist();renderHistory();renderAttention();setNotice("mainMessage","All confirmed history cleared.","good")});
 $("#endProject").addEventListener("click",endProjectNow);$("#saveProjectModal").addEventListener("click",saveProjectNaming);$("#cancelProjectModal").addEventListener("click",cancelProjectNaming);$("#projectModalInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();saveProjectNaming()}});
+$("#strongReminders").addEventListener("change",e=>{
+  state.settings.strongReminders=e.target.checked;
+  persist();
+  syncStrongReminders();
+  const status=$("#workAlertTestStatus");
+  status.classList.add("hidden");
+});
+$("#testStrongReminders").addEventListener("click",testStrongReminders);
 $("#editStart").addEventListener("click",()=>showTimeChoice("start","Change today's start time."));$("#editStop").addEventListener("click",()=>showTimeChoice("stop","Change today's finish time."));$("#clearDraft").addEventListener("click",clearToday);$("#enableLocation").addEventListener("click",requestLocation);$("#enableNotifications").addEventListener("click",enableNotifications);$("#testNotification").addEventListener("click",testNotification);$("#closeTimeModal").addEventListener("click",hideTimeChoice);$("#confirmCustomTime").addEventListener("click",confirmCustomTime);$("#timeModal").addEventListener("click",e=>{if(e.target===$("#timeModal"))hideTimeChoice()});
 $("#fillCurrentLocation").addEventListener("click",()=>{if(!currentPosition)return setNotice("locationEditorMessage","No current GPS position available.","bad");$("#locLat").value=currentPosition.lat;$("#locLon").value=currentPosition.lon;setNotice("locationEditorMessage","Filled current GPS coordinates.","good")});$("#saveLocation").addEventListener("click",saveLocationEditor);$("#cancelLocationEdit").addEventListener("click",resetLocationEditor);$("#saveSettings").addEventListener("click",saveSettings);$("#clearRouteCache").addEventListener("click",()=>{state.routeCache={};persist();setNotice("settingsMessage","Route cache cleared.","good")});
 $("#enableNativeBackground").addEventListener("click",()=>{WorkClockAndroid.requestBackgroundTracking();setNotice("nativeTrackingHelp","Follow the Android permission screens, then reopen WorkClock. Choose Allow all the time where available.");});

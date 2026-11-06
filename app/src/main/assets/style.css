@@ -248,10 +248,22 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
 .clockFace + .currentSection{margin-top:16px}
 @media(max-width:560px){.clockFace{width:280px;height:126px;margin-top:12px}}
 
-/* Quiet by default; optional Android strong vibration is configured in Settings. */
-.reminderToggle{display:flex;align-items:flex-start;gap:12px;margin:14px 0 4px;padding:13px;border:1px solid var(--line-strong);border-radius:13px;background:rgba(27,44,55,.46);cursor:pointer}
-.reminderToggle input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:var(--accent)}
-.reminderToggle span{display:grid;gap:4px}.reminderToggle strong{font-size:12px;color:var(--text-soft)}.reminderToggle small{font-size:10.5px;line-height:1.5;color:var(--muted)}
+/* Work-only alert control: one quiet preference, not a permission warning. */
+.workAlertPreference{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.workAlertControl{position:relative;display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0;cursor:pointer;text-transform:none;letter-spacing:normal}
+.workAlertCopy{display:grid;gap:3px;min-width:0;flex:1}
+.workAlertCopy strong{font:650 12.5px/1.35 var(--font-sans);color:var(--text-soft);text-transform:none;letter-spacing:normal}
+.workAlertCopy small{font:400 10.5px/1.5 var(--font-sans);color:var(--muted);text-transform:none;letter-spacing:normal}
+.workAlertControl input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.workAlertSwitch{position:relative;display:block;flex:none;width:42px;height:24px;border:1px solid rgba(143,180,201,.20);border-radius:99px;background:#23303a;transition:background .15s ease}
+.workAlertSwitch::before{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:#90a0aa;transition:transform .15s ease,background .15s ease}
+.workAlertControl input:checked+.workAlertSwitch{background:#345a71;border-color:#547a91}
+.workAlertControl input:checked+.workAlertSwitch::before{transform:translateX(18px);background:#e6f1f7}
+.workAlertControl input:focus-visible+.workAlertSwitch{outline:2px solid var(--accent-strong);outline-offset:3px}
+.workAlertActions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px}
+.workAlertActions span{color:var(--muted2);font:400 10px/1.45 var(--font-sans)}
+.workAlertActions button{min-height:32px;white-space:nowrap;padding:6px 11px;font:650 11px var(--font-sans)}
+.workAlertStatus{color:var(--muted);font:400 10.5px/1.45 var(--font-sans);margin-top:7px}
 .weekControls #weekNow:disabled{opacity:.44;cursor:default;color:var(--muted2);background:rgba(8,15,20,.52);border-color:rgba(190,212,225,.055);box-shadow:none}
 .weekTable tbody tr.weekToday td{background:rgba(143,180,201,.11);border-top:1px solid rgba(143,180,201,.30);border-bottom:1px solid rgba(143,180,201,.30)}
 .weekTable tbody tr.weekToday td:first-child{color:var(--accent-strong);font-weight:850}

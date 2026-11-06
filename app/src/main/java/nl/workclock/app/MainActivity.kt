@@ -265,6 +265,9 @@ class MainActivity : Activity() {
         @JavascriptInterface fun testNotification() {
             runOnUiThread { GeoReceiver.test(this@MainActivity) }
         }
+        @JavascriptInterface fun testStrongReminder() {
+            runOnUiThread { GeoReceiver.testStrong(this@MainActivity) }
+        }
 
         @JavascriptInterface fun showNotification(title: String, body: String, tag: String) {
             runOnUiThread { if (!screenVisible) GeoReceiver.show(this@MainActivity, title, body, tag) }

@@ -172,10 +172,27 @@
           <h3>Permissions</h3><p>Arrival, departure and forgotten-time reminders.</p>
           <div class="permissionRow"><button class="btn" id="enableNotifications">Enable notifications</button><button class="btn" id="testNotification">Test notification</button><button class="btn" id="goPlacesForLocation">Location settings</button></div>
           <div class="notice" id="notificationHelp">Checking notification access…</div>
-          <label class="reminderToggle"><input type="checkbox" id="strongReminders"><span><strong>Persistent work alerts</strong><small>Ten short vibration pulses at arrival / departure. Repeat after 10, 20 and 30 minutes until handled; no sound. Android may delay repeats.</small></span></label>
           <div id="nativeTrackingBox" class="hidden" style="margin-top:15px">
             <button class="btn primary" id="enableNativeBackground">Enable background location</button>
             <div class="notice" id="nativeTrackingHelp" style="margin-top:9px">Android location setup</div>
+          </div>
+        </div>
+        <div class="settingGroup">
+          <h3>Automatic work detection</h3><p>Weekdays only. These times help decide when to remind you; they do not change logged hours.</p>
+          <div class="grid2"><div><label>Start from</label><input type="time" id="startFrom"></div><div><label>Start until</label><input type="time" id="startUntil"></div></div>
+          <div class="grid2"><div><label>Finish from</label><input type="time" id="finishFrom"></div><div><label>Finish until</label><input type="time" id="finishUntil"></div></div>
+          <label>Default location radius (metres)</label><input type="number" id="defaultRadius" min="30" max="2000" step="10">
+          <div class="workAlertPreference" aria-label="Work reminder settings">
+            <label class="workAlertControl" for="strongReminders">
+              <span class="workAlertCopy"><strong>Stronger work reminders</strong><small>10 vibration pulses, with reminders after 10, 20 and 30 minutes. No sound.</small></span>
+              <input type="checkbox" id="strongReminders" aria-label="Enable stronger work reminders">
+              <span class="workAlertSwitch" aria-hidden="true"></span>
+            </label>
+            <div class="workAlertActions">
+              <span>Only for arriving at or leaving work</span>
+              <button class="btn small" type="button" id="testStrongReminders">Test vibration</button>
+            </div>
+            <div class="workAlertStatus hidden" id="workAlertTestStatus" role="status" aria-live="polite"></div>
           </div>
         </div>
         <div class="settingGroup">
@@ -193,12 +210,6 @@
             <button class="btn primary hidden" id="installUpdate" type="button">Download &amp; install</button>
           </div>
           <div class="notice" id="updateMessage" role="status" aria-live="polite">Updates are available for the Android app.</div>
-        </div>
-        <div class="settingGroup">
-          <h3>Automatic work detection</h3><p>Weekdays only. These times help decide when to remind you; they do not change logged hours.</p>
-          <div class="grid2"><div><label>Start from</label><input type="time" id="startFrom"></div><div><label>Start until</label><input type="time" id="startUntil"></div></div>
-          <div class="grid2"><div><label>Finish from</label><input type="time" id="finishFrom"></div><div><label>Finish until</label><input type="time" id="finishUntil"></div></div>
-          <label>Default location radius (metres)</label><input type="number" id="defaultRadius" min="30" max="2000" step="10">
         </div>
         <div class="settingGroup">
           <h3>Road kilometres</h3><p>Routes are calculated from saved locations, not from a recorded GPS trail.</p>
