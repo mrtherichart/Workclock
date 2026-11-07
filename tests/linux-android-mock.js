@@ -28,7 +28,7 @@
     requestForegroundTracking:()=>calls.push(["foreground"]),
     requestBackgroundTracking:()=>calls.push(["background"]),
     requestNotifications:()=>calls.push(["notifications"]),
-    setWorkSessionStatus:(day,running,finished)=>calls.push(["setWorkSessionStatus",day,running,finished]),
+    setWorkSessionStatus:(day,running,finished,workplaceId,startedAt)=>calls.push(["setWorkSessionStatus",day,running,finished,workplaceId,startedAt]),
     setStrongReminders:enabled=>calls.push(["setStrongReminders",enabled]),
     resolveWorkReminders:scope=>calls.push(["resolveWorkReminders",scope]),
     testStrongReminder:()=>{},

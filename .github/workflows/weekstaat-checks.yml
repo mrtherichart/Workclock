@@ -16,4 +16,6 @@ jobs:
         with:
           node-version: '22'
       - name: Verify Weekstaat logic and inline JavaScript
-        run: node tests/weekstaat.test.cjs
+        run: |
+          node tests/weekstaat.test.cjs
+          node tests/workflow-changes.test.cjs

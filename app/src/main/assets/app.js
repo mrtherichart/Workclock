@@ -67,7 +67,8 @@ function syncNativeWorkStatus(){
     const key=localDateKey(),today=state.currentDay;
     const running=!!(today?.date===key&&today.start&&!today.stop);
     const finished=!!(today?.date===key&&today.stop)||state.history.some(d=>d.date===key&&d.stop);
-    WorkClockAndroid.setWorkSessionStatus(key,running,finished);
+    WorkClockAndroid.setWorkSessionStatus(key,running,finished,
+      running?String(today.workplaceId||""):"",running?String(new Date(today.start).getTime()):"0");
   }catch(e){console.warn("Native work status sync failed",e)}
 }
 function syncAndroidPlaces(){try{const json=JSON.stringify(state.locations.map(({id,name,type,lat,lon,radius})=>({id,name,type,lat,lon,radius})));if(json===syncedPlacesJSON)return;WorkClockAndroid.syncPlaces(json);syncedPlacesJSON=json}catch(e){console.warn("Android place sync failed",e)}}

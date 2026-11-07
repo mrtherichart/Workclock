@@ -37,28 +37,30 @@ class GeoReceiver : BroadcastReceiver() {
                 prefs.edit().putString("pending_work", placeId).apply()
                 val tag = "arrive-$placeId"
                 prefs.edit().putLong("recent_enter:$placeId", eventTime).apply()
-                if (!alreadyHandledToday(prefs, "session_running") && !alreadyHandledToday(prefs, "session_finished")) {
+                if (WorkAlertPolicy.allowArrivalRepeat(
+                        prefs.getString("session_day", null),
+                        prefs.getBoolean("session_running", false),
+                        prefs.getBoolean("session_finished", false), eventTime, now)) {
                     show(context, "Arrived at $label", "Check whether you started work.", tag)
-                    WorkReminderScheduler.start(context, tag, "Arrived at $label", "Check whether you started work.")
+                    WorkReminderScheduler.start(context, tag, "Arrived at $label", "Check whether you started work.", eventTime)
                 }
             } else if (type == "work" && transition == "EXIT") {
                 val tag = "leave-$placeId"
                 prefs.edit().putLong("recent_exit:$placeId", eventTime).apply()
-                if (!alreadyHandledToday(prefs, "session_finished")) {
+                if (WorkAlertPolicy.allowDeparture(
+                        prefs.getString("session_day", null),
+                        prefs.getBoolean("session_running", false),
+                        prefs.getBoolean("session_finished", false),
+                        prefs.getString("session_workplace", null), placeId,
+                        prefs.getLong("session_started_at", 0L), eventTime, now)) {
                     show(context, "Left $label", "Check whether you finished work.", tag)
-                    WorkReminderScheduler.start(context, tag, "Left $label", "Check whether you finished work.")
+                    WorkReminderScheduler.start(context, tag, "Left $label", "Check whether you finished work.", eventTime)
                 }
             } else if (type == "home" && transition == "ENTER" && prefs.contains("pending_work")) {
                 prefs.edit().remove("pending_work").apply()
                 show(context, "Arrived home", "Open WorkClock to complete your return trip.", "home-$placeId")
             }
         }
-    }
-
-    private fun alreadyHandledToday(prefs: android.content.SharedPreferences, key: String): Boolean {
-        val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-            .format(java.util.Date())
-        return prefs.getString("session_day", null) == date && prefs.getBoolean(key, false)
     }
 
     companion object {

@@ -237,12 +237,19 @@ class MainActivity : Activity() {
         @JavascriptInterface fun setStrongReminders(enabled: Boolean) =
             WorkReminderScheduler.setEnabled(applicationContext, enabled)
 
-        @JavascriptInterface fun setWorkSessionStatus(day: String, running: Boolean, finished: Boolean) {
+        @JavascriptInterface fun setWorkSessionStatus(
+            day: String, running: Boolean, finished: Boolean, workplaceId: String, startedAt: String
+        ) {
             if (!Regex("\\d{4}-\\d{2}-\\d{2}").matches(day)) return
             getSharedPreferences("workclock_native", MODE_PRIVATE).edit()
                 .putString("session_day", day)
                 .putBoolean("session_running", running)
-                .putBoolean("session_finished", finished).apply()
+                .putBoolean("session_finished", finished)
+                .putString("session_workplace", workplaceId.take(150))
+                .putLong("session_started_at", if (running) (startedAt.toLongOrNull() ?: 0L) else 0L).apply()
+            // Never leave a repeat alarm alive after a shift is started or ended.
+            if (running || finished) WorkReminderScheduler.resolve(applicationContext, "arrive")
+            if (!running || finished) WorkReminderScheduler.resolve(applicationContext, "leave")
         }
 
         @JavascriptInterface fun resolveWorkReminders(scope: String) {

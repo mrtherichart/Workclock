@@ -18,6 +18,7 @@ object WorkReminderScheduler {
     private const val STAGE = "followup_stage:"
     private const val TITLE = "followup_title:"
     private const val BODY = "followup_body:"
+    private const val EVENT_AT = "followup_event_at:"
     private const val INTERVAL = 10 * 60 * 1000L
     private const val MAX_STAGE = 3
 
@@ -48,7 +49,7 @@ object WorkReminderScheduler {
         manager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, due, alarmIntent(context, tag, stage))
     }
 
-    fun start(context: Context, tag: String, title: String, body: String) {
+    fun start(context: Context, tag: String, title: String, body: String, eventAt: Long) {
         if (!enabled(context) || !(tag.startsWith("arrive-") || tag.startsWith("leave-"))) return
         if (context.getSystemService(NotificationManager::class.java)?.areNotificationsEnabled() != true) return
         val started = System.currentTimeMillis()
@@ -56,20 +57,40 @@ object WorkReminderScheduler {
             .putLong(ACTIVE + tag, started)
             .putInt(STAGE + tag, 1)
             .putString(TITLE + tag, title)
-            .putString(BODY + tag, body).apply()
+            .putString(BODY + tag, body)
+            .putLong(EVENT_AT + tag, eventAt).apply()
         schedule(context, tag, started + INTERVAL, 1)
     }
 
     fun repeat(context: Context, tag: String, stage: Int) {
-        if (!enabled(context) || stage !in 1..MAX_STAGE) return
+        if (!enabled(context) || stage !in 1..MAX_STAGE) {
+            resolveTag(context, tag)
+            return
+        }
         val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         val started = prefs.getLong(ACTIVE + tag, 0L)
         if (started == 0L || prefs.getInt(STAGE + tag, 0) != stage) return
         val title = prefs.getString(TITLE + tag, "WorkClock reminder") ?: "WorkClock reminder"
         val body = prefs.getString(BODY + tag, "Confirm your work hours.") ?: "Confirm your work hours."
         val now = System.currentTimeMillis()
-        // Don't deliver a cluster of stale alarms after Doze delays a wakeup.
-        if (now - started > MAX_STAGE * INTERVAL + 60_000L) return
+        val eventAt = prefs.getLong(EVENT_AT + tag, 0L)
+        val sessionDay = prefs.getString("session_day", null)
+        val running = prefs.getBoolean("session_running", false)
+        val finished = prefs.getBoolean("session_finished", false)
+        val stillNeedsResponse = if (tag.startsWith("leave-")) {
+            WorkAlertPolicy.allowDeparture(
+                sessionDay, running, finished,
+                prefs.getString("session_workplace", null), tag.removePrefix("leave-"),
+                prefs.getLong("session_started_at", 0L), eventAt, now)
+        } else {
+            WorkAlertPolicy.allowArrivalRepeat(sessionDay, running, finished, eventAt, now)
+        }
+        // Never buzz for yesterday's shift or after start/finish confirmation.
+        // Don't deliver a cluster of stale alarms after a Doze-delayed wakeup.
+        if (!stillNeedsResponse || now - started > MAX_STAGE * INTERVAL + 60_000L) {
+            resolveTag(context, tag)
+            return
+        }
         GeoReceiver.show(context, title, body, tag)
         prefs.edit().putInt(STAGE + tag, stage + 1).apply()
         val next = maxOf(started + (stage + 1) * INTERVAL, now + INTERVAL)
@@ -78,21 +99,21 @@ object WorkReminderScheduler {
         }
     }
 
+    private fun resolveTag(context: Context, tag: String) {
+        context.getSystemService(AlarmManager::class.java)?.cancel(alarmIntent(context, tag, 1))
+        context.getSystemService(NotificationManager::class.java)?.cancel(tag, 1)
+        context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit()
+            .remove(ACTIVE + tag).remove(STAGE + tag).remove(TITLE + tag)
+            .remove(BODY + tag).remove(EVENT_AT + tag).apply()
+    }
+
     /** scope is "arrive", "leave", or null for both. */
     fun resolve(context: Context, scope: String?) {
         val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         val tags = prefs.all.keys.filter { it.startsWith(ACTIVE) }
             .map { it.removePrefix(ACTIVE) }
             .filter { scope == null || it.startsWith("$scope-") }
-        val alarmManager = context.getSystemService(AlarmManager::class.java)
-        val notifications = context.getSystemService(NotificationManager::class.java)
-        val edit = prefs.edit()
-        for (tag in tags) {
-            alarmManager?.cancel(alarmIntent(context, tag, 1))
-            notifications?.cancel(tag, 1)
-            edit.remove(ACTIVE + tag).remove(STAGE + tag).remove(TITLE + tag).remove(BODY + tag)
-        }
-        edit.apply()
+        for (tag in tags) resolveTag(context, tag)
     }
 }
 

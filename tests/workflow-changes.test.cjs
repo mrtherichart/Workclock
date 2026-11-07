@@ -73,3 +73,17 @@ assert(!geo.includes('if (WorkReminderScheduler.enabled(context)) {\n           
 const activity=fs.readFileSync(root+'java/nl/workclock/app/MainActivity.kt','utf8');
 assert(activity.includes('fun testStrongReminder()'));
 console.log('Work alert UI: correct settings section, compact typography, immediate save, and one-shot native test wired.');
+
+// v0.4.6: geofence EXIT may only notify for a matching, running shift today.
+const policy=fs.readFileSync(root+'java/nl/workclock/app/WorkAlertPolicy.kt','utf8');
+const mainActivity=fs.readFileSync(root+'java/nl/workclock/app/MainActivity.kt','utf8');
+assert(geo.includes('WorkAlertPolicy.allowDeparture('),'Native EXIT must validate active work before notification');
+assert(geo.includes('WorkAlertPolicy.allowArrivalRepeat('),'Arrival must respect the current shift');
+assert(scheduler.includes('WorkAlertPolicy.allowDeparture('),'Scheduled departure repeat must recheck current shift');
+assert(scheduler.includes('WorkAlertPolicy.allowArrivalRepeat('),'Scheduled arrival repeat must recheck current shift');
+assert(scheduler.includes('resolveTag(context, tag)'),'Invalid repeat must cancel future alarms');
+assert(mainActivity.includes('WorkReminderScheduler.resolve(applicationContext, "leave")'),'Finishing or clearing shift must cancel leave repeats');
+assert(policy.includes('!running || finished || sessionDay != localDay(now)'),'No running current-day shift means no departure');
+assert(policy.includes('localDay(eventAt) == localDay(now)'),'Stale geofence event cannot cross midnight');
+assert(js.includes('WorkClockAndroid.setWorkSessionStatus(key,running,finished,'),'Native must receive active shift context');
+console.log('Geofence regression wiring: departure guard, repeat guard, and session cancellation passed.');
