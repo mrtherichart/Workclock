@@ -10,7 +10,7 @@
     window.scrollTo({top:0,behavior:'instant'});
   }
   window.__activateWorkClockView=activate;
-  function refreshDate(){const d=new Date();document.getElementById('appDateLine').textContent=d.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'});}
+  function refreshDate(){const d=new Date();document.getElementById('appDateLine').textContent=d.toLocaleDateString(window.WorkClockI18n?.locale || undefined,{weekday:'long',day:'numeric',month:'long'});}
   window.__WorkClockAppResume=function(){refreshDate();window.__WorkClockTimerResume?.();window.__WorkClockNativeSync?.();window.__WorkClockWeekResume?.();};
   window.__WorkClockHandleBack=function(){
     if(document.getElementById('timeModal').classList.contains('show')){document.getElementById('closeTimeModal').click();return true;}
@@ -27,5 +27,6 @@
   document.getElementById('hideManualEntry').addEventListener('click',()=>manual.classList.add('collapsed'));
   const saved=sessionStorage.getItem('workclock-view'); if(saved&&views.some(v=>v.dataset.view===saved)) activate(saved);
   window.__WorkClockRestoreHistoryMode?.();
+  window.addEventListener("workclock-language-change",refreshDate);
   refreshDate();
 })();

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WorkClock</string>
+    <string name="work_and_travel">Werk en reizen</string>
+    <string name="persistent_work_alerts">Herhaalde werkmeldingen</string>
+    <string name="strong_channel_description">Aankomst en vertrek van werk; alleen trillen, geen geluid</string>
+    <string name="arrived_home">Thuis aangekomen</string>
+    <string name="return_trip_message">Open WorkClock om je terugreis af te ronden.</string>
+    <string name="check_started">Controleer of je bent begonnen met werken.</string>
+    <string name="check_finished">Controleer of je klaar bent met werken.</string>
+    <string name="notification_start_now">Nu starten</string>
+    <string name="notification_finish_now">Nu stoppen</string>
+    <string name="notification_earlier">Eerder…</string>
+    <string name="notification_not_working">Niet aan het werk</string>
+    <string name="notification_still_working">Nog aan het werk</string>
+    <string name="vibration_test_title">WorkClock trillingstest</string>
+    <string name="vibration_test_description">Tien trilpulsen, zonder herhaling.</string>
+    <string name="notification_test_message">Meldingen werken op dit toestel.</string>
+</resources>

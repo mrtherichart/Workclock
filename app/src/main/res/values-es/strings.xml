@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WorkClock</string>
+    <string name="work_and_travel">Trabajo y desplazamientos</string>
+    <string name="persistent_work_alerts">Avisos de trabajo repetidos</string>
+    <string name="strong_channel_description">Llegada y salida del trabajo; solo vibración</string>
+    <string name="arrived_home">Llegada a casa</string>
+    <string name="return_trip_message">Abre WorkClock para completar el regreso.</string>
+    <string name="check_started">Comprueba si empezaste a trabajar.</string>
+    <string name="check_finished">Comprueba si terminaste de trabajar.</string>
+    <string name="notification_start_now">Empezar ahora</string>
+    <string name="notification_finish_now">Terminar ahora</string>
+    <string name="notification_earlier">Antes…</string>
+    <string name="notification_not_working">Sin trabajar</string>
+    <string name="notification_still_working">Todavía trabajando</string>
+    <string name="vibration_test_title">Prueba de vibración WorkClock</string>
+    <string name="vibration_test_description">Diez vibraciones, sin repetición.</string>
+    <string name="notification_test_message">Las notificaciones funcionan en este dispositivo.</string>
+</resources>

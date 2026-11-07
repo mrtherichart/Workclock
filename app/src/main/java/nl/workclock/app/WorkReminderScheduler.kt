@@ -70,8 +70,15 @@ object WorkReminderScheduler {
         val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         val started = prefs.getLong(ACTIVE + tag, 0L)
         if (started == 0L || prefs.getInt(STAGE + tag, 0) != stage) return
-        val title = prefs.getString(TITLE + tag, "WorkClock reminder") ?: "WorkClock reminder"
-        val body = prefs.getString(BODY + tag, "Confirm your work hours.") ?: "Confirm your work hours."
+        val placeId = tag.substringAfter('-')
+        val placeName = GeoManager.place(context, placeId)?.optString("name", "") ?: ""
+        val localized = placeName.isNotEmpty()
+        val title = if (localized) {
+            if (tag.startsWith("leave-")) WorkClockLocale.left(context, placeName)
+            else WorkClockLocale.arrivedAt(context, placeName)
+        } else prefs.getString(TITLE + tag, "WorkClock") ?: "WorkClock"
+        val body = if (tag.startsWith("leave-")) WorkClockLocale.text(context, R.string.check_finished)
+            else WorkClockLocale.text(context, R.string.check_started)
         val now = System.currentTimeMillis()
         val eventAt = prefs.getLong(EVENT_AT + tag, 0L)
         val sessionDay = prefs.getString("session_day", null)

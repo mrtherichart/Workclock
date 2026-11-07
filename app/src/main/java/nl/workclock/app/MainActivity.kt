@@ -78,7 +78,7 @@ class MainActivity : Activity() {
 
             override fun onPageFinished(view: WebView, url: String) {
                 pageReady = url.startsWith("$LOCAL_ORIGIN/assets/")
-                webView.evaluateJavascript("window.__WorkClockAppResume?.();", null)
+                webView.evaluateJavascript("window.WorkClockI18n?.syncNative?.();window.__WorkClockAppResume?.();", null)
                 lastNativeFix?.let { sendToPage("__WorkClockNativeLocation", it) }
             }
         }
@@ -98,7 +98,7 @@ class MainActivity : Activity() {
         // Clear notifications when the user opens WorkClock.
         getSystemService(NotificationManager::class.java)?.cancelAll()
         if (::webView.isInitialized && pageReady) {
-            webView.evaluateJavascript("window.__WorkClockAppResume?.();", null)
+            webView.evaluateJavascript("window.WorkClockI18n?.syncNative?.();window.__WorkClockAppResume?.();", null)
         }
         GeoManager.ensureRegistered(this) { runOnUiThread { deliverEvents() } }
         if (::updater.isInitialized) updater.onResume()
@@ -219,6 +219,11 @@ class MainActivity : Activity() {
     }
 
     private inner class Bridge {
+        @JavascriptInterface fun deviceLanguage(): String = WorkClockLocale.deviceLanguage()
+        @JavascriptInterface fun languagePreference(): String = WorkClockLocale.preference(applicationContext)
+        @JavascriptInterface fun setLanguagePreference(value: String) {
+            runOnUiThread { WorkClockLocale.setPreference(applicationContext, value) }
+        }
         @JavascriptInterface fun appVersion(): String = updater.appVersion()
         @JavascriptInterface fun checkForUpdates() {
             runOnUiThread { updater.beginCheck() }

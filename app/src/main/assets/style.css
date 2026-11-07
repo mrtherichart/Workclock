@@ -273,3 +273,16 @@ input:focus,select:focus{border-color:rgba(143,180,201,.46);box-shadow:0 0 0 3px
 .projectPickerOption{display:block;flex:none;width:100%;min-height:43px;padding:10px 13px;border:0;border-radius:8px;text-align:left;color:var(--text-soft);background:transparent;font-size:12px;white-space:normal;overflow-wrap:anywhere}
 .projectPickerOption:active,.projectPickerOption:focus-visible{background:var(--accent-deep);color:var(--accent-strong)}
 .projectPickerEmpty{padding:12px;color:var(--muted);font-size:11px}
+
+/* Language setting: compact and self-contained; never inherits uppercase labels. */
+.languageCard{margin-bottom:13px}
+.languageCard .settingGroup{padding-bottom:2px}
+.languagePickerRow{display:flex;align-items:center;gap:11px}
+.languagePickerRow select{flex:1;min-width:0;min-height:42px;font-size:13px;font-weight:500}
+.languageActual{font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* Allow longer German/French labels to fit on narrow phones. */
+.weekTitle{flex:1;min-width:0}
+.weekHeadingButton{max-width:100%;font-size:clamp(16px,5.4vw,25px);white-space:normal;overflow-wrap:anywhere;line-height:1.15}
+.weekControls{flex-shrink:0}
+.bottomNav .navBtn span{font-size:clamp(8px,2.6vw,10.5px);letter-spacing:0;white-space:nowrap}

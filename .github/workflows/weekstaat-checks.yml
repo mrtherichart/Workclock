@@ -19,3 +19,4 @@ jobs:
         run: |
           node tests/weekstaat.test.cjs
           node tests/workflow-changes.test.cjs
+          node tests/i18n.test.cjs

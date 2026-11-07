@@ -41,8 +41,8 @@ class GeoReceiver : BroadcastReceiver() {
                         prefs.getString("session_day", null),
                         prefs.getBoolean("session_running", false),
                         prefs.getBoolean("session_finished", false), eventTime, now)) {
-                    show(context, "Arrived at $label", "Check whether you started work.", tag)
-                    WorkReminderScheduler.start(context, tag, "Arrived at $label", "Check whether you started work.", eventTime)
+                    show(context, WorkClockLocale.arrivedAt(context, label), WorkClockLocale.text(context, R.string.check_started), tag)
+                    WorkReminderScheduler.start(context, tag, WorkClockLocale.arrivedAt(context, label), WorkClockLocale.text(context, R.string.check_started), eventTime)
                 }
             } else if (type == "work" && transition == "EXIT") {
                 val tag = "leave-$placeId"
@@ -53,12 +53,12 @@ class GeoReceiver : BroadcastReceiver() {
                         prefs.getBoolean("session_finished", false),
                         prefs.getString("session_workplace", null), placeId,
                         prefs.getLong("session_started_at", 0L), eventTime, now)) {
-                    show(context, "Left $label", "Check whether you finished work.", tag)
-                    WorkReminderScheduler.start(context, tag, "Left $label", "Check whether you finished work.", eventTime)
+                    show(context, WorkClockLocale.left(context, label), WorkClockLocale.text(context, R.string.check_finished), tag)
+                    WorkReminderScheduler.start(context, tag, WorkClockLocale.left(context, label), WorkClockLocale.text(context, R.string.check_finished), eventTime)
                 }
             } else if (type == "home" && transition == "ENTER" && prefs.contains("pending_work")) {
                 prefs.edit().remove("pending_work").apply()
-                show(context, "Arrived home", "Open WorkClock to complete your return trip.", "home-$placeId")
+                show(context, WorkClockLocale.text(context, R.string.arrived_home), WorkClockLocale.text(context, R.string.return_trip_message), "home-$placeId")
             }
         }
     }
@@ -70,15 +70,15 @@ class GeoReceiver : BroadcastReceiver() {
         ) return
         val manager = context.getSystemService(NotificationManager::class.java)
         manager.createNotificationChannel(
-            NotificationChannel("workclock", "Work and travel", NotificationManager.IMPORTANCE_DEFAULT)
+            NotificationChannel("workclock", WorkClockLocale.text(context, R.string.work_and_travel), NotificationManager.IMPORTANCE_DEFAULT)
         )
         val strong = tag == "strong-test" || (WorkReminderScheduler.enabled(context) &&
             (tag.startsWith("arrive-") || tag.startsWith("leave-")))
         if (strong) {
             // Channel attributes are immutable after creation, so use a separate ID.
-            val channel = NotificationChannel("workclock_strong_v1", "Persistent work alerts",
+            val channel = NotificationChannel("workclock_strong_v1", WorkClockLocale.text(context, R.string.persistent_work_alerts),
                 NotificationManager.IMPORTANCE_HIGH)
-            channel.description = "Workplace arrival and departure; vibration only, no sound"
+            channel.description = WorkClockLocale.text(context, R.string.strong_channel_description)
             channel.setSound(null, null)
             channel.enableVibration(true)
             channel.setVibrationPattern(longArrayOf(0L) + LongArray(19) { 500L })
@@ -106,11 +106,13 @@ class GeoReceiver : BroadcastReceiver() {
         }
         if (arrive || leave) {
             val actions = if (arrive) listOf(
-                "START_NOW" to "Start now", "START_EARLIER" to "Earlier…",
-                "NOT_WORKING" to "Not working"
+                "START_NOW" to WorkClockLocale.text(context, R.string.notification_start_now),
+                "START_EARLIER" to WorkClockLocale.text(context, R.string.notification_earlier),
+                "NOT_WORKING" to WorkClockLocale.text(context, R.string.notification_not_working)
             ) else listOf(
-                "FINISH_NOW" to "Finish now", "FINISH_EARLIER" to "Earlier…",
-                "STILL_WORKING" to "Still working"
+                "FINISH_NOW" to WorkClockLocale.text(context, R.string.notification_finish_now),
+                "FINISH_EARLIER" to WorkClockLocale.text(context, R.string.notification_earlier),
+                "STILL_WORKING" to WorkClockLocale.text(context, R.string.notification_still_working)
             )
             for ((decision, label) in actions) {
                 val actionIntent = Intent(context, ReminderActionReceiver::class.java).apply {
@@ -130,7 +132,7 @@ class GeoReceiver : BroadcastReceiver() {
         fun testStrong(context: Context) {
             // Uses the same Android vibration channel as real work alerts.
             // A test is never registered with WorkReminderScheduler.
-            show(context, "WorkClock vibration test", "Ten pulses, no repeat reminders.", "strong-test")
+            show(context, WorkClockLocale.text(context, R.string.vibration_test_title), WorkClockLocale.text(context, R.string.vibration_test_description), "strong-test")
         }
 
         fun test(context: Context) {
@@ -139,7 +141,7 @@ class GeoReceiver : BroadcastReceiver() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             val manager = context.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(
-                NotificationChannel("workclock", "Work and travel", NotificationManager.IMPORTANCE_DEFAULT)
+                NotificationChannel("workclock", WorkClockLocale.text(context, R.string.work_and_travel), NotificationManager.IMPORTANCE_DEFAULT)
             )
             if (Build.VERSION.SDK_INT >= 33 &&
                 context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -147,7 +149,7 @@ class GeoReceiver : BroadcastReceiver() {
             manager.notify("test", 1, NotificationCompat.Builder(context, "workclock")
                 .setSmallIcon(android.R.drawable.ic_menu_mylocation)
                 .setContentTitle("WorkClock")
-                .setContentText("Notifications are working on this device.")
+                .setContentText(WorkClockLocale.text(context, R.string.notification_test_message))
                 .setContentIntent(pending).setAutoCancel(true).setTimeoutAfter(30_000L).build())
         }
     }

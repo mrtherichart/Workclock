@@ -1,0 +1,430 @@
+English	Nederlands	Deutsch	Français	Español
+Work administration	Werkregistratie	Arbeitszeiterfassung	Suivi du travail	Registro de trabajo
+Local data	Lokale gegevens	Lokale Daten	Données locales	Datos locales
+Today	Vandaag	Heute	Aujourd’hui	Hoy
+History	Geschiedenis	Verlauf	Historique	Historial
+Places	Locaties	Orte	Lieux	Lugares
+Settings	Instellingen	Einstellungen	Paramètres	Ajustes
+Workplace	Werkplek	Arbeitsort	Lieu de travail	Lugar de trabajo
+Workplaces	Werkplekken	Arbeitsorte	Lieux de travail	Lugares de trabajo
+Home	Thuis	Zuhause	Domicile	Casa
+Start	Begin	Beginn	Début	Inicio
+Finish	Einde	Ende	Fin	Fin
+Break	Pauze	Pause	Pause	Pausa
+Date	Datum	Datum	Date	Fecha
+Project	Project	Projekt	Projet	Proyecto
+Projects	Projecten	Projekte	Projets	Proyectos
+Name	Naam	Name	Nom	Nombre
+Type	Type	Typ	Type	Tipo
+Close	Sluiten	Schließen	Fermer	Cerrar
+Cancel	Annuleren	Abbrechen	Annuler	Cancelar
+Save changes	Wijzigingen opslaan	Änderungen speichern	Enregistrer les modifications	Guardar cambios
+Save settings	Instellingen opslaan	Einstellungen speichern	Enregistrer les paramètres	Guardar ajustes
+Add location	Locatie toevoegen	Ort hinzufügen	Ajouter un lieu	Añadir lugar
+Edit location	Locatie bewerken	Ort bearbeiten	Modifier le lieu	Editar lugar
+Save project	Project opslaan	Projekt speichern	Enregistrer le projet	Guardar proyecto
+Name project	Projectnaam	Projekt benennen	Nommer le projet	Nombrar proyecto
+No break	Geen pauze	Keine Pause	Pas de pause	Sin pausa
+No kilometres	Geen kilometers	Keine Kilometer	Aucun kilomètre	Sin kilómetros
+Not working	Niet aan het werk	Nicht bei der Arbeit	Pas au travail	Sin trabajar
+Still working	Nog aan het werk	Noch bei der Arbeit	Toujours au travail	Todavía trabajando
+No saved place	Geen locatie opgeslagen	Kein gespeicherter Ort	Aucun lieu enregistré	No hay lugares guardados
+OFF THE CLOCK	NIET AAN HET WERK	NICHT BEI DER ARBEIT	HORS SERVICE	FUERA DEL TRABAJO
+WORKING	AAN HET WERK	BEI DER ARBEIT	AU TRAVAIL	TRABAJANDO
+READY TO REVIEW	KLAAR OM TE CONTROLEREN	BEREIT ZUR PRÜFUNG	PRÊT À VÉRIFIER	LISTO PARA REVISAR
+ELAPSED	VERSTREKEN	VERGANGEN	ÉCOULÉ	TRANSCURRIDO
+Current section	Huidig onderdeel	Aktueller Abschnitt	Section en cours	Sección actual
+Starts when you clock in	Begint zodra je start	Beginnt beim Arbeitsbeginn	Démarre à la prise de poste	Empieza al fichar
+HOLD TO START WORK	INGEDRUKT HOUDEN OM TE STARTEN	GEDRÜCKT HALTEN ZUM STARTEN	MAINTENIR POUR COMMENCER	MANTÉN PARA EMPEZAR
+HOLD TO FINISH WORK	INGEDRUKT HOUDEN OM TE STOPPEN	GEDRÜCKT HALTEN ZUM BEENDEN	MAINTENIR POUR TERMINER	MANTÉN PARA TERMINAR
+HOLD TO CONFIRM DAY	INGEDRUKT HOUDEN OM DAG TE BEVESTIGEN	GEDRÜCKT HALTEN ZUM BESTÄTIGEN	MAINTENIR POUR VALIDER LA JOURNÉE	MANTÉN PARA CONFIRMAR EL DÍA
+HOLD TO ADD PAST WORKDAY	INGEDRUKT HOUDEN OM DAG TOE TE VOEGEN	GEDRÜCKT HALTEN ZUM HINZUFÜGEN	MAINTENIR POUR AJOUTER LA JOURNÉE	MANTÉN PARA AÑADIR EL DÍA
+HOLD TO SAVE CHANGES	INGEDRUKT HOUDEN OM OP TE SLAAN	GEDRÜCKT HALTEN ZUM SPEICHERN	MAINTENIR POUR ENREGISTRER	MANTÉN PARA GUARDAR
+HOLD TO CLEAR ALL HISTORY	INGEDRUKT HOUDEN OM ALLES TE WISSEN	GEDRÜCKT HALTEN ZUM LÖSCHEN	MAINTENIR POUR EFFACER L’HISTORIQUE	MANTÉN PARA BORRAR EL HISTORIAL
+HOLD TO EDIT	INGEDRUKT HOUDEN OM TE BEWERKEN	GEDRÜCKT HALTEN ZUM BEARBEITEN	MAINTENIR POUR MODIFIER	MANTÉN PARA EDITAR
+HOLD TO DELETE	INGEDRUKT HOUDEN OM TE VERWIJDEREN	GEDRÜCKT HALTEN ZUM LÖSCHEN	MAINTENIR POUR SUPPRIMER	MANTÉN PARA ELIMINAR
+HOLD · SAVE HOME HERE	INGEDRUKT HOUDEN · THUIS OPSLAAN	HALTEN · ZUHAUSE SPEICHERN	MAINTENIR · ENREGISTRER DOMICILE	MANTÉN · GUARDAR CASA
+HOLD · SAVE WORK HERE	INGEDRUKT HOUDEN · WERK OPSLAAN	HALTEN · ARBEITSORT SPEICHERN	MAINTENIR · ENREGISTRER TRAVAIL	MANTÉN · GUARDAR TRABAJO
+END PROJECT · KEEP WORKING	PROJECT AFRONDEN · BLIJF WERKEN	PROJEKT BEENDEN · WEITERARBEITEN	TERMINER LE PROJET · CONTINUER	FINALIZAR PROYECTO · SEGUIR TRABAJANDO
+WORKDAY STOPPED — REVIEW BELOW	WERKDAG GESTOPT — CONTROLEER HIERONDER	ARBEITSTAG BEENDET — UNTEN PRÜFEN	JOURNÉE TERMINÉE — VÉRIFIER CI-DESSOUS	JORNADA TERMINADA — REVISAR ABAJO
+Review before confirming	Controleer voor bevestiging	Vor Bestätigung prüfen	Vérifier avant validation	Revisar antes de confirmar
+Edit start	Begin wijzigen	Beginn ändern	Modifier le début	Editar inicio
+Edit finish	Einde wijzigen	Ende ändern	Modifier la fin	Editar fin
+Clear draft	Concept wissen	Entwurf löschen	Effacer le brouillon	Borrar borrador
+Confirmed workdays, corrections and older work.	Bevestigde werkdagen, correcties en eerder werk.	Bestätigte Arbeitstage, Korrekturen und frühere Einträge.	Journées validées, corrections et travail antérieur.	Jornadas confirmadas, correcciones y trabajo anterior.
+Dagen	Dagen	Tage	Jours	Días
+Weekstaat	Weekstaat	Wochenübersicht	Relevé hebdomadaire	Resumen semanal
+Week	Week	Woche	Semaine	Semana
+Week number	Weeknummer	Kalenderwoche	Numéro de semaine	Número de semana
+Choose week number	Kies weeknummer	Kalenderwoche wählen	Choisir la semaine	Elegir semana
+Change week number	Weeknummer wijzigen	Kalenderwoche ändern	Modifier la semaine	Cambiar número de semana
+Go to week	Ga naar week	Zur Woche	Aller à la semaine	Ir a la semana
+Nu	Nu	Jetzt	Maintenant	Ahora
+Deze week	Deze week	Diese Woche	Cette semaine	Esta semana
+Vorige week	Vorige week	Vorige Woche	Semaine précédente	Semana anterior
+Volgende week	Volgende week	Nächste Woche	Semaine suivante	Semana siguiente
+All projects	Alle projecten	Alle Projekte	Tous les projets	Todos los proyectos
+Project(en):	Project(en):	Projekt(e):	Projet(s) :	Proyecto(s):
+Urenstaat per week	Urenstaat per week	Wochenstundenzettel	Feuille d’heures hebdomadaire	Parte de horas semanal
+dag	dag	Tag	jour	día
+datum	datum	Datum	date	fecha
+van	van	von	de	desde
+tot	tot	bis	à	hasta
+pauze	pauze	Pause	pause	pausa
+totaal	totaal	gesamt	total	total
+zakelijke km	zakelijke km	Dienst-km	km professionnels	km laborales
+Totaal	Totaal	Gesamt	Total	Total
+* Conceptdag: nog niet bevestigd. Onvoltooide uren tellen nog niet mee bij het weektotaal.	* Conceptdag: nog niet bevestigd. Onvoltooide uren tellen niet mee in het weektotaal.	* Entwurf: noch nicht bestätigt. Unvollständige Stunden zählen nicht zur Wochensumme.	* Brouillon non validé. Les heures incomplètes ne comptent pas dans le total hebdomadaire.	* Borrador sin confirmar. Las horas incompletas no cuentan para el total semanal.
+Tap a row to edit a recorded day. Times exclude breaks; kilometres are from registered journeys.	Tik op een rij om een dag te bewerken. Uren zijn exclusief pauzes; kilometers komen uit geregistreerde ritten.	Tippe auf eine Zeile zum Bearbeiten. Zeiten ohne Pausen; Kilometer aus erfassten Fahrten.	Touchez une ligne pour modifier une journée. Temps hors pauses et kilomètres des trajets enregistrés.	Toca una fila para editar un día. Tiempo sin pausas y kilómetros de trayectos registrados.
+Tap a day to edit it. Hours exclude breaks; kilometres use registered journeys.	Tik op een dag om deze te bewerken. Uren zonder pauzes; kilometers uit geregistreerde ritten.	Tag zum Bearbeiten antippen. Stunden ohne Pausen; Kilometer aus erfassten Fahrten.	Touchez un jour pour le modifier. Heures hors pauses ; kilomètres des trajets enregistrés.	Toca un día para editarlo. Horas sin descansos; kilómetros de trayectos registrados.
+Project hours: breaks divided proportionally. Journeys are shown only when the whole workday belongs to this project. Tap a row to edit.	Projecturen: pauzes naar verhouding verdeeld. Ritten verschijnen alleen als de hele werkdag bij dit project hoort. Tik op een rij om te bewerken.	Projektstunden: Pausen anteilig verteilt. Fahrten nur, wenn der ganze Tag diesem Projekt zugeordnet ist. Zeile zum Bearbeiten antippen.	Heures par projet : pauses réparties au prorata. Trajets affichés uniquement si toute la journée concerne ce projet. Touchez une ligne pour modifier.	Horas del proyecto: pausas prorrateadas. Trayectos solo si toda la jornada pertenece al proyecto. Toca una fila para editar.
+＋ Add past workday	＋ Eerdere werkdag toevoegen	＋ Früheren Arbeitstag hinzufügen	＋ Ajouter une journée passée	＋ Añadir jornada anterior
+Show older workdays	Oudere werkdagen tonen	Ältere Arbeitstage anzeigen	Afficher les anciennes journées	Mostrar jornadas anteriores
+Add a past workday manually	Eerdere werkdag handmatig toevoegen	Früheren Arbeitstag manuell hinzufügen	Ajouter une journée passée manuellement	Añadir jornada anterior manualmente
+For missed detection, forgotten registration, or work from before the app existed.	Voor gemiste detectie, vergeten registratie of werk van vóór de app.	Für verpasste Erkennung, vergessene Erfassung oder Arbeit vor Nutzung der App.	Pour une détection manquée, un oubli de saisie ou du travail antérieur à l’application.	Para detecciones fallidas, registros olvidados o trabajo anterior a la aplicación.
+Use previous workday	Vorige werkdag overnemen	Vorherigen Arbeitstag übernehmen	Reprendre la journée précédente	Copiar la jornada anterior
+Use this time	Deze tijd gebruiken	Diese Zeit verwenden	Utiliser cet horaire	Usar esta hora
+Exact date and time	Exacte datum en tijd	Genaues Datum und Uhrzeit	Date et heure exactes	Fecha y hora exactas
+When?	Wanneer?	Wann?	Quand ?	¿Cuándo?
+When did you start?	Wanneer begon je?	Wann hast du angefangen?	Quand avez-vous commencé ?	¿Cuándo empezaste?
+When did you finish?	Wanneer was je klaar?	Wann warst du fertig?	Quand avez-vous terminé ?	¿Cuándo terminaste?
+Choose the closest option.	Kies de beste optie.	Wähle die passendste Option.	Choisissez l’option la plus proche.	Elige la opción más cercana.
+Now	Nu	Jetzt	Maintenant	Ahora
+Custom time	Andere tijd	Andere Uhrzeit	Autre horaire	Otra hora
+5 min	5 min	5 Min.	5 min	5 min
+10 min	10 min	10 Min.	10 min	10 min
+15 min	15 min	15 Min.	15 min	15 min
+30 min	30 min	30 Min.	30 min	30 min
+45 min	45 min	45 Min.	45 min	45 min
+60 min	60 min	60 Min.	60 min	60 min
+75 min	75 min	75 Min.	75 min	75 min
+90 min	90 min	90 Min.	90 min	90 min
+1 hour	1 uur	1 Std.	1 heure	1 hora
+2 hours	2 uur	2 Std.	2 heures	2 horas
+3 hours	3 uur	3 Std.	3 heures	3 horas
+No confirmed workdays yet.	Nog geen bevestigde werkdagen.	Noch keine bestätigten Arbeitstage.	Aucune journée validée pour l’instant.	Aún no hay jornadas confirmadas.
+No match. Save to create a new project.	Geen resultaat. Sla op om een nieuw project te maken.	Kein Treffer. Speichern, um ein neues Projekt anzulegen.	Aucun résultat. Enregistrez pour créer un projet.	Sin resultados. Guarda para crear un proyecto.
+Type or choose a previous project	Typ of kies een eerder project	Projekt eingeben oder früheres wählen	Saisir ou choisir un ancien projet	Escribe o elige un proyecto anterior
+Type or choose project	Typ of kies een project	Projekt eingeben oder auswählen	Saisir ou choisir un projet	Escribe o elige un proyecto
+Every section needs a name	Elk onderdeel heeft een naam nodig	Jeder Abschnitt braucht einen Namen	Chaque section doit avoir un nom	Cada sección necesita un nombre
+＋ Add project split	＋ Projectonderdeel toevoegen	＋ Projektabschnitt hinzufügen	＋ Ajouter une section de projet	＋ Añadir división de proyecto
+Ends	Eindigt	Endet	Se termine	Termina
+Ends at	Eindigt om	Endet um	Se termine à	Termina a las
+At workday finish	Aan het einde van de werkdag	Am Ende des Arbeitstags	À la fin de la journée	Al terminar la jornada
+Remove split	Onderdeel verwijderen	Abschnitt entfernen	Supprimer la section	Eliminar división
+Date, start and finish are required.	Datum, begin en einde zijn verplicht.	Datum, Beginn und Ende sind erforderlich.	Date, début et fin obligatoires.	Se requieren fecha, inicio y fin.
+Start home	Vertrekadres	Startadresse	Domicile de départ	Casa de salida
+Return home	Terug naar huis	Rückkehr nach Hause	Retour à domicile	Regreso a casa
+Distance method	Afstandsmethode	Entfernungsberechnung	Méthode de distance	Método de distancia
+Calculate road distances automatically	Wegafstanden automatisch berekenen	Straßenentfernung automatisch berechnen	Calculer les distances routières automatiquement	Calcular distancias por carretera automáticamente
+Enter total kilometres manually	Totaal kilometers handmatig invoeren	Gesamtkilometer manuell eingeben	Saisir le total des kilomètres	Introducir kilómetros totales manualmente
+Keep existing recorded kilometres	Bestaande kilometers behouden	Erfasste Kilometer beibehalten	Conserver les kilomètres enregistrés	Conservar kilómetros registrados
+Manual total kilometres	Totaal kilometers handmatig	Gesamtkilometer manuell	Kilomètres totaux manuels	Kilómetros totales manuales
+Calculate road kilometres	Wegkilometers berekenen	Straßenkilometer berechnen	Calculer les kilomètres routiers	Calcular kilómetros por carretera
+Cancel editing	Bewerken annuleren	Bearbeitung abbrechen	Annuler la modification	Cancelar edición
+Cancel edit	Bewerken annuleren	Bearbeitung abbrechen	Annuler la modification	Cancelar edición
+Edit past workday	Eerdere werkdag bewerken	Früheren Arbeitstag bearbeiten	Modifier une journée passée	Editar jornada anterior
+Choose the details for the historical workday.	Vul de gegevens van de eerdere werkdag in.	Angaben für den früheren Arbeitstag wählen.	Saisissez les détails de la journée passée.	Introduce los datos de la jornada anterior.
+Location access	Locatietoegang	Standortzugriff	Accès à la localisation	Acceso a ubicación
+Android location	Android-locatie	Android-Standort	Localisation Android	Ubicación de Android
+Enable location	Locatie inschakelen	Standort aktivieren	Activer la localisation	Activar ubicación
+Enable background location	Achtergrondlocatie inschakelen	Hintergrundstandort aktivieren	Activer la localisation en arrière-plan	Activar ubicación en segundo plano
+Enable notifications	Meldingen inschakelen	Benachrichtigungen aktivieren	Activer les notifications	Activar notificaciones
+Notifications on	Meldingen aan	Benachrichtigungen aktiv	Notifications activées	Notificaciones activadas
+Test notification	Melding testen	Benachrichtigung testen	Tester la notification	Probar notificación
+Test vibration	Trilling testen	Vibration testen	Tester la vibration	Probar vibración
+Location settings	Locatie-instellingen	Standorteinstellungen	Paramètres de localisation	Ajustes de ubicación
+Location, reminders and your work records.	Locatie, herinneringen en je werkregistratie.	Standort, Erinnerungen und Arbeitszeiten.	Localisation, rappels et relevés de travail.	Ubicación, recordatorios y registros de trabajo.
+Permissions	Machtigingen	Berechtigungen	Autorisations	Permisos
+Arrival, departure and forgotten-time reminders.	Herinneringen bij aankomst, vertrek en vergeten tijden.	Erinnerungen bei Ankunft, Abfahrt und vergessenen Zeiten.	Rappels à l’arrivée, au départ et en cas d’oubli.	Recordatorios de llegada, salida y horas olvidadas.
+Checking notification access…	Meldingstoegang controleren…	Benachrichtigungszugriff prüfen…	Vérification des autorisations…	Comprobando acceso a notificaciones…
+Checking Android background detection…	Android-achtergronddetectie controleren…	Android-Hintergrunderkennung prüfen…	Vérification de la détection en arrière-plan…	Comprobando detección en segundo plano…
+Android location setup	Android-locatie instellen	Android-Standort einrichten	Configuration de la localisation Android	Configuración de ubicación Android
+Automatic work detection	Automatische werkdetectie	Automatische Arbeitserkennung	Détection automatique du travail	Detección automática de trabajo
+Weekdays only. These times help decide when to remind you; they do not change logged hours.	Alleen werkdagen. Deze tijden bepalen wanneer herinneringen komen; ze veranderen je uren niet.	Nur werktags. Diese Zeiten steuern Erinnerungen; erfasste Stunden bleiben unverändert.	En semaine uniquement. Ces plages règlent les rappels sans modifier les heures enregistrées.	Solo días laborables. Estos horarios determinan los avisos sin cambiar las horas registradas.
+Start from	Start vanaf	Beginn ab	Début à partir de	Inicio desde
+Start until	Start tot	Beginn bis	Début jusqu’à	Inicio hasta
+Finish from	Einde vanaf	Ende ab	Fin à partir de	Fin desde
+Finish until	Einde tot	Ende bis	Fin jusqu’à	Fin hasta
+Default location radius (metres)	Standaard detectiestraal (meter)	Standardradius (Meter)	Rayon de détection par défaut (mètres)	Radio de ubicación predeterminado (metros)
+Detection radius	Detectiestraal	Erkennungsradius	Rayon de détection	Radio de detección
+Stronger work reminders	Sterkere werkherinneringen	Stärkere Arbeitserinnerungen	Rappels de travail renforcés	Recordatorios de trabajo intensos
+10 vibration pulses, with reminders after 10, 20 and 30 minutes. No sound.	10 trilpulsen; herhaling na 10, 20 en 30 minuten. Geen geluid.	10 Vibrationsimpulse, Wiederholung nach 10, 20 und 30 Minuten. Ohne Ton.	10 vibrations, rappels après 10, 20 et 30 minutes. Sans son.	10 vibraciones, avisos a los 10, 20 y 30 minutos. Sin sonido.
+Enable stronger work reminders	Sterkere werkherinneringen inschakelen	Stärkere Arbeitserinnerungen aktivieren	Activer les rappels renforcés	Activar recordatorios intensos
+Only for arriving at or leaving work	Alleen bij aankomst of vertrek van werk	Nur bei Ankunft oder Verlassen der Arbeit	Uniquement à l’arrivée ou au départ du travail	Solo al llegar o salir del trabajo
+Work reminder settings	Instellingen werkherinneringen	Einstellungen für Arbeitserinnerungen	Paramètres des rappels de travail	Ajustes de recordatorios de trabajo
+Data and backups	Gegevens en back-ups	Daten und Sicherungen	Données et sauvegardes	Datos y copias de seguridad
+Keep a copy of your workdays before changing phones or reinstalling.	Bewaar een kopie van je werkdagen voordat je van telefoon wisselt of opnieuw installeert.	Sichere deine Arbeitstage vor einem Handywechsel oder einer Neuinstallation.	Conservez vos journées avant de changer de téléphone ou de réinstaller.	Guarda tus jornadas antes de cambiar de móvil o reinstalar.
+Export backup	Back-up exporteren	Sicherung exportieren	Exporter la sauvegarde	Exportar copia
+Import backup	Back-up importeren	Sicherung importieren	Importer la sauvegarde	Importar copia
+Restore local snapshot	Lokale reservekopie herstellen	Lokalen Schnappschuss wiederherstellen	Restaurer une copie locale	Restaurar copia local
+Choose automatic backup folder	Map voor automatische back-ups kiezen	Ordner für automatische Sicherungen wählen	Choisir le dossier de sauvegarde automatique	Elegir carpeta de copia automática
+Local safety copies are kept in the app. Choose a folder for daily copies outside the app.	Lokale reservekopieën blijven in de app. Kies een map voor dagelijkse kopieën buiten de app.	Lokale Sicherungen bleiben in der App. Wähle einen Ordner für tägliche externe Sicherungen.	Les copies locales restent dans l’application. Choisissez un dossier pour les sauvegardes quotidiennes.	Las copias locales quedan en la app. Elige una carpeta para copias diarias externas.
+Backups contain your saved locations, projects, hours and settings.	Back-ups bevatten je locaties, projecten, uren en instellingen.	Sicherungen enthalten Orte, Projekte, Stunden und Einstellungen.	Les sauvegardes comprennent vos lieux, projets, heures et paramètres.	Las copias contienen lugares, proyectos, horas y ajustes.
+App updates	App-updates	App-Updates	Mises à jour	Actualizaciones
+Installed WorkClock	Geïnstalleerde WorkClock	Installiertes WorkClock	WorkClock installé	WorkClock instalado
+Check for updates	Controleren op updates	Nach Updates suchen	Rechercher des mises à jour	Buscar actualizaciones
+Download & install	Downloaden en installeren	Herunterladen und installieren	Télécharger et installer	Descargar e instalar
+Updates are available for the Android app.	Updates zijn beschikbaar voor de Android-app.	Updates sind für die Android-App verfügbar.	Des mises à jour sont disponibles pour l’application Android.	Hay actualizaciones disponibles para la app Android.
+Road kilometres	Wegkilometers	Straßenkilometer	Kilomètres routiers	Kilómetros por carretera
+Routes are calculated from saved locations, not from a recorded GPS trail.	Routes worden berekend vanaf opgeslagen locaties, niet vanuit een GPS-spoor.	Routen werden aus gespeicherten Orten berechnet, nicht aus einer GPS-Aufzeichnung.	Les trajets sont calculés à partir des lieux enregistrés, sans suivi GPS.	Las rutas se calculan entre lugares guardados, no desde un recorrido GPS.
+Routing service	Routedienst	Routendienst	Service d’itinéraires	Servicio de rutas
+OSRM road route — no API key	OSRM-wegroute — geen API-sleutel	OSRM-Straßenroute — kein API-Schlüssel	Itinéraire OSRM — sans clé API	Ruta OSRM — sin clave API
+OpenRouteService shortest route — API key required	OpenRouteService kortste route — API-sleutel nodig	OpenRouteService kürzeste Route — API-Schlüssel nötig	OpenRouteService trajet le plus court — clé API requise	OpenRouteService ruta más corta — requiere clave API
+OpenRouteService API key	OpenRouteService API-sleutel	OpenRouteService API-Schlüssel	Clé API OpenRouteService	Clave API OpenRouteService
+Only needed for shortest-route mode	Alleen nodig voor kortste-route-modus	Nur für den Modus „kürzeste Route“ nötig	Uniquement pour le trajet le plus court	Solo para la opción de ruta más corta
+Clear route cache	Routecache wissen	Routencache leeren	Vider le cache des itinéraires	Borrar caché de rutas
+Settings loaded.	Instellingen geladen.	Einstellungen geladen.	Paramètres chargés.	Ajustes cargados.
+Test tools · simulation	Testgereedschap · simulatie	Testwerkzeuge · Simulation	Outils de test · simulation	Herramientas de prueba · simulación
+Simulation bypasses real weekday and time-window restrictions.	Simulatie negeert de werkdag- en tijdbeperkingen.	Simulation ignoriert Wochentags- und Zeitfenstergrenzen.	La simulation ignore les restrictions de jours et d’horaires.	La simulación omite los límites de días y horarios.
+Simulation ready.	Simulatie klaar.	Simulation bereit.	Simulation prête.	Simulación lista.
+Set simulated home	Gesimuleerd thuis instellen	Simulierten Wohnort setzen	Définir le domicile simulé	Establecer casa simulada
+Home → Work	Thuis → Werk	Zuhause → Arbeit	Domicile → Travail	Casa → Trabajo
+Leave Work	Werk verlaten	Arbeit verlassen	Quitter le travail	Salir del trabajo
+Work → Home	Werk → Thuis	Arbeit → Zuhause	Travail → Domicile	Trabajo → Casa
+Show getting-started guide →	Startgids tonen →	Einführung anzeigen →	Afficher le guide de démarrage →	Mostrar guía de inicio →
+GETTING STARTED	AAN DE SLAG	ERSTE SCHRITTE	BIEN DÉMARRER	PRIMEROS PASOS
+Getting started	Aan de slag	Erste Schritte	Bien démarrer	Primeros pasos
+Hide getting-started tips	Starttips verbergen	Einführungstipps ausblenden	Masquer les conseils de démarrage	Ocultar consejos de inicio
+Hide tips	Tips verbergen	Tipps ausblenden	Masquer les conseils	Ocultar consejos
+Not now	Niet nu	Nicht jetzt	Pas maintenant	Ahora no
+Review →	Controleren →	Prüfen →	Vérifier →	Revisar →
+Days needing attention	Dagen die aandacht vragen	Tage mit Handlungsbedarf	Journées à vérifier	Días que requieren atención
+Homes and workplaces used for arrival detection and road-distance calculation.	Thuis- en werklocaties voor aankomstdetectie en routeberekening.	Wohn- und Arbeitsorte für Ankunftserkennung und Routenberechnung.	Domiciles et lieux de travail pour la détection et les distances routières.	Casas y lugares de trabajo para detectar llegadas y calcular rutas.
+Get your current position to save home and workplaces.	Haal je huidige positie op om thuis- en werklocaties op te slaan.	Aktuelle Position abrufen, um Wohn- und Arbeitsorte zu speichern.	Obtenez votre position pour enregistrer domicile et lieux de travail.	Obtén tu posición para guardar casa y lugares de trabajo.
+Save your current position here, or enter a place manually. You can add others later.	Sla je huidige positie op of voer een locatie handmatig in. Je kunt later meer toevoegen.	Speichere deine Position oder gib einen Ort manuell ein. Weitere kannst du später ergänzen.	Enregistrez votre position ou saisissez un lieu manuellement. Vous pourrez en ajouter d’autres.	Guarda tu posición o añade un lugar manualmente. Puedes añadir más después.
+Edit anytime	Altijd aanpasbaar	Jederzeit bearbeitbar	Modifiable à tout moment	Editable en cualquier momento
+Latitude	Breedtegraad	Breitengrad	Latitude	Latitud
+Longitude	Lengtegraad	Längengrad	Longitude	Longitud
+Use current GPS	Huidige GPS gebruiken	Aktuellen GPS-Standort verwenden	Utiliser le GPS actuel	Usar GPS actual
+You can add any number of homes and workplaces.	Je kunt zoveel thuis- en werklocaties toevoegen als je wilt.	Du kannst beliebig viele Wohn- und Arbeitsorte hinzufügen.	Vous pouvez enregistrer autant de domiciles et lieux de travail que nécessaire.	Puedes añadir tantas casas y lugares de trabajo como quieras.
+Start work first.	Begin eerst met werken.	Starte zuerst die Arbeit.	Commencez d’abord à travailler.	Empieza a trabajar primero.
+The timestamp is already held while this dialog is open.	De tijd is al vastgelegd terwijl dit venster openstaat.	Der Zeitpunkt ist bereits gespeichert, solange dieses Fenster geöffnet ist.	L’heure est déjà enregistrée pendant l’ouverture de cette fenêtre.	La hora ya se ha guardado mientras esta ventana está abierta.
+Choose home	Kies thuislocatie	Wohnort wählen	Choisir le domicile	Elegir casa
+Choose workplace	Kies werkplek	Arbeitsort wählen	Choisir le lieu de travail	Elegir lugar de trabajo
+Choose start home	Kies vertrekadres	Startadresse wählen	Choisir le domicile de départ	Elegir casa de salida
+Choose return home	Kies thuisadres voor terugreis	Rückkehradresse wählen	Choisir le domicile de retour	Elegir casa de regreso
+Navigation	Navigatie	Navigation	Navigation	Navegación
+Primary	Hoofdnavigatie	Hauptnavigation	Navigation principale	Navegación principal
+Phone location is switched off.	Telefoonlocatie staat uit.	Standortdienste des Telefons sind aus.	La localisation du téléphone est désactivée.	La ubicación del teléfono está desactivada.
+Precise location permission needed.	Toestemming voor nauwkeurige locatie nodig.	Berechtigung für genauen Standort erforderlich.	Autorisation de localisation précise nécessaire.	Se necesita permiso de ubicación precisa.
+Background permission needed for arrival alerts.	Achtergrondtoestemming nodig voor aankomstmeldingen.	Hintergrundberechtigung für Ankunftsmeldungen nötig.	Autorisation en arrière-plan nécessaire pour les alertes d’arrivée.	Se necesita permiso en segundo plano para avisos de llegada.
+Android background place detection is active.	Android-achtergronddetectie is actief.	Android-Hintergrunderkennung ist aktiv.	La détection Android en arrière-plan est active.	La detección de lugares en segundo plano está activa.
+Save a home or workplace to enable detection.	Sla een thuis- of werklocatie op voor detectie.	Wohn- oder Arbeitsort speichern, um Erkennung zu aktivieren.	Enregistrez un domicile ou un lieu de travail pour activer la détection.	Guarda casa o trabajo para activar la detección.
+Reminders are enabled. Use Test notification to check delivery.	Herinneringen staan aan. Test de bezorging met Melding testen.	Erinnerungen sind aktiv. Mit Benachrichtigung testen prüfen.	Les rappels sont activés. Utilisez Tester la notification.	Los recordatorios están activos. Usa Probar notificación.
+Notifications are off. Enable them to receive reminders.	Meldingen staan uit. Schakel ze in voor herinneringen.	Benachrichtigungen sind aus. Für Erinnerungen aktivieren.	Les notifications sont désactivées. Activez-les pour recevoir les rappels.	Las notificaciones están desactivadas. Actívalas para recibir avisos.
+Retry background setup	Achtergrondlocatie opnieuw proberen	Hintergrund-Einrichtung erneut versuchen	Réessayer la configuration en arrière-plan	Reintentar configuración en segundo plano
+Android location permission not granted. Tap Enable location above.	Geen locatietoestemming. Tik hierboven op Locatie inschakelen.	Standortberechtigung fehlt. Tippe oben auf Standort aktivieren.	Autorisation de localisation refusée. Touchez Activer la localisation ci-dessus.	Sin permiso de ubicación. Pulsa Activar ubicación arriba.
+Phone location services are OFF. Turn on Location in Android quick settings.	Locatie staat UIT op je telefoon. Zet Locatie aan via Android-snelinstellingen.	Standortdienste sind AUS. In Android-Schnelleinstellungen aktivieren.	Les services de localisation sont désactivés. Activez-les dans les réglages rapides Android.	La ubicación está desactivada. Actívala en los ajustes rápidos de Android.
+Approximate location only. Precise location is required for background place detection.	Alleen geschatte locatie. Nauwkeurige locatie is nodig voor achtergronddetectie.	Nur ungefährer Standort. Genauer Standort für Hintergrunderkennung nötig.	Localisation approximative uniquement. Une localisation précise est nécessaire.	Solo ubicación aproximada. Se necesita ubicación precisa para detección en segundo plano.
+Foreground location enabled. For background detection, tap above and allow location all the time.	Locatie op de voorgrond aan. Sta voor achtergronddetectie Altijd toestaan toe.	Standort im Vordergrund aktiv. Für Hintergrunderkennung Immer zulassen wählen.	Localisation au premier plan active. Pour l’arrière-plan, autorisez en permanence.	Ubicación en primer plano activa. Para detección en segundo plano, permite siempre.
+Background place detection active.	Achtergronddetectie actief.	Hintergrunderkennung aktiv.	Détection en arrière-plan active.	Detección en segundo plano activa.
+Location enabled. Save home and work locations to enable background reminders.	Locatie aan. Sla thuis- en werklocaties op voor achtergrondherinneringen.	Standort aktiviert. Wohn- und Arbeitsorte für Erinnerungen speichern.	Localisation activée. Enregistrez domicile et travail pour les rappels.	Ubicación activa. Guarda casa y trabajo para los recordatorios.
+Refresh location	Locatie vernieuwen	Standort aktualisieren	Actualiser la localisation	Actualizar ubicación
+Retry location	Locatie opnieuw proberen	Standort erneut versuchen	Réessayer la localisation	Reintentar ubicación
+Android could not obtain your location.	Android kon je locatie niet bepalen.	Android konnte deinen Standort nicht bestimmen.	Android n’a pas pu obtenir votre position.	Android no pudo obtener tu ubicación.
+More than five minutes since arrival. When did work start?	Meer dan vijf minuten sinds aankomst. Wanneer begon je?	Ankunft liegt über fünf Minuten zurück. Wann begann die Arbeit?	Plus de cinq minutes depuis l’arrivée. Quand avez-vous commencé ?	Han pasado más de cinco minutos desde la llegada. ¿Cuándo empezaste?
+Work was already started.	Werk was al gestart.	Arbeit wurde bereits begonnen.	Le travail avait déjà commencé.	El trabajo ya estaba iniciado.
+When did work actually start?	Wanneer begon het werk echt?	Wann hat die Arbeit tatsächlich begonnen?	Quand le travail a-t-il réellement commencé ?	¿Cuándo empezó realmente el trabajo?
+No workday started.	Geen werkdag gestart.	Kein Arbeitstag begonnen.	Aucune journée de travail commencée.	No se ha iniciado ninguna jornada.
+More than five minutes since departure. When did you finish?	Meer dan vijf minuten sinds vertrek. Wanneer was je klaar?	Abfahrt liegt über fünf Minuten zurück. Wann warst du fertig?	Plus de cinq minutes depuis le départ. Quand avez-vous terminé ?	Han pasado más de cinco minutos desde la salida. ¿Cuándo terminaste?
+No running workday to finish.	Geen lopende werkdag om af te sluiten.	Kein laufender Arbeitstag zum Beenden.	Aucune journée en cours à terminer.	No hay ninguna jornada en curso que finalizar.
+When did you actually finish?	Wanneer was je echt klaar?	Wann warst du tatsächlich fertig?	Quand avez-vous réellement terminé ?	¿Cuándo terminaste realmente?
+Work continues.	Werk gaat door.	Arbeit läuft weiter.	Le travail continue.	El trabajo continúa.
+Not a valid WorkClock backup	Geen geldige WorkClock-back-up	Keine gültige WorkClock-Sicherung	Sauvegarde WorkClock non valide	Copia de WorkClock no válida
+Replace existing WorkClock data with this backup? A safety copy of your current data will be stored on this device.	Bestaande gegevens vervangen door deze back-up? Op dit toestel wordt eerst een reservekopie gemaakt.	Vorhandene Daten durch diese Sicherung ersetzen? Eine Sicherheitskopie wird lokal gespeichert.	Remplacer les données existantes par cette sauvegarde ? Une copie de sécurité sera conservée sur l’appareil.	¿Sustituir los datos por esta copia? Se guardará antes una copia de seguridad en el dispositivo.
+Backup imported. Workdays and places restored.	Back-up geïmporteerd. Werkdagen en locaties hersteld.	Sicherung importiert. Arbeitstage und Orte wiederhergestellt.	Sauvegarde importée. Journées et lieux restaurés.	Copia importada. Jornadas y lugares restaurados.
+Automatic daily folder backups enabled. Each day overwrites that day's backup file.	Dagelijkse back-ups naar een map staan aan. Elke dag overschrijft zijn eigen back-up.	Tägliche Ordnersicherungen aktiv. Jede Tagessicherung wird überschrieben.	Sauvegarde quotidienne dans un dossier activée. Chaque jour remplace sa propre copie.	Copias diarias en carpeta activadas. Cada día sustituye su propia copia.
+Only app-local safety copies are enabled. Choose a folder for backups outside the app.	Alleen lokale reservekopieën staan aan. Kies een map voor back-ups buiten de app.	Nur appinterne Sicherungen sind aktiv. Wähle einen externen Ordner.	Seules les copies locales sont actives. Choisissez un dossier externe.	Solo están activas las copias locales. Elige una carpeta externa.
+Backup folder unavailable	Back-upmap niet beschikbaar	Sicherungsordner nicht verfügbar	Dossier de sauvegarde indisponible	Carpeta de copias no disponible
+Automatic backup folder selected.	Map voor automatische back-ups gekozen.	Ordner für automatische Sicherung ausgewählt.	Dossier de sauvegarde automatique sélectionné.	Carpeta de copia automática seleccionada.
+No safety snapshots yet. Export your data to a file for long-term backups.	Nog geen reservekopieën. Exporteer je gegevens voor langdurige opslag.	Noch keine Sicherheitskopien. Daten für langfristige Sicherung exportieren.	Aucune copie locale. Exportez vos données pour une sauvegarde durable.	Aún no hay copias locales. Exporta tus datos para conservarlos.
+Safety snapshot restored.	Reservekopie hersteld.	Sicherheitskopie wiederhergestellt.	Copie de sécurité restaurée.	Copia de seguridad restaurada.
+Start and finish are required.	Begin en einde zijn verplicht.	Beginn und Ende sind erforderlich.	Début et fin obligatoires.	Se requieren inicio y fin.
+At least one project section is required.	Minstens één projectonderdeel is nodig.	Mindestens ein Projektabschnitt ist erforderlich.	Au moins une section de projet est nécessaire.	Se requiere al menos una sección de proyecto.
+The first project section must start with the workday.	Het eerste projectonderdeel moet bij het begin van de werkdag starten.	Der erste Projektabschnitt muss mit dem Arbeitstag beginnen.	La première section doit débuter avec la journée.	La primera sección debe empezar con la jornada.
+The last project section must end with the workday.	Het laatste projectonderdeel moet bij het einde van de werkdag stoppen.	Der letzte Projektabschnitt muss mit dem Arbeitstag enden.	La dernière section doit se terminer avec la journée.	La última sección debe terminar con la jornada.
+Project name required	Projectnaam verplicht	Projektname erforderlich	Nom du projet obligatoire	Nombre del proyecto obligatorio
+Project section must have positive duration	Projectonderdeel moet langer dan nul duren	Projektabschnitt muss länger als null sein	La section doit avoir une durée positive	La sección debe tener duración positiva
+Enter a valid date and time.	Voer een geldige datum en tijd in.	Gültiges Datum und Uhrzeit eingeben.	Saisissez une date et une heure valides.	Introduce una fecha y hora válidas.
+The time cannot be in the future.	De tijd mag niet in de toekomst liggen.	Die Uhrzeit darf nicht in der Zukunft liegen.	L’heure ne peut pas être dans le futur.	La hora no puede estar en el futuro.
+Set a start time first.	Stel eerst een begintijd in.	Zuerst eine Startzeit festlegen.	Définissez d’abord l’heure de début.	Establece primero una hora de inicio.
+Finish must be after start.	Einde moet na begin liggen.	Ende muss nach Beginn liegen.	La fin doit être après le début.	El fin debe ser posterior al inicio.
+Finish must be after the last project started.	Het einde moet na de start van het laatste project liggen.	Das Ende muss nach Beginn des letzten Projekts liegen.	La fin doit suivre le début du dernier projet.	El fin debe ser después del inicio del último proyecto.
+Start must be before the first project finished.	Begin moet vóór het einde van het eerste project liggen.	Der Beginn muss vor dem Ende des ersten Projekts liegen.	Le début doit précéder la fin du premier projet.	El inicio debe ser anterior al final del primer proyecto.
+The new start would be after the first project section ends.	De nieuwe begintijd ligt na het einde van het eerste projectonderdeel.	Der neue Beginn läge nach Ende des ersten Projektabschnitts.	Le nouveau début serait après la fin de la première section.	El nuevo inicio sería después del final de la primera sección.
+Start work first. A project marker does not stop the work timer.	Start eerst met werken. Een projectmarkering stopt de klok niet.	Erst Arbeit starten. Ein Projektmarker stoppt die Zeiterfassung nicht.	Commencez d’abord. Un marqueur de projet n’arrête pas le compteur.	Empieza a trabajar. Un marcador de proyecto no detiene el cronómetro.
+Project marker must be after the current section started.	Projectmarkering moet na de start van het huidige onderdeel liggen.	Projektmarker muss nach dem Beginn des aktuellen Abschnitts liegen.	Le marqueur doit suivre le début de la section actuelle.	El marcador debe ser posterior al inicio de la sección actual.
+Name the project you just finished	Geef het afgeronde project een naam	Gerade abgeschlossenes Projekt benennen	Nommez le projet terminé	Nombra el proyecto que acabas de terminar
+What was the last project?	Wat was het laatste project?	Was war das letzte Projekt?	Quel était le dernier projet ?	¿Cuál fue el último proyecto?
+Type a project name or choose a previous one.	Typ een projectnaam of kies een eerdere.	Projektname eingeben oder früheres Projekt wählen.	Saisissez un nom de projet ou choisissez un précédent.	Escribe un nombre de proyecto o elige uno anterior.
+Project name is required.	Projectnaam verplicht.	Projektname erforderlich.	Nom du projet obligatoire.	Se requiere nombre del proyecto.
+Project marker cancelled. Work continues unchanged.	Projectmarkering geannuleerd. Werk gaat gewoon door.	Projektmarker abgebrochen. Arbeit läuft unverändert weiter.	Marqueur annulé. Le travail continue sans changement.	Marcador cancelado. El trabajo sigue sin cambios.
+OpenRouteService API key missing	OpenRouteService API-sleutel ontbreekt	OpenRouteService API-Schlüssel fehlt	Clé API OpenRouteService manquante	Falta la clave API de OpenRouteService
+No route returned	Geen route ontvangen	Keine Route gefunden	Aucun itinéraire retourné	No se devolvió ninguna ruta
+Route calculation failed	Routeberekening mislukt	Routenberechnung fehlgeschlagen	Échec du calcul d’itinéraire	Error al calcular ruta
+Return route pending · open WorkClock at a saved home.	Terugreis ontbreekt nog · open WorkClock bij een opgeslagen thuislocatie.	Rückfahrt fehlt noch · WorkClock am gespeicherten Wohnort öffnen.	Trajet retour en attente · ouvrez WorkClock à un domicile enregistré.	Ruta de regreso pendiente · abre WorkClock en una casa guardada.
+No current GPS position is available. Enable location first or add coordinates manually.	Geen actuele GPS-positie. Schakel locatie in of voer coördinaten in.	Keine aktuelle GPS-Position. Standort aktivieren oder Koordinaten eingeben.	Pas de position GPS actuelle. Activez la localisation ou saisissez les coordonnées.	No hay posición GPS actual. Activa la ubicación o introduce coordenadas.
+Invalid coordinates	Ongeldige coördinaten	Ungültige Koordinaten	Coordonnées non valides	Coordenadas no válidas
+Enter valid latitude and longitude.	Voer geldige breedte- en lengtegraad in.	Gültige Breiten- und Längengrade eingeben.	Saisissez une latitude et une longitude valides.	Introduce latitud y longitud válidas.
+Detection radius must be at least 30 m.	Detectiestraal moet minstens 30 m zijn.	Erkennungsradius muss mindestens 30 m betragen.	Le rayon de détection doit être d’au moins 30 m.	El radio de detección debe ser de al menos 30 m.
+Auto ON	Auto AAN	Automatik AN	Auto ACTIVÉ	Auto ACTIVADO
+Auto OFF	Auto UIT	Automatik AUS	Auto DÉSACTIVÉ	Auto DESACTIVADO
+Not detected yet	Nog niet gedetecteerd	Noch nicht erkannt	Pas encore détecté	Aún no detectado
+GETTING STARTED · OPTIONAL SETUP	AAN DE SLAG · OPTIONEEL	ERSTE SCHRITTE · OPTIONAL	BIEN DÉMARRER · FACULTATIF	PRIMEROS PASOS · OPCIONAL
+Save a place for automatic reminders, or start tracking manually.	Sla een locatie op voor automatische herinneringen of begin handmatig.	Ort für automatische Erinnerungen speichern oder manuell starten.	Enregistrez un lieu pour les rappels ou commencez manuellement.	Guarda un lugar para recordatorios o empieza manualmente.
+Add a place →	Locatie toevoegen →	Ort hinzufügen →	Ajouter un lieu →	Añadir lugar →
+YOUR FIRST DAY	JE EERSTE DAG	DEIN ERSTER TAG	VOTRE PREMIÈRE JOURNÉE	TU PRIMER DÍA
+Hold the Start button below when you begin working.	Houd de startknop ingedrukt wanneer je begint.	Zum Arbeitsbeginn die Starttaste gedrückt halten.	Maintenez le bouton Démarrer quand vous commencez.	Mantén pulsado Inicio cuando empieces.
+WHILE YOU WORK	TIJDENS HET WERK	WÄHREND DER ARBEIT	PENDANT LE TRAVAIL	MIENTRAS TRABAJAS
+Your start time is saved. You can close WorkClock until you're finished.	Je begintijd is opgeslagen. Je kunt WorkClock sluiten tot je klaar bent.	Deine Startzeit ist gespeichert. Du kannst WorkClock bis zum Arbeitsende schließen.	Votre heure de début est enregistrée. Vous pouvez fermer WorkClock jusqu’à la fin.	Tu hora de inicio se ha guardado. Puedes cerrar WorkClock hasta terminar.
+FINISH YOUR DAY	ROND JE DAG AF	TAG ABSCHLIESSEN	TERMINER LA JOURNÉE	TERMINA TU DÍA
+Check your hours below, then hold Confirm to save the day.	Controleer je uren en houd Bevestigen ingedrukt om de dag op te slaan.	Stunden prüfen und Bestätigen gedrückt halten, um den Tag zu speichern.	Vérifiez vos heures puis maintenez Valider pour enregistrer.	Revisa tus horas y mantén Confirmar para guardar el día.
+FIRST DAY SAVED	EERSTE DAG OPGESLAGEN	ERSTER TAG GESPEICHERT	PREMIÈRE JOURNÉE ENREGISTRÉE	PRIMER DÍA GUARDADO
+Your first workday is saved. Find your weekly hours in Weekstaat.	Je eerste werkdag is opgeslagen. Je weekuren staan in Weekstaat.	Dein erster Arbeitstag ist gespeichert. Wochenstunden findest du in der Wochenübersicht.	Votre première journée est enregistrée. Consultez vos heures hebdomadaires.	Tu primera jornada está guardada. Consulta las horas semanales.
+Open Weekstaat →	Weekstaat openen →	Wochenübersicht öffnen →	Ouvrir le relevé hebdomadaire →	Abrir resumen semanal →
+Workday still running after 24 hours	Werkdag loopt al langer dan 24 uur	Arbeitstag läuft seit über 24 Stunden	Journée en cours depuis plus de 24 heures	Jornada en curso más de 24 horas
+Unconfirmed workday	Onbevestigde werkdag	Unbestätigter Arbeitstag	Journée non validée	Jornada sin confirmar
+Unconfirmed previous day	Onbevestigde eerdere werkdag	Unbestätigter früherer Arbeitstag	Ancienne journée non validée	Jornada anterior sin confirmar
+Return trip missing	Terugreis ontbreekt	Rückfahrt fehlt	Trajet retour manquant	Falta viaje de regreso
+Incomplete workday	Onvolledige werkdag	Unvollständiger Arbeitstag	Journée incomplète	Jornada incompleta
+Confirmed workday	Bevestigde werkdag	Bestätigter Arbeitstag	Journée validée	Jornada confirmada
+Workday confirmed. Return route is pending and will be added when WorkClock sees you at a saved home.	Werkdag bevestigd. De terugreis wordt toegevoegd zodra WorkClock je thuis detecteert.	Arbeitstag bestätigt. Die Rückfahrt wird hinzugefügt, sobald WorkClock dich zu Hause erkennt.	Journée validée. Le retour sera ajouté lorsque WorkClock vous détectera à domicile.	Jornada confirmada. El regreso se añadirá cuando WorkClock detecte tu llegada a casa.
+Workday confirmed and added to history.	Werkdag bevestigd en toegevoegd aan geschiedenis.	Arbeitstag bestätigt und gespeichert.	Journée validée et ajoutée à l’historique.	Jornada confirmada y añadida al historial.
+Clear today's unconfirmed draft?	Concept van vandaag wissen?	Heutigen unbestätigten Entwurf löschen?	Effacer le brouillon non validé d’aujourd’hui ?	¿Borrar el borrador de hoy?
+Today's draft cleared.	Concept van vandaag gewist.	Heutiger Entwurf gelöscht.	Brouillon d’aujourd’hui effacé.	Borrador de hoy borrado.
+Choose a workplace, start home and return home.	Kies werkplek, vertrekadres en retouradres.	Arbeitsort, Start- und Rückkehradresse wählen.	Choisissez le lieu de travail et les domiciles de départ et retour.	Elige trabajo, casa de salida y casa de regreso.
+Calculating road distances…	Wegafstanden berekenen…	Straßenentfernungen werden berechnet…	Calcul des distances routières…	Calculando distancias por carretera…
+Road-distance calculation failed. Check internet/routing settings.	Wegafstand berekenen mislukt. Controleer internet- en route-instellingen.	Straßenentfernung fehlgeschlagen. Internet-/Routeneinstellungen prüfen.	Échec du calcul. Vérifiez internet et les paramètres d’itinéraire.	Error de cálculo. Comprueba internet y los ajustes de rutas.
+Cancel editing before copying another workday.	Annuleer bewerken voordat je een andere werkdag kopieert.	Bearbeitung abbrechen, bevor du einen anderen Arbeitstag kopierst.	Annulez la modification avant de copier une autre journée.	Cancela la edición antes de copiar otra jornada.
+No completed workday to copy yet.	Nog geen afgeronde werkdag om over te nemen.	Noch kein abgeschlossener Arbeitstag zum Kopieren.	Aucune journée terminée à copier.	Aún no hay una jornada terminada para copiar.
+Previous workday copied. Check the date, hours, workplace and kilometres before saving.	Vorige werkdag overgenomen. Controleer datum, uren, werkplek en kilometers.	Vorheriger Arbeitstag kopiert. Datum, Stunden, Arbeitsort und Kilometer prüfen.	Journée précédente copiée. Vérifiez date, heures, lieu et kilomètres.	Jornada anterior copiada. Revisa fecha, horas, lugar y kilómetros.
+Edit the day, then hold Save Changes.	Bewerk de dag en houd Wijzigingen opslaan ingedrukt.	Tag bearbeiten, dann Änderungen speichern gedrückt halten.	Modifiez la journée puis maintenez Enregistrer les modifications.	Edita el día y mantén Guardar cambios.
+Set start and finish first.	Vul eerst begin en einde in.	Zuerst Beginn und Ende festlegen.	Définissez d’abord le début et la fin.	Indica primero inicio y fin.
+There is not enough time left for another project section.	Er is niet genoeg tijd over voor nog een projectonderdeel.	Nicht genug Zeit für einen weiteren Projektabschnitt.	Pas assez de temps pour une autre section.	No queda tiempo suficiente para otra sección.
+Invalid date or time.	Ongeldige datum of tijd.	Ungültiges Datum oder Uhrzeit.	Date ou heure non valide.	Fecha u hora no válida.
+Workday cannot exceed 24 hours.	Een werkdag mag niet langer dan 24 uur duren.	Ein Arbeitstag darf 24 Stunden nicht überschreiten.	Une journée ne peut dépasser 24 heures.	Una jornada no puede superar las 24 horas.
+Enter valid total kilometres.	Voer een geldig aantal kilometers in.	Gültige Gesamtkilometer eingeben.	Saisissez un kilométrage total valide.	Introduce un total de kilómetros válido.
+There are no existing kilometres to keep.	Er zijn geen bestaande kilometers om te behouden.	Es gibt keine erfassten Kilometer zum Beibehalten.	Aucun kilomètre enregistré à conserver.	No hay kilómetros registrados que conservar.
+Default radius must be at least 30 m.	Standaardstraal moet minstens 30 m zijn.	Standardradius muss mindestens 30 m betragen.	Le rayon par défaut doit être d’au moins 30 m.	El radio predeterminado debe ser de al menos 30 m.
+Settings saved. Route cache cleared.	Instellingen opgeslagen. Routecache gewist.	Einstellungen gespeichert. Routencache geleert.	Paramètres enregistrés. Cache des itinéraires vidé.	Ajustes guardados. Caché de rutas borrada.
+Choose a home first.	Kies eerst een thuislocatie.	Zuerst Wohnort wählen.	Choisissez d’abord un domicile.	Elige primero una casa.
+Choose both a home and a workplace.	Kies een thuislocatie en een werkplek.	Wohn- und Arbeitsort wählen.	Choisissez domicile et lieu de travail.	Elige una casa y un lugar de trabajo.
+Choose a workplace.	Kies een werkplek.	Arbeitsort wählen.	Choisissez un lieu de travail.	Elige un lugar de trabajo.
+Start a running work session first.	Start eerst een werksessie.	Zuerst eine laufende Arbeitssitzung starten.	Commencez d’abord une session de travail.	Inicia primero una sesión de trabajo.
+There is no current or recently confirmed workday waiting for a return-home route.	Er is geen lopende of onlangs bevestigde werkdag die wacht op een terugreis.	Kein aktueller oder kürzlich bestätigter Arbeitstag wartet auf eine Rückfahrt.	Aucune journée récente ou en cours n’attend un trajet retour.	No hay jornada actual o confirmada recientemente esperando un regreso.
+The pending workday has no saved workplace.	De wachtende werkdag heeft geen opgeslagen werkplek.	Der ausstehende Arbeitstag hat keinen gespeicherten Arbeitsort.	La journée en attente n’a pas de lieu de travail enregistré.	La jornada pendiente no tiene lugar de trabajo guardado.
+Before clearing draft	Voor concept wissen	Vor Entwurf löschen	Avant suppression du brouillon	Antes de borrar borrador
+Before clearing history	Voor geschiedenis wissen	Vor Verlauf löschen	Avant effacement de l’historique	Antes de borrar historial
+All confirmed history cleared.	Alle bevestigde geschiedenis gewist.	Gesamter bestätigter Verlauf gelöscht.	Tout l’historique validé a été effacé.	Se ha borrado todo el historial confirmado.
+Route cache cleared.	Routecache gewist.	Routencache geleert.	Cache des itinéraires vidé.	Caché de rutas borrada.
+Change today's start time.	Begintijd van vandaag wijzigen.	Heutige Startzeit ändern.	Modifier l’heure de début d’aujourd’hui.	Cambiar hora de inicio de hoy.
+Change today's finish time.	Eindtijd van vandaag wijzigen.	Heutige Endzeit ändern.	Modifier l’heure de fin d’aujourd’hui.	Cambiar hora de fin de hoy.
+No current GPS position available.	Geen actuele GPS-positie beschikbaar.	Keine aktuelle GPS-Position verfügbar.	Aucune position GPS actuelle.	No hay posición GPS actual.
+Filled current GPS coordinates.	Huidige GPS-coördinaten ingevuld.	Aktuelle GPS-Koordinaten eingetragen.	Coordonnées GPS actuelles renseignées.	Coordenadas GPS actuales introducidas.
+Follow the Android permission screens, then reopen WorkClock. Choose Allow all the time where available.	Volg de Android-machtigingen en open WorkClock opnieuw. Kies waar mogelijk Altijd toestaan.	Android-Berechtigungsdialogen folgen, dann WorkClock erneut öffnen. Falls verfügbar Immer zulassen wählen.	Suivez les demandes Android, rouvrez WorkClock et choisissez Toujours autoriser si proposé.	Sigue los permisos de Android y reabre WorkClock. Elige Permitir siempre si aparece.
+One test alert sent. If it doesn't vibrate, check Android's notification settings.	Testmelding verzonden. Geen trilling? Controleer Android-meldingsinstellingen.	Testbenachrichtigung gesendet. Ohne Vibration? Android-Benachrichtigungen prüfen.	Alerte de test envoyée. Sans vibration ? Vérifiez les notifications Android.	Aviso de prueba enviado. Si no vibra, revisa las notificaciones de Android.
+Finding your position…	Je locatie zoeken…	Standort wird gesucht…	Recherche de votre position…	Buscando tu ubicación…
+Android test notification requested.	Android-testmelding aangevraagd.	Android-Testbenachrichtigung angefordert.	Notification de test Android demandée.	Notificación de prueba Android solicitada.
+Android notification permission requested. Check the system prompt or app settings.	Android-meldingstoestemming aangevraagd. Controleer het systeemvenster of appinstellingen.	Android-Benachrichtigungsberechtigung angefordert. Systemdialog oder App-Einstellungen prüfen.	Autorisation de notification demandée. Vérifiez la fenêtre système ou les paramètres.	Permiso de notificación solicitado. Revisa el aviso del sistema o ajustes.
+Language	Taal	Sprache	Langue	Idioma
+App language	App-taal	App-Sprache	Langue de l’application	Idioma de la aplicación
+Choose the language for WorkClock. Automatic follows the language of your device.	Kies de taal voor WorkClock. Automatisch volgt de taal van je telefoon.	Wähle die Sprache von WorkClock. Automatisch übernimmt die Gerätesprache.	Choisissez la langue de WorkClock. Automatique suit celle de votre appareil.	Elige el idioma de WorkClock. Automático sigue el idioma del dispositivo.
+Automatic · device language	Automatisch · apparaattaal	Automatisch · Gerätesprache	Automatique · langue de l’appareil	Automático · idioma del dispositivo
+Device language	Apparaattaal	Gerätesprache	Langue de l’appareil	Idioma del dispositivo
+Language applied.	Taal toegepast.	Sprache übernommen.	Langue appliquée.	Idioma aplicado.
+Work and travel	Werk en reizen	Arbeit und Fahrten	Travail et trajets	Trabajo y desplazamientos
+Persistent work alerts	Herhaalde werkmeldingen	Wiederholte Arbeitsmeldungen	Alertes de travail répétées	Avisos de trabajo repetidos
+Workplace arrival and departure; vibration only, no sound	Aankomst en vertrek van werk; alleen trillen, geen geluid	Ankunft und Abfahrt von der Arbeit; nur Vibration, kein Ton	Arrivée et départ du travail ; vibration uniquement	Llegada y salida del trabajo; solo vibración
+Arrived home	Thuis aangekomen	Zuhause angekommen	Arrivé à domicile	Llegada a casa
+Open WorkClock to complete your return trip.	Open WorkClock om je terugreis af te ronden.	Öffne WorkClock, um die Rückfahrt abzuschließen.	Ouvrez WorkClock pour compléter votre trajet retour.	Abre WorkClock para completar el regreso.
+Check whether you started work.	Controleer of je bent begonnen met werken.	Prüfe, ob du mit der Arbeit begonnen hast.	Vérifiez si vous avez commencé à travailler.	Comprueba si empezaste a trabajar.
+Check whether you finished work.	Controleer of je klaar bent met werken.	Prüfe, ob du die Arbeit beendet hast.	Vérifiez si vous avez terminé de travailler.	Comprueba si terminaste de trabajar.
+Start now	Nu starten	Jetzt starten	Commencer maintenant	Empezar ahora
+Finish now	Nu stoppen	Jetzt beenden	Terminer maintenant	Terminar ahora
+Earlier…	Eerder…	Früher…	Plus tôt…	Antes…
+WorkClock vibration test	WorkClock trillingstest	WorkClock Vibrationstest	Test de vibration WorkClock	Prueba de vibración WorkClock
+Ten pulses, no repeat reminders.	Tien trilpulsen, zonder herhaling.	Zehn Vibrationsimpulse, ohne Wiederholung.	Dix vibrations, sans rappel répété.	Diez vibraciones, sin repetición.
+Notifications are working on this device.	Meldingen werken op dit toestel.	Benachrichtigungen funktionieren auf diesem Gerät.	Les notifications fonctionnent sur cet appareil.	Las notificaciones funcionan en este dispositivo.
+Checking GitHub for an update…	Controleren op GitHub-update…	GitHub wird auf Updates geprüft…	Recherche de mises à jour sur GitHub…	Buscando actualizaciones en GitHub…
+Check for updates first.	Controleer eerst op updates.	Zuerst nach Updates suchen.	Recherchez d’abord les mises à jour.	Busca actualizaciones primero.
+Started	Gestart	Begonnen	Débuté	Empezado
+Worked	Gewerkt	Gearbeitet	Travaillé	Trabajado
+Road	Weg	Strecke	Trajet	Ruta
+Workday	Werkdag	Arbeitstag	Journée de travail	Jornada laboral
+No completed project sections yet.	Nog geen afgeronde projectonderdelen.	Noch keine abgeschlossenen Projektabschnitte.	Aucune section de projet terminée.	Aún no hay secciones de proyecto terminadas.
+No saved locations yet.	Nog geen locaties opgeslagen.	Noch keine Orte gespeichert.	Aucun lieu enregistré.	Aún no hay lugares guardados.
+Return route pending · open WorkClock when you reach a saved home.	Terugreis ontbreekt nog · open WorkClock zodra je bij een opgeslagen thuislocatie bent.	Rückfahrt ausstehend · öffne WorkClock am gespeicherten Wohnort.	Trajet retour en attente · ouvrez WorkClock à votre domicile enregistré.	Trayecto de regreso pendiente · abre WorkClock al llegar a una casa guardada.
+Out ·	Heen ·	Hinweg ·	Aller ·	Ida ·
+Back ·	Terug ·	Rückfahrt ·	Retour ·	Vuelta ·
+Edit	Bewerken	Bearbeiten	Modifier	Editar
+Delete	Verwijderen	Löschen	Supprimer	Eliminar
+home	thuis	Zuhause	domicile	casa
+work	werk	Arbeit	travail	trabajo
+workday	werkdag	Arbeitstag	journée de travail	jornada laboral
+workdays	werkdagen	Arbeitstage	journées de travail	jornadas laborales
+Current section started	Huidig onderdeel gestart	Aktueller Abschnitt begonnen	Section en cours depuis	Sección actual iniciada
+Working since	Aan het werk sinds	In Arbeit seit	Au travail depuis	Trabajando desde
+Draft finished at	Concept beëindigd om	Entwurf beendet um	Brouillon terminé à	Borrador terminado a las
+Start set to	Begin ingesteld op	Beginn auf	Début fixé à	Inicio establecido a las
+Finish changed to	Einde gewijzigd naar	Ende geändert auf	Fin modifiée à	Fin cambiada a las
+Finish set to	Einde ingesteld op	Ende auf	Fin fixée à	Fin establecida a las
+At	Bij	Bei	À	En
+Last detected	Laatst gedetecteerd	Zuletzt erkannt	Dernière détection	Última detección
+Last detected 	Laatst gedetecteerd 	Zuletzt erkannt 	Dernière détection 	Última detección 
+Open in Maps	Openen in Maps	In Maps öffnen	Ouvrir dans Maps	Abrir en Maps
+No projects yet.	Nog geen projecten.	Noch keine Projekte.	Aucun projet pour l’instant.	Todavía no hay proyectos.
+No locations yet.	Nog geen locaties.	Noch keine Orte.	Aucun lieu pour l’instant.	Aún no hay lugares.
+No GPS fix yet.	Nog geen GPS-positie.	Noch kein GPS-Fix.	Aucune position GPS.	Aún no hay posición GPS.
+Review the day and confirm it.	Controleer de dag en bevestig deze.	Tag prüfen und bestätigen.	Vérifiez la journée et validez-la.	Revisa la jornada y confírmala.
+No valid project sections found.	Geen geldige projectonderdelen gevonden.	Keine gültigen Projektabschnitte gefunden.	Aucune section de projet valide trouvée.	No se encontraron secciones de proyecto válidas.
+Clear all confirmed history?	Alle bevestigde geschiedenis wissen?	Gesamten bestätigten Verlauf löschen?	Effacer tout l’historique validé ?	¿Borrar todo el historial confirmado?
+Restore the safety copy from	Reservekopie herstellen van	Sicherheitskopie wiederherstellen vom	Restaurer la copie de sécurité du	Restaurar copia de seguridad del
+Current entries will be replaced.	Huidige gegevens worden vervangen.	Aktuelle Einträge werden ersetzt.	Les données actuelles seront remplacées.	Se sustituirán las entradas actuales.
+Delete saved location	Opgeslagen locatie verwijderen	Gespeicherten Ort löschen	Supprimer le lieu enregistré	Eliminar lugar guardado
+Historical records keep their stored names and kilometres.	Historische records behouden hun namen en kilometers.	Historische Einträge behalten Namen und Kilometer.	Les anciennes entrées conservent les noms et kilomètres.	Los registros anteriores conservan nombres y kilómetros.
+Tap End Project / Switch to place an exact marker without stopping work.	Tik op Project afronden om een exacte markering te plaatsen zonder het werk te stoppen.	Projekt beenden antippen, um eine genaue Markierung zu setzen, ohne die Arbeit anzuhalten.	Touchez Terminer le projet pour ajouter un repère précis sans arrêter le travail.	Toca Finalizar proyecto para añadir una marca precisa sin parar el trabajo.
+No saved places yet.	Nog geen locaties opgeslagen.	Noch keine Orte gespeichert.	Aucun lieu enregistré.	Aún no hay lugares guardados.
+minute	minuut	Minute	minute	minuto
+minutes	minuten	Minuten	minutes	minutos
+min	min	Min.	min	min
+break	pauze	Pause	pause	pausa
+manual entry	handmatig ingevoerd	manueller Eintrag	saisie manuelle	entrada manual
+detection radius	detectiestraal	Erkennungsradius	rayon de détection	radio de detección
+remaining	resterend	verbleibend	restantes	restantes
+Show older workdays (	Oudere werkdagen tonen (	Ältere Arbeitstage anzeigen (	Afficher les anciennes journées (	Mostrar jornadas anteriores (
+Automation	Automatisering	Automatik	Automatisation	Automatización
+Geschiedenisweergave	Geschiedenisweergave	Verlaufsansicht	Affichage de l’historique	Vista del historial
+e.g. 64.2	bijv. 64,2	z. B. 64,2	p. ex. 64,2	p. ej. 64,2
+e.g. Home Utrecht	bijv. Thuis Utrecht	z. B. Zuhause Utrecht	p. ex. Domicile Utrecht	p. ej. Casa Utrecht
+Could not save WorkClock data on this device.	Kan WorkClock-gegevens niet opslaan op dit toestel.	WorkClock-Daten konnten auf diesem Gerät nicht gespeichert werden.	Impossible d’enregistrer les données WorkClock sur cet appareil.	No se pudieron guardar los datos de WorkClock en este dispositivo.
+The finish would be before the final project section starts.	Het einde zou vóór het begin van het laatste projectonderdeel vallen.	Das Ende läge vor dem Beginn des letzten Projektabschnitts.	La fin serait avant le début de la dernière section du projet.	El fin sería anterior al inicio de la última sección.
+You appear to have left work while the timer is running.	Je lijkt het werk te hebben verlaten terwijl de klok nog loopt.	Du scheinst die Arbeit verlassen zu haben, während die Zeiterfassung läuft.	Vous semblez avoir quitté le travail alors que le compteur tourne.	Parece que saliste del trabajo con el cronómetro en marcha.
+Arrival was over five minutes ago. When did you start?	Aankomst was meer dan vijf minuten geleden. Wanneer begon je?	Ankunft war vor mehr als fünf Minuten. Wann hast du angefangen?	L’arrivée remonte à plus de cinq minutes. Quand avez-vous commencé ?	Llegaste hace más de cinco minutos. ¿Cuándo empezaste?
+You are at	Je bent bij	Du bist bei	Vous êtes à	Estás en
+Simulation: Detected at	Simulatie: gedetecteerd bij	Simulation: erkannt bei	Simulation : détecté à	Simulación: detectado en
+Simulation: Detected leaving	Simulatie: vertrek gedetecteerd bij	Simulation: Abfahrt erkannt bei	Simulation : départ détecté de	Simulación: salida detectada de
+Simulation: You arrived at	Simulatie: aangekomen bij	Simulation: angekommen bei	Simulation : arrivée à	Simulación: llegaste a
+Simulated position set to	Gesimuleerde positie ingesteld op	Simulierte Position gesetzt auf	Position simulée définie sur	Posición simulada establecida en
+Simulating	Simuleren	Simulation von	Simulation de	Simulando
+Simulating departure from	Vertrek simuleren vanaf	Abfahrt simulieren von	Simuler le départ de	Simulando salida desde
+Daily safety copy	Dagelijkse reservekopie	Tägliche Sicherung	Copie quotidienne de sécurité	Copia de seguridad diaria
+Daily snapshot unavailable	Dagelijkse reservekopie niet beschikbaar	Täglicher Schnappschuss nicht verfügbar	Copie quotidienne indisponible	Copia diaria no disponible
+Could not make local safety snapshot	Kan geen lokale reservekopie maken	Lokale Sicherheitskopie konnte nicht erstellt werden	Impossible de créer une copie locale	No se pudo crear copia local
+Road distance could not be calculated for	Kan wegafstand niet berekenen voor	Straßenentfernung konnte nicht berechnet werden für	Distance routière impossible à calculer pour	No se pudo calcular distancia por carretera para
+OpenRouteService shortest	OpenRouteService kortste	OpenRouteService kürzeste	OpenRouteService plus court	OpenRouteService más corto
+OSRM road route	OSRM-wegroute	OSRM-Straßenroute	Itinéraire OSRM	Ruta OSRM
+Manual total	Handmatig totaal	Manuelle Summe	Total manuel	Total manual
+manual kilometres	handmatige kilometers	manuelle Kilometer	kilomètres manuels	kilómetros manuales
+Today's draft	Concept van vandaag	Heutiger Entwurf	Brouillon d’aujourd’hui	Borrador de hoy
+today's draft	concept van vandaag	heutiger Entwurf	brouillon d’aujourd’hui	borrador de hoy
+Marker saved at	Markering opgeslagen om	Markierung gespeichert um	Repère enregistré à	Marca guardada a las
+Work finish is	Eindtijd is	Arbeitsende ist	La fin du travail est à	El fin del trabajo es a las
+Project section saved. Work continues from	Projectonderdeel opgeslagen. Werk gaat verder vanaf	Projektabschnitt gespeichert. Arbeit geht weiter ab	Section enregistrée. Le travail continue à partir de	Sección guardada. El trabajo sigue desde
+Added missing return commute to	Ontbrekende terugreis toegevoegd aan	Fehlende Rückfahrt hinzugefügt zu	Trajet retour manquant ajouté à	Regreso pendiente añadido a
+Saved changes to	Wijzigingen opgeslagen voor	Änderungen gespeichert für	Modifications enregistrées pour	Cambios guardados para
+Choose a week between 1 and	Kies een week tussen 1 en	Woche zwischen 1 und	Choisissez une semaine entre 1 et	Elige una semana entre 1 y
+Not configured	Niet ingesteld	Nicht eingerichtet	Non configuré	No configurado
+not configured	niet ingesteld	nicht eingerichtet	non configuré	sin configurar
+Background detection:	Achtergronddetectie:	Hintergrunderkennung:	Détection en arrière-plan :	Detección en segundo plano:
+Background setup:	Achtergrondinstelling:	Hintergrund-Einrichtung:	Configuration en arrière-plan :	Configuración en segundo plano:

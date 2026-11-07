@@ -49,6 +49,7 @@ jobs:
         run: |
           node tests/weekstaat.test.cjs
           node tests/workflow-changes.test.cjs
+          node tests/i18n.test.cjs
           node tests/linux-ui-smoke.cjs
           node tests/linux-ui-smoke.cjs --first-run
       - uses: actions/setup-java@v4

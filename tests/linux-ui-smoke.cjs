@@ -11,13 +11,15 @@ const firstRun=process.argv.includes("--first-run");
 const mock=fs.readFileSync(path.join(__dirname,firstRun?"linux-first-run-mock.js":"linux-android-mock.js"),"utf8");
 const appJs=fs.readFileSync(path.join(root,"app/src/main/assets/app.js"),"utf8");
 const navigationJs=fs.readFileSync(path.join(root,"app/src/main/assets/navigation.js"),"utf8");
+const i18nJs=fs.readFileSync(path.join(root,"app/src/main/assets/i18n.js"),"utf8");
+const i18nCatalog=fs.readFileSync(path.join(root,"app/src/main/assets/i18n-catalog.js"),"utf8");
 const forbidden=[
  "navigator.geolocation","navigator.serviceWorker","workclock-sw.js",
  "Notification.permission","new Notification(","__WorkClockTest",
  'id="backupFile"',"ensureNotificationWorker"
 ];
 for(const token of forbidden)assert(![apkHtml,appJs,navigationJs].some(s=>s.includes(token)),"Browser-only code in production: "+token);
-const scripts=[appJs,navigationJs];
+const scripts=[i18nCatalog,i18nJs,appJs,navigationJs];
 const vm=require("node:vm");
 for(const [i,script] of scripts.entries())new vm.Script(script,{filename:"app-script-"+i});
 const chromium=process.env.CHROME_BIN||["chromium","chromium-browser","google-chrome-stable","google-chrome"].find(name=>{
@@ -30,6 +32,8 @@ assert.notEqual(html,apkHtml,"Could not insert test bridge");
 const server=http.createServer((req,res)=>{
  const assets={
     "/assets/index.html":[html,"text/html; charset=utf-8"],
+    "/assets/i18n.js":[i18nJs,"text/javascript; charset=utf-8"],
+    "/assets/i18n-catalog.js":[i18nCatalog,"text/javascript; charset=utf-8"],
     "/assets/app.js":[appJs,"text/javascript; charset=utf-8"],
     "/assets/navigation.js":[navigationJs,"text/javascript; charset=utf-8"],
     "/assets/style.css":[fs.readFileSync(path.join(root,"app/src/main/assets/style.css"),"utf8"),"text/css; charset=utf-8"]

@@ -129,7 +129,7 @@
               <tfoot><tr><th colspan="5" scope="row">Totaal</th><td id="weekTotalHours">—</td><td id="weekTotalKm">—</td></tr></tfoot>
             </table>
           </div>
-          <div class="weekFoot"><strong>Project(en):</strong> <span id="weekProjects">—</span></div>
+          <div class="weekFoot"><strong>Project(en):</strong> <span id="weekProjects" data-i18n-ignore>—</span></div>
           <div id="weekDraftNote" class="weekInfo hidden">* Conceptdag: nog niet bevestigd. Onvoltooide uren tellen nog niet mee bij het weektotaal.</div>
           <div class="weekInfo" id="weekFilterInfo">Tap a row to edit a recorded day. Times exclude breaks; kilometres are from registered journeys.</div>
         </div>
@@ -166,6 +166,24 @@
     <section class="view" data-view="settings" id="viewSettings">
       <div class="viewTitle"><h1>Settings</h1><p>Location, reminders and your work records.</p></div>
       <button type="button" id="rhythmGuideReplay" class="rhythmReplay">Show getting-started guide →</button>
+
+      <section class="card languageCard" aria-label="Language">
+        <div class="settingGroup">
+          <h3>Language</h3>
+          <p>Choose the language for WorkClock. Automatic follows the language of your device.</p>
+          <div class="languagePickerRow">
+            <select id="languageSelect" aria-label="App language">
+              <option value="auto">🌐 Automatic · device language</option>
+              <option value="en">🇬🇧 English</option>
+              <option value="nl">🇳🇱 Nederlands</option>
+              <option value="de">🇩🇪 Deutsch</option>
+              <option value="fr">🇫🇷 Français</option>
+              <option value="es">🇪🇸 Español</option>
+            </select>
+            <span id="languageActual" class="languageActual" aria-live="polite"></span>
+          </div>
+        </div>
+      </section>
 
       <section class="card">
         <div class="settingGroup">
@@ -245,6 +263,8 @@
 
 <div class="modalBack" id="timeModal"><div class="modal"><h3 id="timeModalTitle">When?</h3><p id="timeModalText"></p><div class="offsets" id="timeChoices"></div><div class="customTimeEditor hidden" id="customTimeEditor"><label for="customTimeInput">Exact date and time</label><input id="customTimeInput" type="datetime-local" step="60"><button class="btn primary" id="confirmCustomTime" type="button">Use this time</button><div class="notice bad hidden" id="customTimeError" role="alert"></div></div><div style="height:10px"></div><button class="btn" style="width:100%" id="closeTimeModal">Cancel</button></div></div>
 <div class="modalBack" id="projectModal"><div class="modal"><h3 id="projectModalTitle">Name project</h3><p id="projectModalText"></p><label>Project</label><input id="projectModalInput" autocomplete="off" placeholder="Type or choose a previous project"><div id="projectPickerList" class="projectPickerList hidden" role="listbox"></div><div class="modalButtons"><button class="btn" id="cancelProjectModal">Cancel</button><button class="btn primary" id="saveProjectModal">Save project</button></div><div class="notice" id="projectModalMessage">The timestamp is already held while this dialog is open.</div></div></div>
+<script src="./i18n-catalog.js"></script>
+<script src="./i18n.js"></script>
 <script src="./app.js"></script>
 <script src="./navigation.js"></script>
 </body>

@@ -2,6 +2,7 @@
 (() => {
 "use strict";
 const $=s=>document.querySelector(s);
+const uiText=s=>window.WorkClockI18n?.t(s) || s;
 const STORAGE_KEY="workclock-v4";
 const PREVIOUS_KEYS=["workclock-v3","workclock-prototype-v1"];
 const RHYTHM_KEY="workclock-first-run-hints-v1";
@@ -45,8 +46,8 @@ function timeValue(v){if(!v)return "";const d=v instanceof Date?v:new Date(v),p=
 function parseTime(s){const [h,m]=String(s).split(":").map(Number);return h*60+m}
 function minutesOfDay(d=new Date()){return d.getHours()*60+d.getMinutes()}
 function inWindow(date,from,to){const n=minutesOfDay(date),a=parseTime(from),b=parseTime(to);return n>=a&&n<=b}
-function fmtTime(v){if(!v)return "—";const d=v instanceof Date?v:new Date(v);return d.toLocaleTimeString(undefined, {hour:"2-digit",minute:"2-digit",hourCycle:"h23"})}
-function fmtDate(v){const d=v instanceof Date?v:new Date(v);return d.toLocaleDateString([], {weekday:"short",day:"numeric",month:"short",year:"numeric"})}
+function fmtTime(v){if(!v)return "—";const d=v instanceof Date?v:new Date(v);return d.toLocaleTimeString(window.WorkClockI18n?.locale || undefined, {hour:"2-digit",minute:"2-digit",hourCycle:"h23"})}
+function fmtDate(v){const d=v instanceof Date?v:new Date(v);return d.toLocaleDateString(window.WorkClockI18n?.locale || undefined, {weekday:"short",day:"numeric",month:"short",year:"numeric"})}
 function fmtDuration(ms){ms=Math.max(0,Number(ms)||0);const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000);return `${h}h ${String(m).padStart(2,"0")}m`}
 function fmtTimer(ms){ms=Math.max(0,Number(ms)||0);const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`}
 function esc(x){return String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]))}
@@ -186,7 +187,7 @@ async function syncAndroidEvents(){
 }
 window.__WorkClockNativeSync=syncAndroidEvents;
 window.__WorkClockBackupResult=message=>setNotice("backupMessage",message);
-window.__WorkClockReceiveImport=function(raw){try{const parsed=JSON.parse(raw);if(!parsed||typeof parsed!=="object"||!Array.isArray(parsed.locations)||!Array.isArray(parsed.history))throw new Error("Not a valid WorkClock backup");if(!confirm("Replace existing WorkClock data with this backup? A safety copy of your current data will be stored on this device."))return;saveSafetySnapshot("Before importing data");state=validateState(parsed);setRhythmMode("completed");persist();resetLocationEditor();resetManualEditor();renderAll();renderSettings();refreshAndroidStatus();setNotice("backupMessage","Backup imported. Workdays and places restored.","good")}catch(e){setNotice("backupMessage","Import failed: "+(e.message||e),"bad")}};
+window.__WorkClockReceiveImport=function(raw){try{const parsed=JSON.parse(raw);if(!parsed||typeof parsed!=="object"||!Array.isArray(parsed.locations)||!Array.isArray(parsed.history))throw new Error("Not a valid WorkClock backup");if(!confirm(uiText("Replace existing WorkClock data with this backup? A safety copy of your current data will be stored on this device.")))return;saveSafetySnapshot("Before importing data");state=validateState(parsed);setRhythmMode("completed");persist();resetLocationEditor();resetManualEditor();renderAll();renderSettings();refreshAndroidStatus();setNotice("backupMessage","Backup imported. Workdays and places restored.","good")}catch(e){setNotice("backupMessage","Import failed: "+(e.message||e),"bad")}};
 function showFolderBackupStatus(){
   const enabled=!!WorkClockAndroid.backupFolderEnabled();
   $("#backupFolderStatus").textContent=enabled?
@@ -236,7 +237,7 @@ function restoreSafetySnapshot(){
   const list=readSafetySnapshots();
   if(!list.length)return setNotice("backupMessage","No safety snapshots yet. Export your data to a file for long-term backups.","bad");
   const mostRecent=list[0];
-  if(!confirm("Restore the safety copy from "+new Date(mostRecent.at).toLocaleString()+"? Current entries will be replaced."))return;
+  if(!confirm(uiText("Restore the safety copy from")+" "+new Date(mostRecent.at).toLocaleString(window.WorkClockI18n?.locale)+"? "+uiText("Current entries will be replaced.")))return;
   try{
     const recovered=validateState(JSON.parse(mostRecent.data));
     saveSafetySnapshot("Before restoring safety copy");
@@ -257,7 +258,7 @@ function renderProjectMatches(picker){
   picker.list.innerHTML="";
   for(const name of names){
     const button=document.createElement("button");button.type="button";button.className="projectPickerOption";
-    button.textContent=name;
+    button.textContent=name;button.className+=" i18n-user-data";
     button.addEventListener("pointerdown",e=>e.preventDefault());
     button.addEventListener("click",()=>{
       picker.input.value=name;picker.typed=false;picker.onSelect(name);
@@ -513,11 +514,11 @@ function addLocation(type,name,lat,lon,radius){const loc={id:uid("loc"),type,nam
 function resetLocationEditor(){editingLocationId=null;$("#locationEditorTitle").textContent="Add location";$("#saveLocation").textContent="Add location";$("#locType").value="home";$("#locName").value="";$("#locLat").value="";$("#locLon").value="";$("#locRadius").value=state.settings.defaultRadius;setNotice("locationEditorMessage","You can add any number of homes and workplaces.")}
 function editLocation(id){const l=locationById(id);if(!l)return;editingLocationId=id;$("#locationEditorTitle").textContent="Edit location";$("#saveLocation").textContent="Save changes";$("#locType").value=l.type;$("#locName").value=l.name;$("#locLat").value=l.lat;$("#locLon").value=l.lon;$("#locRadius").value=l.radius;setNotice("locationEditorMessage",`Editing ${l.name}.`);$("#locationEditorTitle").scrollIntoView({behavior:"smooth",block:"start"})}
 function saveLocationEditor(){const type=$("#locType").value,name=$("#locName").value.trim(),lat=Number($("#locLat").value),lon=Number($("#locLon").value),radius=Number($("#locRadius").value);if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat<-90||lat>90||lon<-180||lon>180){setNotice("locationEditorMessage","Enter valid latitude and longitude.","bad");return}if(!Number.isFinite(radius)||radius<30){setNotice("locationEditorMessage","Detection radius must be at least 30 m.","bad");return}if(editingLocationId){const l=locationById(editingLocationId);if(!l)return;Object.assign(l,{type,name:name||l.name,lat,lon,radius});state.routeCache={};persist();setNotice("locationEditorMessage",`Saved ${l.name}.`,"good")}else{const l=addLocation(type,name,lat,lon,radius);setNotice("locationEditorMessage",`Added ${l.name}.`,"good")}resetLocationEditor();renderAll()}
-function deleteLocation(id){const l=locationById(id);if(!l)return;if(!confirm(`Delete saved location “${l.name}”? Historical records keep their stored names and kilometres.`))return;state.locations=state.locations.filter(x=>x.id!==id);state.routeCache={};for(const key of ["currentId","lastHomeId","lastWorkId"])if(state.presence[key]===id)state.presence[key]=null;persist();renderAll();setNotice("locationEditorMessage",`Deleted ${l.name}.`,"good")}
+function deleteLocation(id){const l=locationById(id);if(!l)return;if(!confirm(`${uiText("Delete saved location")} “${l.name}”? ${uiText("Historical records keep their stored names and kilometres.")}`))return;state.locations=state.locations.filter(x=>x.id!==id);state.routeCache={};for(const key of ["currentId","lastHomeId","lastWorkId"])if(state.presence[key]===id)state.presence[key]=null;persist();renderAll();setNotice("locationEditorMessage",`Deleted ${l.name}.`,"good")}
 function addCurrentLocation(type){if(!currentPosition){setNotice("locationEditorMessage","No current GPS position is available. Enable location first or add coordinates manually.","bad");return}const l=addLocation(type,"",currentPosition.lat,currentPosition.lon,state.settings.defaultRadius);renderAll();setNotice("locationEditorMessage",`Added ${l.name} from current GPS position.`,"good")}
 
 function renderStatus(found=null,source=null){const auto=isAutomationDay();$("#dayAutomationStatus").textContent=auto?"Auto ON":"Auto OFF";$("#dayAutomationStatus").className=`pill ${auto?"good":""}`;const loc=found||locationById(state.presence.currentId);$("#placeStatus").textContent=loc?`At ${loc.name}`:"No saved place"}
-function projectLines(day){if(!day.segments?.length)return '<div class="meta">No completed project sections yet.</div>';return `<div class="projectList">${day.segments.map(s=>`<div class="projectLine"><span class="name">${esc(s.projectName)}</span><span class="time">${fmtTime(s.start)}–${fmtTime(s.stop)} · ${fmtDuration(new Date(s.stop)-new Date(s.start))}</span></div>`).join("")}</div>`}
+function projectLines(day){if(!day.segments?.length)return '<div class="meta">No completed project sections yet.</div>';return `<div class="projectList">${day.segments.map(s=>`<div class="projectLine"><span class="name" data-i18n-ignore>${esc(s.projectName)}</span><span class="time">${fmtTime(s.start)}–${fmtTime(s.stop)} · ${fmtDuration(new Date(s.stop)-new Date(s.start))}</span></div>`).join("")}</div>`}
 // First-run tips follow the saved workday state.
 function rhythmStep(){
   if(rhythmMode!=="active")return null;
@@ -582,7 +583,7 @@ function setRhythmMode(mode){
   }catch(e){console.warn("Could not save guidance preference",e)}
   renderRhythmGuide();
 }
-function renderToday(){const d=getToday(),running=!!(d.start&&!d.stop),stopped=!!(d.start&&d.stop),main=$("#mainHold");document.body.classList.toggle("work-running",running);document.body.classList.toggle("work-review",stopped);const openStart=openSegmentStart(d);const stateEl=$("#workState"),sectionEl=$("#currentSection");if(stateEl){stateEl.textContent=running?"WORKING":stopped?"READY TO REVIEW":"OFF THE CLOCK";stateEl.className=`workState ${running?"active":stopped?"review":""}`}if(sectionEl){sectionEl.innerHTML=running?`<span>Current section</span><strong>Started ${fmtTime(openStart)}</strong>`:stopped?`<span>Workday</span><strong>${d.segments.length} project${d.segments.length===1?"":"s"}</strong>`:`<span>Current section</span><strong>Starts when you clock in</strong>`};main.disabled=stopped;main.classList.toggle("finish",running);main.querySelector("span").textContent=running?"HOLD TO FINISH WORK":stopped?"WORKDAY STOPPED — REVIEW BELOW":"HOLD TO START WORK";$("#endProject").disabled=!running;$("#endProject").classList.toggle("hidden",!running);$("#projectQuickHelp").textContent=running?`Current section started ${fmtTime(openSegmentStart(d))}. Tap End Project / Switch to place an exact marker without stopping work.`:"Start work first. A project marker does not stop the work timer.";$("#timerLabel").textContent=running?`Working since ${fmtTime(d.start)}`:stopped?`Draft finished at ${fmtTime(d.stop)}`:"Not working";$("#editStart").disabled=!d.start;$("#editStop").disabled=!d.stop;$("#clearDraft").disabled=!d.start&&!d.stop&&!d.commuteOut&&!d.commuteBack;const gross=d.start&&d.stop?new Date(d.stop)-new Date(d.start):null,net=gross===null?null:Math.max(0,gross-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),coverage=d.stop?coverageError(d):null;$("#todayReview").innerHTML=`<div class="summaryGrid"><div class="summaryStat"><span>Start</span><strong>${fmtTime(d.start)}</strong></div><div class="summaryStat"><span>Finish</span><strong>${fmtTime(d.stop)}</strong></div><div class="summaryStat"><span>Worked</span><strong>${net===null?"—":fmtDuration(net)}</strong></div><div class="summaryStat"><span>Road</span><strong>${km?km.toFixed(1)+" km":"—"}</strong></div></div>${d.commuteOut?`<div class="meta">Out · ${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)} · ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">Back · ${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)} · ${d.commuteBack.km.toFixed(1)} km</div>`:(d.start&&d.stop&&d.workplaceId&&!d.manuallyAdded?`<div class="notice">Return route pending · open WorkClock when you reach a saved home.</div>`:"")}${projectLines(d)}${coverage?`<div class="notice bad">${esc(coverage)}</div>`:""}`;$("#breakChips").innerHTML="";for(const n of [0,15,30,45,60,75,90]){const b=document.createElement("button");b.type="button";b.className=`chip ${d.breakMin===n?"selected":""}`;b.textContent=n?`${n} min`:"No break";b.addEventListener("click",()=>{d.breakMin=n;persist();renderToday()});$("#breakChips").appendChild(b)}$("#confirmDayHold").disabled=!(d.start&&d.stop&&!coverage);updateTimer();renderRhythmGuide()}
+function renderToday(){const d=getToday(),running=!!(d.start&&!d.stop),stopped=!!(d.start&&d.stop),main=$("#mainHold");document.body.classList.toggle("work-running",running);document.body.classList.toggle("work-review",stopped);const openStart=openSegmentStart(d);const stateEl=$("#workState"),sectionEl=$("#currentSection");if(stateEl){stateEl.textContent=running?"WORKING":stopped?"READY TO REVIEW":"OFF THE CLOCK";stateEl.className=`workState ${running?"active":stopped?"review":""}`}if(sectionEl){sectionEl.innerHTML=running?`<span>Current section</span><strong>${uiText("Started")} ${fmtTime(openStart)}</strong>`:stopped?`<span>Workday</span><strong>${d.segments.length} ${d.segments.length===1?uiText("Project"):uiText("Projects")}</strong>`:`<span>Current section</span><strong>Starts when you clock in</strong>`};main.disabled=stopped;main.classList.toggle("finish",running);main.querySelector("span").textContent=running?"HOLD TO FINISH WORK":stopped?"WORKDAY STOPPED — REVIEW BELOW":"HOLD TO START WORK";$("#endProject").disabled=!running;$("#endProject").classList.toggle("hidden",!running);$("#projectQuickHelp").textContent=running?`${uiText("Current section started")} ${fmtTime(openSegmentStart(d))}. ${uiText("Tap End Project / Switch to place an exact marker without stopping work.")}`:"Start work first. A project marker does not stop the work timer.";$("#timerLabel").textContent=running?`${uiText("Working since")} ${fmtTime(d.start)}`:stopped?`${uiText("Draft finished at")} ${fmtTime(d.stop)}`:"Not working";$("#editStart").disabled=!d.start;$("#editStop").disabled=!d.stop;$("#clearDraft").disabled=!d.start&&!d.stop&&!d.commuteOut&&!d.commuteBack;const gross=d.start&&d.stop?new Date(d.stop)-new Date(d.start):null,net=gross===null?null:Math.max(0,gross-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),coverage=d.stop?coverageError(d):null;$("#todayReview").innerHTML=`<div class="summaryGrid"><div class="summaryStat"><span>Start</span><strong>${fmtTime(d.start)}</strong></div><div class="summaryStat"><span>Finish</span><strong>${fmtTime(d.stop)}</strong></div><div class="summaryStat"><span>Worked</span><strong>${net===null?"—":fmtDuration(net)}</strong></div><div class="summaryStat"><span>Road</span><strong>${km?km.toFixed(1)+" km":"—"}</strong></div></div>${d.commuteOut?`<div class="meta">Out · ${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)} · ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">Back · ${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)} · ${d.commuteBack.km.toFixed(1)} km</div>`:(d.start&&d.stop&&d.workplaceId&&!d.manuallyAdded?`<div class="notice">Return route pending · open WorkClock when you reach a saved home.</div>`:"")}${projectLines(d)}${coverage?`<div class="notice bad">${esc(coverage)}</div>`:""}`;$("#breakChips").innerHTML="";for(const n of [0,15,30,45,60,75,90]){const b=document.createElement("button");b.type="button";b.className=`chip ${d.breakMin===n?"selected":""}`;b.textContent=n?`${n} min`:"No break";b.addEventListener("click",()=>{d.breakMin=n;persist();renderToday()});$("#breakChips").appendChild(b)}$("#confirmDayHold").disabled=!(d.start&&d.stop&&!coverage);updateTimer();renderRhythmGuide()}
 function renderLocations(){
   const list=$("#locationList");
   list.innerHTML="";
@@ -590,8 +591,8 @@ function renderLocations(){
   for(const l of state.locations){
     const el=document.createElement("div");el.className="location";
     const visit=l.lastVisitedAt?new Date(l.lastVisitedAt):null;
-    const visitText=visit&&Number.isFinite(visit.getTime())?"Last detected "+fmtDate(visit):"Not detected yet";
-    el.innerHTML=`<div class="locationHead"><div><div class="placeTitleLine"><button type="button" class="placeNameButton" title="Open in Maps">${esc(l.name)}<span class="placeExternalArrow" aria-hidden="true">↗</span></button><span class="placeKind">(${l.type==="home"?"home":"work"})</span></div><div class="meta">${esc(visitText)} · detection radius ${Number(l.radius)||150} m</div></div><div class="actions"><button class="btn small edit">Edit</button><button class="btn small del">Delete</button></div></div>`;
+    const visitText=visit&&Number.isFinite(visit.getTime())?uiText("Last detected")+" "+fmtDate(visit):uiText("Not detected yet");
+    el.innerHTML=`<div class="locationHead"><div><div class="placeTitleLine"><button type="button" class="placeNameButton" title="Open in Maps"><span data-i18n-ignore>${esc(l.name)}</span><span class="placeExternalArrow" aria-hidden="true">↗</span></button><span class="placeKind">(${uiText(l.type==="home"?"home":"work")})</span></div><div class="meta">${esc(visitText)} · ${uiText("detection radius")} ${Number(l.radius)||150} m</div></div><div class="actions"><button class="btn small edit">${uiText("Edit")}</button><button class="btn small del">${uiText("Delete")}</button></div></div>`;
     el.querySelector(".placeNameButton").addEventListener("click",()=>WorkClockAndroid.openPlaceOnMap(l.id));
     el.querySelector(".edit").addEventListener("click",()=>editLocation(l.id));
     el.querySelector(".del").addEventListener("click",()=>deleteLocation(l.id));
@@ -599,7 +600,7 @@ function renderLocations(){
   }
   fillLocationSelects();
 }
-function fillSelect(el,items,placeholder,preferred=null){const old=preferred??el.value;el.innerHTML=`<option value="">${esc(placeholder)}</option>`+items.map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("");if(items.some(x=>x.id===old))el.value=old;else if(items.length===1)el.value=items[0].id}
+function fillSelect(el,items,placeholder,preferred=null){const old=preferred??el.value;el.innerHTML=`<option value="">${esc(placeholder)}</option>`+items.map(x=>`<option data-i18n-ignore value="${esc(x.id)}">${esc(x.name)}</option>`).join("");if(items.some(x=>x.id===old))el.value=old;else if(items.length===1)el.value=items[0].id}
 function fillLocationSelects(){const homes=locationsOf("home"),works=locationsOf("work");fillSelect($("#simHome"),homes,"Choose home");fillSelect($("#simWork"),works,"Choose workplace");fillSelect($("#manualStartHome"),homes,"Choose start home");fillSelect($("#manualEndHome"),homes,"Choose return home");fillSelect($("#manualWork"),works,"Choose workplace");updateManualModeUI()}
 function renderSettings(){const s=state.settings;$("#startFrom").value=s.startFrom;$("#startUntil").value=s.startUntil;$("#finishFrom").value=s.finishFrom;$("#finishUntil").value=s.finishUntil;$("#defaultRadius").value=s.defaultRadius;$("#routingProvider").value=s.routingProvider;$("#orsKey").value=s.orsKey;$("#strongReminders").checked=!!s.strongReminders}
 
@@ -644,16 +645,17 @@ function renderWeekSheet(){
   localStorage.setItem("workclock-week-anchor",localDateKey(monday));
   const {year,week}=isoWeekData(monday),sunday=new Date(monday);
   sunday.setDate(monday.getDate()+6);
-  const label=d=>d.toLocaleDateString("nl-NL",{day:"numeric",month:"short"});
-  $("#weekHeading").textContent=`Week ${week}`;
+  const label=d=>d.toLocaleDateString(window.WorkClockI18n?.locale || "nl-NL",{day:"numeric",month:"short"});
+  $("#weekHeading").textContent=`${typeof uiText === "function" ? uiText("Week") : "Week"} ${week}`;
    const selector=$("#weekProjectSelect");
   const names=[...new Set(state.history.flatMap(d=>(d.segments||[]).map(seg=>seg.projectName).filter(Boolean)))].sort((a,b)=>a.localeCompare(b));
-  selector.innerHTML='<option value="">All projects</option>'+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");
+  selector.innerHTML='<option value="">All projects</option>'+names.map(n=>`<option data-i18n-ignore value="${esc(n)}">${esc(n)}</option>`).join("");
   if(!names.includes(weekProjectFilter))weekProjectFilter="";
   selector.value=weekProjectFilter;
   $("#weekRange").textContent=`${label(monday)} – ${label(sunday)} ${year}`;
   $("#weekNow").disabled=localDateKey(monday)===localDateKey(mondayOfWeek(new Date()));
   $("#weekNow").setAttribute("aria-current",$("#weekNow").disabled?"date":"false");
+  const weekdayFormatter=window.WorkClockI18n?new Intl.DateTimeFormat(window.WorkClockI18n.locale,{weekday:"short"}):null;
   const weekdays=["ma","di","wo","do","vr","za","zo"];
   const todayKey=localDateKey(new Date());
   const projects=new Set();
@@ -701,7 +703,7 @@ function renderWeekSheet(){
     const pauseLabel=finishedCount?`${Math.floor(breaks/60)}:${String(breaks%60).padStart(2,"0")}`:"—";
     const hoursLabel=finishedCount?weekDuration(minutes):"—";
     const distLabel=validDistance?weekKm(km):"—";
-    return `<tr data-date="${localDateKey(date)}" class="${blank?"weekBlank":""} ${partial?"weekDraft":""} ${entries.length?"weekAction":""} ${localDateKey(date)===todayKey?"weekToday":""}"><td>${weekdays[i]}${partial?"*":""}</td><td>${dateLabel}</td><td>${startLabel}</td><td>${endLabel}</td><td>${pauseLabel}</td><td>${hoursLabel}</td><td>${distLabel}</td></tr>`;
+    return `<tr data-date="${localDateKey(date)}" class="${blank?"weekBlank":""} ${partial?"weekDraft":""} ${entries.length?"weekAction":""} ${localDateKey(date)===todayKey?"weekToday":""}"><td>${weekdayFormatter?weekdayFormatter.format(date).replace(/\.$/,"").toLocaleLowerCase():weekdays[i]}${partial?"*":""}</td><td>${dateLabel}</td><td>${startLabel}</td><td>${endLabel}</td><td>${pauseLabel}</td><td>${hoursLabel}</td><td>${distLabel}</td></tr>`;
   }).join("");
   $("#weekTotalHours").textContent=totalMinutes?weekDuration(totalMinutes):"—";
   $("#weekTotalKm").textContent=hasDistance?weekKm(totalDistance):"—";
@@ -753,7 +755,7 @@ function attentionDays(){
 function renderAttention(){
   const issues=attentionDays(),card=$("#attentionStrip");
   card.classList.toggle("hidden",issues.length===0);
-  $("#attentionLabel").textContent=`${issues.length} workday${issues.length===1?"":"s"} need attention`;
+  $("#attentionLabel").textContent=window.WorkClockI18n?.attentionCount(issues.length) || `${issues.length} workday${issues.length===1?"":"s"} need attention`;
   const nav=$("#attentionNav");if(nav){nav.textContent=String(issues.length);nav.classList.toggle("hidden",!issues.length)}
 }
 function jumpToAttention(){
@@ -765,7 +767,7 @@ function jumpToAttention(){
   el?.scrollIntoView({behavior:"smooth",block:"center"});
 }
 let historyLimit=60;
-function renderHistory(){const box=$("#historyList");$("#clearHistory").closest(".section").classList.toggle("hidden",!state.history.length);if(!state.history.length){box.innerHTML='<div class="meta">No confirmed workdays yet.</div>';$("#historyShowOlder").classList.add("hidden");return}box.innerHTML="";for(const d of state.history.slice().sort((a,b)=>new Date(b.start)-new Date(a.start)).slice(0,historyLimit)){const ms=Math.max(0,new Date(d.stop)-new Date(d.start)-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),el=document.createElement("div");el.className="historyItem";el.dataset.dayId=d.id;el.innerHTML=`<div class="historyTop"><strong>${fmtDate(d.start)}</strong><strong>${fmtDuration(ms)}</strong></div><div class="meta">${fmtTime(d.start)}–${fmtTime(d.stop)} · break ${d.breakMin} min · ${km.toFixed(1)} km${d.manuallyAdded?" · manual entry":""}</div>${projectLines(d)}${d.commuteOut?`<div class="meta" style="margin-top:7px">${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)}: ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)}: ${d.commuteBack.km.toFixed(1)} km</div>`:(!d.manuallyAdded&&d.workplaceId?`<div class="notice">Return route pending · open WorkClock at a saved home.</div>`:"")}<div class="buttonRow" style="margin-top:10px"><button class="hold mini editDay"><div class="fill"></div><span>HOLD TO EDIT</span></button><button class="hold mini danger deleteDay"><div class="fill"></div><span>HOLD TO DELETE</span></button></div>`;wireHold(el.querySelector(".editDay"),()=>beginEditDay(d.id));wireHold(el.querySelector(".deleteDay"),()=>deletePastDay(d.id));box.appendChild(el)}
+function renderHistory(){const box=$("#historyList");$("#clearHistory").closest(".section").classList.toggle("hidden",!state.history.length);if(!state.history.length){box.innerHTML='<div class="meta">No confirmed workdays yet.</div>';$("#historyShowOlder").classList.add("hidden");return}box.innerHTML="";for(const d of state.history.slice().sort((a,b)=>new Date(b.start)-new Date(a.start)).slice(0,historyLimit)){const ms=Math.max(0,new Date(d.stop)-new Date(d.start)-d.breakMin*60000),km=(d.commuteOut?.km||0)+(d.commuteBack?.km||0),el=document.createElement("div");el.className="historyItem";el.dataset.dayId=d.id;el.innerHTML=`<div class="historyTop"><strong>${fmtDate(d.start)}</strong><strong>${fmtDuration(ms)}</strong></div><div class="meta">${fmtTime(d.start)}–${fmtTime(d.stop)} · ${uiText("break")} ${d.breakMin} ${uiText("min")} · ${km.toFixed(1)} km${d.manuallyAdded?" · "+uiText("manual entry"):""}</div>${projectLines(d)}${d.commuteOut?`<div class="meta" style="margin-top:7px">${esc(d.commuteOut.from)} → ${esc(d.commuteOut.to)}: ${d.commuteOut.km.toFixed(1)} km</div>`:""}${d.commuteBack?`<div class="meta">${esc(d.commuteBack.from)} → ${esc(d.commuteBack.to)}: ${d.commuteBack.km.toFixed(1)} km</div>`:(!d.manuallyAdded&&d.workplaceId?`<div class="notice">Return route pending · open WorkClock at a saved home.</div>`:"")}<div class="buttonRow" style="margin-top:10px"><button class="hold mini editDay"><div class="fill"></div><span>HOLD TO EDIT</span></button><button class="hold mini danger deleteDay"><div class="fill"></div><span>HOLD TO DELETE</span></button></div>`;wireHold(el.querySelector(".editDay"),()=>beginEditDay(d.id));wireHold(el.querySelector(".deleteDay"),()=>deletePastDay(d.id));box.appendChild(el)}
 const older=$("#historyShowOlder"),remaining=Math.max(0,state.history.length-historyLimit);
 older.classList.toggle("hidden",remaining===0);older.textContent=remaining?`Show older workdays (${remaining} remaining)`:"";}
 let renderInitialized=false;
@@ -784,7 +786,7 @@ window.__WorkClockRefreshView=function(name){
 };
 function updateTimer(){const d=getToday();let ms=0;if(d.start)ms=(d.stop?new Date(d.stop):new Date())-new Date(d.start);$("#timer").textContent=fmtTimer(ms)}
 function confirmToday(){const d=getToday(),err=coverageError(d);if(err){setNotice("mainMessage",err,"bad");return}const returnPending=!!(d.workplaceId&&!d.commuteBack&&!d.manuallyAdded);d.status="confirmed";state.history.push(deepCopy(d));state.history.sort((a,b)=>new Date(a.start)-new Date(b.start));state.currentDay=blankDay();persist();saveSafetySnapshot("Confirmed workday");writeBackupToFolder(true);renderAll();setNotice("mainMessage",returnPending?"Workday confirmed. Return route is pending and will be added when WorkClock sees you at a saved home.":"Workday confirmed and added to history.","good")}
-function clearToday(){if(!confirm("Clear today's unconfirmed draft?"))return;saveSafetySnapshot("Before clearing draft");state.currentDay=blankDay();persist();renderAll();setNotice("mainMessage","Today's draft cleared.")}
+function clearToday(){if(!confirm(uiText("Clear today's unconfirmed draft?")))return;saveSafetySnapshot("Before clearing draft");state.currentDay=blankDay();persist();renderAll();setNotice("mainMessage","Today's draft cleared.")}
 
 function updateManualModeUI(){const mode=$("#manualDistanceMode").value,auto=mode==="auto",manual=mode==="manual",keep=mode==="keep";$("#manualStartHome").disabled=!auto;$("#manualEndHome").disabled=!auto;$("#manualCalculate").disabled=!auto;$("#manualKm").disabled=!manual;$("#manualDistanceMode").querySelector('option[value="keep"]').disabled=!manualEditDayId;if(keep&&!manualEditDayId)$("#manualDistanceMode").value="auto"}
 async function manualDistancePreview(){const w=locationById($("#manualWork").value),h1=locationById($("#manualStartHome").value),h2=locationById($("#manualEndHome").value);if(w?.type!=="work"||h1?.type!=="home"||h2?.type!=="home"){setNotice("manualMessage","Choose a workplace, start home and return home.","bad");return null}setNotice("manualMessage","Calculating road distances…");const out=await routeBetween(h1,w),back=await routeBetween(w,h2);if(!out||!back){setNotice("manualMessage","Road-distance calculation failed. Check internet/routing settings.","bad");return null}const result={out,back,h1,h2,w,total:out.km+back.km};setNotice("manualMessage",`${h1.name} → ${w.name}: ${out.km.toFixed(1)} km · ${w.name} → ${h2.name}: ${back.km.toFixed(1)} km · total ${result.total.toFixed(1)} km`,"good");return result}
@@ -933,6 +935,14 @@ if(!lastUpdateCheck||Date.now()-lastUpdateCheck>24*3600000){
   setTimeout(()=>{WorkClockAndroid.checkForUpdates();localStorage.setItem("workclock-update-checked-at",String(Date.now()))},1500);
 }
 
+$("#languageSelect").addEventListener("change",e=>{
+  window.WorkClockI18n.setLanguage(e.target.value, true);
+  renderAll();
+  if(document.querySelector(".view.active")?.dataset.view === "history" && weekSheetMode === "week")renderWeekSheet();
+});
+window.addEventListener("workclock-language-change",()=>{
+  if(document.querySelector(".view.active")?.dataset.view === "history" && weekSheetMode === "week")renderWeekSheet();
+});
 $("#rhythmGuideDismiss").addEventListener("click",()=>setRhythmMode("dismissed"));
 $("#rhythmGuideSkip").addEventListener("click",()=>{
   if(rhythmStep()!=="place")return;
